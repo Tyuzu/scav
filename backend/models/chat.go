@@ -10,7 +10,7 @@ type Message struct {
 	MessageID  string     `bson:"messageid,omitempty"        json:"messageid"`
 	ChatID     string     `bson:"chatid"              json:"chatid"`
 	RoomID     string     `bson:"roomid"              json:"roomid"`
-	UserID     string     `bson:"sender"              json:"sender"`
+	UserID     string     `bson:"userid"              json:"userid"`
 	Text       string     `bson:"text,omitempty" json:"text,omitempty"`
 	FileURL    string     `bson:"fileURL,omitempty" json:"fileURL,omitempty"`
 	FileType   string     `bson:"fileType,omitempty" json:"fileType,omitempty"` // "image" or "video"
@@ -42,7 +42,7 @@ type Chat struct {
 
 type MessagePreview struct {
 	Text      string    `bson:"text" json:"text"`
-	SenderID  string    `bson:"senderId" json:"senderId"`
+	UserID    string    `bson:"userid" json:"userid"`
 	Timestamp time.Time `bson:"timestamp" json:"timestamp"`
 }
 

@@ -141,7 +141,7 @@ func CreateMessage(app *infra.Deps) httprouter.Handle {
 			"$set": map[string]any{
 				"lastMessage": models.MessagePreview{
 					Text:      text,
-					SenderID:  userID,
+					UserID:    userID,
 					Timestamp: now,
 				},
 				"updatedAt": now,
