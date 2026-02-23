@@ -1,0 +1,15 @@
+.chat-main {
+    flex: 3;
+}
+
+.preview_image_wrap li img{
+    width: 100%;
+}
+
+@media (max-width: 600px) {
+    .merechatcon {
+        display: flex;
+        flex-direction: column;
+    }
+  }
+  

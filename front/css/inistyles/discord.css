@@ -1,0 +1,307 @@
+/* =========================
+   RESET + BASE
+========================= */
+
+* {
+    box-sizing: border-box;
+}
+
+html,
+body {
+    margin: 0;
+    height: 100%;
+    font-family: system-ui, -apple-system, BlinkMacSystemFont,
+        "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    background: #313338;
+    color: #dbdee1;
+}
+
+button,
+input {
+    font-family: inherit;
+    font-size: 14px;
+}
+
+/* =========================
+   LAYOUT
+========================= */
+
+.layout {
+    display: flex;
+    height: 100vh;
+    width: 100vw;
+    overflow: hidden;
+}
+
+/* =========================
+   SERVERS BAR
+========================= */
+
+.servers {
+    width: 72px;
+    background: #1e1f22;
+    padding: 8px 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 8px;
+}
+
+/* Button already exists – style via container */
+.servers button {
+    width: 48px;
+    height: 48px;
+    border-radius: 50%;
+    background: #313338;
+    color: #dbdee1;
+}
+
+.servers button.active {
+    background: #5865f2;
+}
+
+/* =========================
+   CHANNELS
+========================= */
+
+.channels {
+    width: 240px;
+    background: #2b2d31;
+    padding: 12px 8px;
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+}
+
+.channels button {
+    width: 100%;
+    justify-content: flex-start;
+    background: transparent;
+    color: #b5bac1;
+    padding: 6px 8px;
+    border-radius: 4px;
+}
+
+.channels button:hover {
+    background: #35373c;
+    color: #dbdee1;
+}
+
+.channels button.active {
+    background: #404249;
+    color: #ffffff;
+}
+
+/* =========================
+   CHAT
+========================= */
+
+.chat {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    background: #313338;
+}
+
+/* =========================
+   CHAT HEADER
+========================= */
+
+.chat-header {
+    height: 48px;
+    display: flex;
+    align-items: center;
+    padding: 0 16px;
+    border-bottom: 1px solid #1f2023;
+    font-weight: 600;
+    color: #f2f3f5;
+    flex-shrink: 0;
+}
+
+/* =========================
+   MESSAGES
+========================= */
+
+.messages {
+    flex: 1;
+    overflow-y: auto;
+    padding: 16px 0;
+}
+
+/* Date bucket */
+.bucket {
+    text-align: center;
+    margin: 16px 0;
+    font-size: 12px;
+    color: #949ba4;
+    position: relative;
+}
+
+.bucket::before,
+.bucket::after {
+    content: "";
+    position: absolute;
+    top: 50%;
+    width: 30%;
+    height: 1px;
+    background: #3f4147;
+}
+
+.bucket::before {
+    left: 16px;
+}
+
+.bucket::after {
+    right: 16px;
+}
+
+/* =========================
+   MESSAGE BLOCK
+========================= */
+
+.msg-block {
+    display: flex;
+    gap: 12px;
+    padding: 4px 16px;
+}
+
+.msg-block:hover {
+    background: #2e3035;
+}
+
+/* =========================
+   AVATAR
+========================= */
+
+.avatar {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    background: #5865f2;
+    color: white;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 600;
+    flex-shrink: 0;
+    position: relative;
+}
+
+/* Presence dot */
+.avatar::after {
+    content: "";
+    position: absolute;
+    bottom: -1px;
+    right: -1px;
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+    border: 2px solid #313338;
+    background: #747f8d;
+}
+
+.avatar.online::after {
+    background: #23a55a;
+}
+
+.avatar.idle::after {
+    background: #f0b232;
+}
+
+.avatar.dnd::after {
+    background: #f23f43;
+}
+
+/* =========================
+   MESSAGE CONTENT
+========================= */
+
+.msg-content {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    min-width: 0;
+}
+
+.msg-header {
+    display: flex;
+    align-items: baseline;
+    gap: 8px;
+}
+
+.msg-header strong {
+    font-size: 15px;
+    color: #f2f3f5;
+}
+
+.timestamp {
+    font-size: 12px;
+    color: #949ba4;
+    opacity: 0;
+}
+
+.msg-block:hover .timestamp {
+    opacity: 1;
+}
+
+/* =========================
+   MESSAGE TEXT
+========================= */
+
+.message {
+    font-size: 15px;
+    line-height: 1.4;
+    color: #dbdee1;
+    word-wrap: break-word;
+}
+
+.message.pending {
+    opacity: 0.6;
+    font-style: italic;
+}
+
+/* =========================
+   TYPING INDICATOR
+========================= */
+
+.typing {
+    padding: 4px 16px;
+    font-size: 13px;
+    color: #949ba4;
+    font-style: italic;
+}
+
+/* =========================
+   INPUT BAR
+========================= */
+
+.input {
+    padding: 12px 16px;
+    border-top: 1px solid #1f2023;
+    display: flex;
+    gap: 8px;
+    flex-shrink: 0;
+}
+
+.input input {
+    flex: 1;
+    background: #383a40;
+    border: none;
+    border-radius: 8px;
+    padding: 10px 12px;
+    color: #dbdee1;
+}
+
+.input input:focus {
+    outline: none;
+}
+
+.input button {
+    background: #5865f2;
+    color: white;
+    border-radius: 6px;
+}
+
+.input button:hover {
+    background: #4752c4;
+}

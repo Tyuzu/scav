@@ -1,0 +1,139 @@
+/* -------------------- Form Layout -------------------- */
+.modal-form {
+    display: flex;
+    flex-direction: column;
+    gap: 18px;
+    padding: 10px 4px;
+}
+
+.modal-form label {
+    font-weight: 600;
+    font-size: 0.95rem;
+    margin-bottom: -6px;
+}
+
+/* -------------------- Multiselect Wrapper -------------------- */
+.multiselect-wrapper {
+    position: relative;
+    width: 100%;
+    background: #fff;
+    border: 1px solid #dcdcdc;
+    padding: 8px;
+    border-radius: 8px;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+.multiselect-wrapper input {
+    width: 100%;
+    border: none;
+    outline: none;
+    padding: 6px 4px;
+    font-size: 0.9rem;
+    background: transparent;
+}
+
+/* -------------------- Dropdown -------------------- */
+.multiselect-dropdown {
+    display: none;
+    position: absolute;
+    top: 100%;
+    left: 0;
+    width: 100%;
+    background: #fff;
+    border: 1px solid #ccc;
+    border-top: none;
+    border-radius: 0 0 8px 8px;
+    max-height: 180px;
+    overflow-y: auto;
+    z-index: 10;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+}
+
+.multiselect-wrapper:focus-within .multiselect-dropdown {
+    display: block;
+}
+
+.multiselect-item {
+    padding: 10px;
+    cursor: pointer;
+    font-size: 0.9rem;
+    border-bottom: 1px solid #f2f2f2;
+}
+
+.multiselect-item:last-child {
+    border-bottom: none;
+}
+
+.multiselect-item:hover {
+    background: #f5f5f5;
+}
+
+/* -------------------- Chips -------------------- */
+.multiselect-chips {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+}
+
+.chip {
+    display: flex;
+    align-items: center;
+    padding: 5px 8px;
+    border-radius: 16px;
+    font-size: 0.85rem;
+    gap: 6px;
+}
+
+.chip-remove-btn {
+    background: transparent;
+    border: none;
+    font-size: 1rem;
+    cursor: pointer;
+    padding: 0;
+    margin: 0;
+    line-height: 1;
+    color: #555;
+}
+
+.chip-remove-btn:hover {
+    color: #d00;
+}
+
+/* -------------------- Buttons -------------------- */
+.modal-form button {
+    padding: 10px 16px;
+    border-radius: 6px;
+    font-weight: 500;
+}
+
+.modal-form button:first-of-type {
+    background: #007BFF;
+    color: #fff;
+}
+
+.modal-form button:last-of-type {
+    background: #f0f0f0;
+    color: #333;
+}
+
+/* -------------------- Mobile -------------------- */
+@media screen and (max-width: 600px) {
+    .modal-form {
+        gap: 14px;
+    }
+
+    .multiselect-wrapper {
+        padding: 6px;
+    }
+
+    .multiselect-item {
+        padding: 8px;
+    }
+
+    .chip {
+        font-size: 0.8rem;
+        padding: 4px 7px;
+    }
+}

@@ -1,0 +1,109 @@
+/* --- General layout --- */
+.create-section {
+  max-width: 800px;
+  margin: 2rem auto;
+  padding: 1.5rem;
+  border-radius: 8px;
+  box-shadow: 0 0 8px rgba(0,0,0,0.1);
+  font-family: sans-serif;
+}
+
+.create-section h2 {
+  margin-bottom: 1rem;
+  font-size: 1.8rem;
+  text-align: center;
+}
+
+/* --- Form groups --- */
+.form-group {
+  margin-bottom: 1rem;
+  display: flex;
+  flex-direction: column;
+}
+
+.form-group label {
+  margin-bottom: 0.3rem;
+  font-weight: 600;
+}
+
+.form-group input,
+.form-group textarea,
+.form-group select {
+  padding: 0.5rem;
+  font-size: 1rem;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+}
+
+.form-group textarea {
+  resize: vertical;
+  min-height: 80px;
+}
+
+/* --- Day sections --- */
+.day-section {
+  border: 1px solid #ddd;
+  padding: 1rem;
+  margin-bottom: 1.5rem;
+  border-radius: 6px;
+  background-color: #fff;
+}
+
+.day-section h3 {
+  margin-top: 0;
+  margin-bottom: 0.8rem;
+  font-size: 1.2rem;
+}
+
+/* --- Visit entries --- */
+.visit-entry {
+  border: 1px dashed #ccc;
+  padding: 0.8rem;
+  margin-bottom: 0.8rem;
+  border-radius: 4px;
+  position: relative;
+  background-color: #fafafa;
+}
+
+.visit-entry .form-group {
+  margin-bottom: 0.5rem;
+}
+
+/* --- Remove visit/day buttons --- */
+.visit-entry button,
+.day-section button {
+  font-size: 0.85rem;
+  padding: 0.3rem 0.5rem;
+}
+
+/* --- Add day button --- */
+.create-section > button[type="button"] {
+  display: block;
+  margin: 1rem 0;
+  background-color: #28a745;
+  color: white;
+}
+
+/* --- Submit button --- */
+.create-section button[type="submit"] {
+  background-color: var(--color-btn-bg);
+  color: white;
+  padding: 0.4rem 0.6rem;
+  border-radius: 4px;
+  margin-top: 1rem;
+}
+
+/* --- Message display --- */
+#create-section #message {
+  margin-top: 1rem;
+  color: #d9534f; /* red by default for errors */
+  font-weight: 600;
+}
+
+/* --- Responsive --- */
+@media (max-width: 600px) {
+  .form-group {
+    flex-direction: column;
+  }
+
+}

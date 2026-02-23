@@ -1,0 +1,204 @@
+.DimmedBadgeTextView_badge_text__NQTPZ {
+    background-color: #0009;
+    border-radius: 9px;
+    bottom: 6px;
+    color: #fff;
+    font-size: 9px;
+    font-weight: 600;
+    line-height: 17px;
+    padding: 0 6px;
+    position: absolute;
+    right: 6px;
+    -webkit-user-select: none;
+    user-select: none;
+    z-index: 30;
+}
+
+.DimmedBadgeTextView_badge_text__NQTPZ.DimmedBadgeTextView_-text-shadow__WqhwT {
+    text-shadow: 0 0 4px #000c;
+}
+
+.DimmedBadgeTextView_badge_text__NQTPZ.DimmedBadgeTextView_-mobile__Yjd3Z.DimmedBadgeTextView_-viewcount__U-UUa {
+    bottom: 4px;
+    font-size: 7px;
+    font-weight: 500;
+    left: 4px;
+    letter-spacing: .2px;
+    line-height: 13px;
+    padding: 0 3px 0 2px;
+    right: auto;
+}
+
+.DimmedBadgeTextView_badge_text__NQTPZ.DimmedBadgeTextView_-mobile__Yjd3Z.DimmedBadgeTextView_-viewcount__U-UUa:before {
+    background: no-repeat url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACEAAAAhCAYAAABX5MJvAAAACXBIWXMAACE4AAAhOAFFljFgAAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAEOSURBVHgB7ZbtEYIwDECDEzhCR3AERnAENpANYAPZADdwhLoJboAbxPQId7ECAv3wT99dDg7o9ZE0BYBEIuEIIuYULcWdooDYmEnxm45CQSx4QuRsnChuQqaNIsOTaetaIeQMFYRkSkLcK4VMF2y9LEnwfWWVSHsv0S8JS0YHWS9rJcTzhVWiElzZKiHG1RQ9j3cT2SvBYxWL9HPPHCAwWZY96fCiOMI/JOjtj6Zr6FRRPMCFHQvTTF6J9dA5d8kWCRy29rEzjEQNPlgjgcM3RYs9ojEZAV8sSXDqr/i5W+bgmzkJunax6n6GUIx9PqZ3qu5eUz8j0Yi31SL1Lcb6sRn7PXjdN8goSCQSkXgDtzfqzzENrLsAAAAASUVORK5CYII=) 0 0/contain;
+    content: "";
+    display: inline-block;
+    height: 11px;
+    margin: 1px 1px 0 0;
+    vertical-align: top;
+    width: 11px;
+}
+
+.DimmedBadgeTextView_badge_text__NQTPZ.DimmedBadgeTextView_-mobile__Yjd3Z.DimmedBadgeTextView_-gif__Oy2fM {
+    bottom: 10px;
+    font-weight: 600;
+    letter-spacing: .4px;
+    right: 10px;
+}
+
+.DimmedBadgeTextView_badge_text__NQTPZ.DimmedBadgeTextView_-mobile__Yjd3Z.DimmedBadgeTextView_-playtime__AOR9Y {
+    bottom: 8px;
+    right: 8px;
+}
+
+.preview_image_wrap__Q29V8 {
+    display: grid;
+    grid-auto-columns: 1fr;
+    grid-template-areas: "one";
+    overflow: hidden;
+}
+
+.preview_image_wrap__Q29V8 .PostPreviewImageView_image_item__dzD2P {
+    min-height: 0;
+    position: relative;
+    max-height: 84vh;
+}
+
+.preview_image_wrap__Q29V8 .PostPreviewImageView_post_image__zLzXH {
+    height: 100%;
+    object-fit: cover;
+    width: 100%;
+}
+
+/* .preview_image_wrap__Q29V8.PostPreviewImageView_-one__-6MMx {
+    display: inline-block;
+} */
+
+.preview_image_wrap__Q29V8.PostPreviewImageView_-one__-6MMx {
+    display: grid;
+}
+
+.preview_image_wrap__Q29V8.PostPreviewImageView_-two__WP8GL {
+    grid-template-areas: "one two";
+}
+
+.preview_image_wrap__Q29V8.PostPreviewImageView_-three__HLsVN {
+    grid-template-areas: "one one two" "one one three";
+}
+
+.preview_image_wrap__Q29V8.PostPreviewImageView_-four__fYIRN {
+    grid-template-areas: "one two" "three four";
+}
+
+.preview_image_wrap__Q29V8.PostPreviewImageView_-five__RZvWx {
+    grid-template-areas: "one one one two two two" "three three four four five five";
+}
+
+.preview_image_wrap__Q29V8.PostPreviewImageView_-six__EG45r {
+    grid-template-areas: "one one two" "one one three" "four five six";
+}
+
+.preview_image_wrap__Q29V8.PostPreviewImageView_-seven__65gnj {
+    grid-template-areas: "one one one two two two" "three three three four four four" "five five six six seven seven";
+}
+
+.preview_image_wrap__Q29V8.PostPreviewImageView_-eight__SoycA {
+    grid-template-areas: "one two" "three four" "five six" "seven eight";
+}
+
+.preview_image_wrap__Q29V8 .PostPreviewImageView_blur_wrap__o8vk\+ {
+    align-items: center;
+    background-color: #0006;
+    bottom: 0;
+    display: flex;
+    justify-content: center;
+    left: 0;
+    position: absolute;
+    right: 0;
+    top: 0;
+}
+
+.preview_image_wrap__Q29V8 .PostPreviewImageView_count__7mfv3 {
+    color: #fff;
+}
+
+.preview_image_wrap__Q29V8 {
+    grid-gap: 3px;
+    border-radius: 15px;
+}
+
+.preview_image_wrap__Q29V8 .PostPreviewImageView_image_item__dzD2P:first-child {
+    grid-area: one;
+}
+
+.preview_image_wrap__Q29V8 .PostPreviewImageView_image_item__dzD2P:nth-child(2) {
+    grid-area: two;
+}
+
+.preview_image_wrap__Q29V8 .PostPreviewImageView_image_item__dzD2P:nth-child(3) {
+    grid-area: three;
+}
+
+.preview_image_wrap__Q29V8 .PostPreviewImageView_image_item__dzD2P:nth-child(4) {
+    grid-area: four;
+}
+
+.preview_image_wrap__Q29V8 .PostPreviewImageView_image_item__dzD2P:nth-child(5) {
+    grid-area: five;
+}
+
+.preview_image_wrap__Q29V8 .PostPreviewImageView_image_item__dzD2P:nth-child(6) {
+    grid-area: six;
+}
+
+.preview_image_wrap__Q29V8.PostPreviewImageView_-one__-6MMx .PostPreviewImageView_image_item__dzD2P .PostPreviewImageView_post_image__zLzXH {
+    max-height: 707px;
+    max-width: 707px;
+}
+
+.preview_image_wrap__Q29V8.PostPreviewImageView_-two__WP8GL {
+    aspect-ratio: 707/352;
+}
+
+.preview_image_wrap__Q29V8.PostPreviewImageView_-three__HLsVN {
+    aspect-ratio: 707/471;
+}
+
+.preview_image_wrap__Q29V8.PostPreviewImageView_-four__fYIRN {
+    aspect-ratio: 1/1;
+}
+
+.preview_image_wrap__Q29V8.PostPreviewImageView_-five__RZvWx {
+    aspect-ratio: 707/589;
+}
+
+.preview_image_wrap__Q29V8.PostPreviewImageView_-six__EG45r {
+    aspect-ratio: 1/1;
+}
+
+.preview_image_wrap__Q29V8.PostPreviewImageView_-bottom_radius__Mmn-- {
+    border-radius: 0 15px 0 15px;
+}
+
+.preview_image_wrap__Q29V8.PostPreviewImageView_-artist__WkyUA.PostPreviewImageView_-one__-6MMx {
+    /* aspect-ratio: 1/1; */
+    grid-template-areas: "one";
+}
+
+/* .preview_image_wrap__Q29V8.PostPreviewImageView_-artist__WkyUA.PostPreviewImageView_-one__-6MMx .PostPreviewImageView_image_item__dzD2P {
+    background: #e9eef4;
+} */
+
+.preview_image_wrap__Q29V8.PostPreviewImageView_-artist__WkyUA.PostPreviewImageView_-one__-6MMx .PostPreviewImageView_image_item__dzD2P .PostPreviewImageView_post_image__zLzXH {
+    height: 100%;
+    max-height: none;
+    max-width: none;
+    object-fit: cover;
+    width: 100%;
+}
+
+.PostPreviewImageView_count__7mfv3 {
+    font-size: 28px;
+    font-weight: 700;
+    line-height: 34px;
+}

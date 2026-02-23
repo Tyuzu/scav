@@ -1,0 +1,214 @@
+/* Container */
+.croppage {
+  max-width: 900px;
+  margin: 0 auto;
+}
+
+/* Header */
+.crop-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 15px;
+}
+
+.crop-header .span {
+  font-weight: bold;
+  font-size: 1.5rem;
+}
+
+.crop-meta {
+  font-size: 0.9rem;
+}
+
+/* Button */
+.toggle-filters-btn {
+  background-color: #f0ad4e;
+  border: none;
+  padding: 8px 16px;
+  cursor: pointer;
+  border-radius: 4px;
+  font-size: 0.95rem;
+  margin-bottom: 15px;
+}
+
+.toggle-filters-btn:hover {
+  background-color: #ec971f;
+}
+
+/* Filter Form */
+.filter-controls {
+  display: none; /* hidden by default, can toggle with JS */
+  border: 1px solid #ddd;
+  padding: 15px;
+  border-radius: 5px;
+  margin-bottom: 20px;
+  background-color: #f9f9f9;
+}
+
+.filter-controls.open {
+  display: block;
+}
+
+.filter-controls fieldset {
+  border: none;
+  margin: 0;
+  padding: 0;
+}
+
+.filter-controls legend {
+  font-weight: bold;
+  margin-bottom: 10px;
+}
+
+.filter-row {
+  display: flex;
+  flex-wrap: wrap;
+  margin-bottom: 10px;
+  align-items: center;
+}
+
+.filter-row label {
+  width: 150px;
+  font-weight: 500;
+}
+
+.filter-row input {
+  flex: 1;
+  padding: 5px 8px;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+}
+
+/* Filter Buttons */
+.filter-actions {
+  display: flex;
+  gap: 10px;
+  margin-top: 10px;
+}
+
+.filter-actions button {
+  padding: 6px 12px;
+  border-radius: 4px;
+  border: none;
+  cursor: pointer;
+  background-color: #5bc0de;
+  color: #fff;
+  font-size: 0.9rem;
+}
+
+.filter-actions button:hover {
+  background-color: #31b0d5;
+}
+
+/* Listings Section */
+.crop-listings {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 20px;
+}
+
+.listing-card {
+  display: flex;
+  border: 1px solid #ddd;
+  border-radius: 6px;
+  overflow: hidden;
+}
+
+.listing-image img {
+  width: 150px;
+  height: 150px;
+  object-fit: cover;
+  border-right: 1px solid #ddd;
+}
+
+.listing-content {
+  flex: 1;
+  padding: 10px 15px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+}
+
+.listing-details h3 {
+  margin: 0 0 5px 0;
+  font-size: 1.2rem;
+}
+
+.listing-details p {
+  margin: 3px 0;
+  font-size: 0.9rem;
+}
+
+/* Quantity Controls */
+.listing-controls {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-top: 10px;
+}
+
+.quantity-control {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+}
+
+.quantity-control button {
+  padding: 2px 8px;
+  border: 1px solid #ccc;
+  background-color: #f5f5f5;
+  cursor: pointer;
+  border-radius: 3px;
+}
+
+.quantity-value {
+  min-width: 20px;
+  text-align: center;
+}
+
+/* Add to Cart Button */
+#a2c-crop-crd {
+  margin-left: auto;
+  background-color: #5cb85c;
+  color: #fff;
+  border: none;
+  padding: 6px 12px;
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+#a2c-crop-crd:hover {
+  background-color: #4cae4c;
+}
+
+/* Responsive */
+@media (max-width: 600px) {
+  .filter-row {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+  .filter-row label {
+    width: 100%;
+    margin-bottom: 4px;
+  }
+  .listing-card {
+    flex-direction: column;
+    align-items: center;
+  }
+  .listing-image img {
+    width: 100%;
+    height: auto;
+    border-right: none;
+    border-bottom: 1px solid #ddd;
+  }
+  .listing-controls {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+  #a2c-crop-crd {
+    margin-left: 0;
+    width: 100%;
+    text-align: center;
+  }
+}

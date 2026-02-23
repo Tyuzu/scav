@@ -1,0 +1,52 @@
+.ad-card {
+  max-width: 400px;   /* cap the width */
+  width: 100%;        /* responsive within parent */
+  margin: 0 auto;     /* center it horizontally */
+  box-sizing: border-box;
+}
+
+.ad-card img,
+.ad-card picture {
+  width: 100%;
+  height: auto;
+  border-radius: 6px;
+}
+
+
+@media (min-width: 768px) {
+  .ad-card {
+    max-width: 600px;
+  }
+}
+
+@media (min-width: 1200px) {
+  .ad-card {
+    max-width: 800px;
+  }
+}
+
+/* 
+.ad-card {
+    opacity: 0;
+    transition: opacity 0.5s ease-in-out;
+    font-size: 80%;
+    border: 1px solid #ddd;
+  }
+  .ad-card.fade-in {
+    opacity: 1;
+  }
+  .ad-card.fade-out {
+    opacity: 0;
+  }
+  .ad-progress {
+    height: 4px;
+    background: #2196f3;
+    margin-top: 8px;
+    animation: none;
+  }
+
+
+  @keyframes progressAnim {
+    from { width: 0%; }
+    to { width: 100%; }
+  } */

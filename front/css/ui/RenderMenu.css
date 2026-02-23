@@ -1,0 +1,15 @@
+.menu-section {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.4rem;
+}
+
+.menu-item {
+    max-width: 250px;
+    flex-grow: 1;
+    margin: 1rem 0;
+    flex-basis: 33%;
+    padding: 0.5rem;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+}

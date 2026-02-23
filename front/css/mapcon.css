@@ -1,0 +1,167 @@
+
+.mapcon {
+  position: relative;
+  width: 100%;
+  max-width: 1200px;
+  margin: auto;
+}
+/* 
+.generic-map-container {
+  position: relative;
+  overflow: hidden;
+  border: 2px solid #ccc;
+  border-radius: 8px;
+  background: #f9f9f9;
+}
+
+.generic-map-wrapper {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  transform-origin: top left;
+}
+
+.generic-map-inner {
+  display: block;
+  width: 100%;
+  height: auto;
+  user-select: none;
+  pointer-events: none;
+}
+
+.generic-map-marker-layer {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+}
+
+.generic-map-marker,
+.generic-map-user-marker,
+.generic-map-locked-area {
+  font-size: 1.5rem;
+  line-height: 1;
+  text-align: center;
+  transition: transform 0.2s ease, opacity 0.2s ease;
+}
+
+.generic-map-marker {
+  cursor: pointer;
+}
+
+.generic-map-marker:hover {
+  transform: scale(1.2);
+}
+
+.generic-map-user-marker {
+  font-size: 2rem;
+  color: red;
+}
+
+.generic-map-locked-area {
+  background: rgba(0, 0, 0, 0.6);
+  color: #fff;
+  font-weight: bold;
+  border: 2px dashed #ffcc00;
+  border-radius: 6px;
+  text-align: center;
+  cursor: not-allowed;
+}
+
+.generic-map-minimap {
+  position: absolute;
+  bottom: 10px;
+  right: 10px;
+  border: 2px solid #333;
+  background: #fff;
+  padding: 4px;
+  border-radius: 6px;
+}
+
+.generic-map-minimap img {
+  width: 160px;
+  height: auto;
+  display: block;
+}
+
+.generic-map-minimap-viewport {
+  position: absolute;
+  border: 2px solid #00aaff;
+  background: rgba(0, 170, 255, 0.2);
+  pointer-events: none;
+}
+
+.generic-map-zoom-controls {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  background: rgba(255, 255, 255, 0.9);
+  padding: 6px;
+  border-radius: 6px;
+  border: 1px solid #ccc;
+}
+
+.generic-map-btn {
+  background: #0078d7;
+  color: #fff;
+  border: none;
+  border-radius: 4px;
+  padding: 4px 8px;
+  cursor: pointer;
+  font-size: 1rem;
+  transition: background 0.2s ease;
+}
+
+.generic-map-btn:hover {
+  background: #005fa3;
+}
+
+.generic-map-zoom-controls input[type="range"] {
+  writing-mode: bt-lr; 
+  transform: rotate(270deg);
+  margin: 8px auto;
+}
+
+.generic-map-info-panel {
+  position: absolute;
+  bottom: 10px;
+  left: 10px;
+  background: #fff;
+  border: 1px solid #ccc;
+  border-radius: 6px;
+  padding: 10px;
+  width: 200px;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.2);
+}
+
+.generic-map-info-panel h3 {
+  margin: 0 0 6px;
+  font-size: 1.1rem;
+  color: #0078d7;
+}
+
+.generic-map-info-close {
+  position: absolute;
+  top: 4px;
+  right: 6px;
+  background: transparent;
+  border: none;
+  font-size: 1.2rem;
+  cursor: pointer;
+}
+
+.generic-map-legend {
+  background: #fff;
+  border: 1px solid #ccc;
+  border-radius: 6px;
+  padding: 6px 10px;
+  font-size: 0.9rem;
+}
+
+.generic-map-legend div {
+  margin: 2px 0;
+} */

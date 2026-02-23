@@ -1,0 +1,112 @@
+/* Container for the tab content */
+/* #merch-tab {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 20px;
+  justify-content: center;
+  padding: 20px;
+  background: #f9f9f9;
+  border-radius: 10px;
+} */
+
+.merchcon {
+  padding: 0.6rem 0;
+  gap: 0.6rem;
+  justify-content: center;
+}
+
+/* Individual merch card */
+.merch-card {
+  border: 1px solid var(--color-fg);
+  border-radius: 12px;
+  padding: 8px;
+  max-width: 250px;
+  width: 100%;
+  box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.1);
+  transition: transform 0.3s ease-in-out, box-shadow 0.3s ease-in-out;
+  overflow: hidden;
+}
+
+.merch-card:hover {
+  box-shadow: 0px 6px 15px rgba(0, 0, 0, 0.2);
+}
+
+/* Merch images */
+.merch-card img {
+  width: 100%;
+  height: 220px;
+  object-fit: cover;
+  border-radius: 10px;
+  transition: transform 0.3s ease-in-out;
+}
+
+.merch-card:hover img {
+  transform: scale(1.05);
+}
+
+/* Merch title */
+
+/* Price and availability */
+.merch-card p {
+  font-size: 14px;
+  margin: 4px 0;
+}
+
+/* Action button */
+.merch-actions {
+  margin-top: 12px;
+}
+
+.merch-actions button {
+  background: linear-gradient(135deg, #ff7eb3, #ff758c);
+  color: white;
+  border: none;
+  padding: 10px 16px;
+  font-size: 14px;
+  font-weight: bold;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: background 0.3s ease-in-out, transform 0.2s ease-in-out;
+}
+
+.merch-actions button:hover {
+  background: linear-gradient(135deg, #ff5e8a, #ff3d67);
+  transform: scale(1.05);
+}
+
+.merch-actions button:active {
+  transform: scale(0.95);
+}
+
+/* .merch-card {
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    padding: 10px;
+    margin: 10px;
+    text-align: center;
+    max-width: 200px;
+    width: 100%;
+  }
+  
+  .merch-card img {
+    max-width: 100%;
+    border-radius: 4px;
+  }
+  
+  .merch-card h3 {
+    margin: 10px 0;
+  }
+  
+  .merch-card button {
+    padding: 5px 10px;
+    background-color: #4caf50;
+    color: white;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+  }
+  
+  .merch-card button:hover {
+    background-color: #45a049;
+  }
+   */

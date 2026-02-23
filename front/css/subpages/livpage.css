@@ -1,0 +1,173 @@
+/* --- GENERAL LAYOUT --- */
+.live-layout {
+    display: flex;
+    flex-direction: row;
+    gap: 1rem;
+    align-items: flex-start;
+  }
+  
+  .live-header {
+    display: flex;
+    flex-direction: column;
+    margin-bottom: 1rem;
+  }
+  
+  .live-header-info {
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+  }
+  
+  .live-title {
+    font-size: 1.6rem;
+    font-weight: 600;
+    margin: 0;
+  }
+  
+  .live-creator {
+    font-size: 0.95rem;
+    opacity: 0.8;
+  }
+  
+  /* --- BANNER --- */
+  .live-banner {
+    width: 100%;
+    max-height: 280px;
+    object-fit: cover;
+    margin-bottom: 1rem;
+  }
+  
+  /* --- VIDEO --- */
+  .live-video-wrapper {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    position: relative;
+  }
+  
+  .live-video {
+    width: 100%;
+    height: auto;
+    max-height: 70vh;
+    border: none;
+    outline: none;
+  }
+  
+  .offline-message {
+    text-align: center;
+    font-style: italic;
+    margin-top: 0.5rem;
+  }
+  
+  /* --- SIDEBAR --- */
+  .live-sidebar {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    min-width: 150px;
+  }
+  
+  .like-btn,
+  .follow-btn {
+    padding: 0.5rem 1rem;
+    border: none;
+    cursor: pointer;
+  }
+  
+  /* --- CHAT SECTION --- */
+  .live-chat {
+    display: flex;
+    flex-direction: column;
+    border-top: 1px solid currentColor;
+    margin-top: 1rem;
+    padding-top: 0.5rem;
+  }
+  
+  .chat-title {
+    font-size: 1.1rem;
+    font-weight: 500;
+    margin-bottom: 0.5rem;
+  }
+  
+  .chat-log {
+    display: flex;
+    flex-direction: column;
+    overflow-y: auto;
+    max-height: 250px;
+    padding: 0.5rem;
+    border: 1px solid currentColor;
+    border-radius: 3px;
+  }
+  
+  .chat-message,
+  .chat-system {
+    display: flex;
+    gap: 0.25rem;
+    padding: 0.25rem 0;
+  }
+  
+  .chat-system {
+    font-style: italic;
+    opacity: 0.7;
+  }
+  
+  .chat-user {
+    font-weight: 600;
+  }
+  
+  .chat-text {
+    flex: 1;
+    word-wrap: break-word;
+  }
+  
+  .chat-form {
+    display: flex;
+    gap: 0.5rem;
+    margin-top: 0.5rem;
+  }
+  
+  .chat-input {
+    flex: 1;
+    padding: 0.4rem 0.6rem;
+    border: 1px solid currentColor;
+    border-radius: 3px;
+  }
+  
+  .chat-send-btn {
+    padding: 0.4rem 0.8rem;
+    cursor: pointer;
+  }
+  
+  /* --- LOGIN REMINDER --- */
+  .login-reminder {
+    margin-top: 1rem;
+    text-align: center;
+    font-style: italic;
+  }
+  
+  /* --- STATS --- */
+  .live-stats {
+    display: flex;
+    gap: 1.5rem;
+    justify-content: center;
+    margin-top: 1rem;
+  }
+  
+  .live-views,
+  .live-likes {
+    font-weight: 500;
+  }
+  
+  /* --- RESPONSIVE --- */
+  @media (max-width: 800px) {
+    .live-layout {
+      flex-direction: column;
+    }
+  
+    .live-sidebar {
+      flex-direction: row;
+      justify-content: center;
+    }
+  }
+  

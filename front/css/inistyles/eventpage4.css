@@ -1,0 +1,185 @@
+/* Container */
+.eventpage {
+  display: flex;
+  flex-direction: column;
+  /* padding: 1rem; */
+  max-width: 800px;
+  margin: auto;
+}
+
+/* Event Card */
+.eventpage .eventx-card {
+  display: flex;
+  flex-direction: column;
+  /* border-radius: 12px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1); */
+  overflow: hidden;
+}
+
+/* Banner Section */
+.eventpage .event-banner {
+  width: 100%;
+  aspect-ratio: 7/3;
+  position: relative;
+  object-fit: cover;
+}
+
+.eventpage .banner-section {
+  aspect-ratio: 7/3;
+  width: 100%;
+  position: relative;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  background: #e6e6e6;
+}
+
+.eventpage .event-banner-image {
+  width: 100%;
+  height: auto;
+  object-fit: cover;
+  aspect-ratio: 7/3;
+}
+
+/* Event Info */
+.eventpage .event-info {
+  padding: 1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.eventpage .event-header-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.eventpage .eventpage-details {
+  flex: 1;
+}
+
+.eventpage .event-title {
+  font-size: 1.5rem;
+  margin: 0;
+}
+
+.eventpage .event-status {
+  font-weight: bold;
+  color: #0078d4;
+}
+
+.eventpage .event-date {
+  font-size: 0.9rem;
+  color: #666;
+}
+
+.eventpage .event-description {
+  font-size: 0.95rem;
+  margin-top: 0.5rem;
+}
+
+/* Status Tag */
+/* .eventpage .event-header-row span:first-of-type {
+  background-color: #999;
+  color: white;
+  border-radius: 4px;
+  padding: 2px 6px;
+  font-size: 0.75rem;
+} */
+
+/* Save Icon */
+/* .eventpage .event-header-row span[title="Save Event"] {
+  font-size: 20px;
+  color: gray;
+  cursor: pointer;
+} */
+
+/* Place Link */
+.eventpage .event-info a {
+  color: #0078d4;
+  text-decoration: none;
+}
+
+/* Action Buttons */
+.eventpage .event-actions {
+  display: flex;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+  margin-top: 1rem;
+}
+
+/* Tabs */
+/* .eventpage .tabs-container {
+  margin-top: 2rem;
+}
+
+.eventpage .tab-buttons {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin-bottom: 1rem;
+}
+
+.eventpage .tab-button {
+  padding: 0.5rem 1rem;
+  background-color: #e1e1e1;
+  border-radius: 6px;
+  cursor: pointer;
+  font-weight: 500;
+}
+
+.eventpage .tab-button.active {
+  background-color: #0078d4;
+  color: white;
+}
+
+.eventpage .tab-contents {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.eventpage .tab-content {
+  display: none;
+}
+
+.eventpage .tab-content.active {
+  display: block;
+  background: white;
+  padding: 1rem;
+  border-radius: 8px;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.1);
+} */
+
+/* Venue Image */
+.eventpage .venue-container {
+  margin-top: 2rem;
+  display: flex;
+  justify-content: center;
+}
+
+.eventpage .venue-container img {
+  max-width: 100%;
+  border-radius: 8px;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
+}
+
+.seatingcon {
+  max-height: 300px;
+  position: relative;
+  margin-bottom: 2rem;
+  border: 1px solid #ddd;
+}
+
+.seatmap, .event-seating {
+  position: relative;
+  max-height: 300px;
+}
+
+.seatmap img {
+  aspect-ratio: 2/1;
+  object-fit: contain;
+  width: 100%;
+}

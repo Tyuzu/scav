@@ -1,0 +1,96 @@
+.mini-audio {
+  width: 100%;
+  max-width: 400px;
+  background: #1a1a1a;
+  color: #fff;
+  border-radius: 10px;
+  font-family: sans-serif;
+  padding: 10px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.5);
+}
+
+.thumbnail-wrapper {
+  position: relative;
+  width: 100%;
+  height: auto;
+  cursor: pointer;
+}
+
+.audio-thumbnail {
+  width: 100%;
+  border-radius: 6px;
+  display: block;
+}
+
+.overlay-icon {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 3rem;
+  height: 3rem;
+  color: white;
+  background: rgba(0,0,0,0.6);
+  padding: 10px;
+  border-radius: 50%;
+  pointer-events: none;
+}
+
+.seek-bar {
+  width: 100%;
+  margin: 8px 0;
+  padding: 0;
+}
+
+.time-display {
+  display: flex;
+  justify-content: space-between;
+  font-size: 0.9rem;
+  color: #ccc;
+}
+
+.controls {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-top: 8px;
+}
+
+.controls .btn {
+  background: none;
+  border: none;
+  color: #fff;
+  font-size: 1.2rem;
+  cursor: pointer;
+}
+
+.controls .btn.active {
+  color: #00e676;
+}
+
+.volume-slider, .speed-select {
+  flex: 1;
+}
+
+.volume-slider {
+  appearance: none;
+  height: 4px;
+  background: #555;
+  border-radius: 4px;
+  outline: none;
+}
+
+.speed-select {
+  background: #222;
+  color: #fff;
+  border: 1px solid #444;
+  padding: 2px 6px;
+  border-radius: 4px;
+  font-size: 0.9rem;
+}
+
+.mini-audio svg {
+  stroke: #fff;
+  width: 3rem;
+  height: 3rem;
+}

@@ -1,0 +1,52 @@
+
+  
+  /* 🔍 Filters */
+  .user-orders-page .filters {
+    display: flex;
+    gap: 15px;
+    flex-wrap: wrap;
+    margin-bottom: 20px;
+  }
+  .user-orders-page .filters label {
+    display: flex;
+    flex-direction: column;
+    font-weight: 600;
+  }
+  .user-orders-page .filters select,
+  .user-orders-page .filters input[type="date"],
+  .user-orders-page .filters button {
+    padding: 8px;
+    border: 1px solid #cbd5e0;
+    border-radius: 6px;
+    margin-top: 4px;
+  }
+  
+  /* 📋 Orders Table */
+  .user-orders-page .orders-table {
+    width: 100%;
+    border-collapse: collapse;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.05);
+  }
+  .user-orders-page .orders-table th,
+  .user-orders-page .orders-table td {
+    padding: 12px;
+    border: 1px solid #e2e8f0;
+    text-align: center;
+  }
+  .user-orders-page .orders-table th {
+    /* background-color: #ebf8ff; */
+    font-weight: bold;
+  }
+  .user-orders-page .orders-table td button {
+    padding: 6px 10px;
+    margin: 2px;
+    background-color: #4299e1;
+    border: none;
+    color: white;
+    border-radius: 4px;
+    cursor: pointer;
+  }
+  .user-orders-page .orders-table td button:hover {
+    background-color: #2b6cb0;
+  }
+  

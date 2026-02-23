@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <title>Farmium</title>
+  <meta name="description"
+    content="Farmium provides fast client-side navigation, lightweight components, and excellent performance using only vanilla JavaScript." />
+  <meta name="keywords" content="vanilla js, spa, mongodb, golang, frontend, webapp, router, farmium, js application" />
+  <meta name="author" content="Your Name or Org" />
+  <meta name="theme-color" content="#ffffff" />
+
+  <!-- Open Graph -->
+  <meta property="og:title" content="Farmium" />
+  <meta property="og:description" content="A fast single-page application built without frameworks." />
+  <meta property="og:type" content="website" />
+  <meta property="og:url" content="https://indium.netlify.app/" />
+  <meta property="og:image" content="https://indium.netlify.app/assets/preview.png" />
+
+  <!-- Twitter -->
+  <meta name="twitter:card" content="summary_large_image" />
+  <meta name="twitter:title" content="Farmium" />
+  <meta name="twitter:description" content="A performance-focused SPA built in pure JavaScript." />
+  <meta name="twitter:image" content="https://indium.netlify.app/assets/preview.png" />
+
+  <!-- Icons & Manifest -->
+  <link rel="manifest" href="/manifest.json" />
+  <link rel="sitemap" type="application/xml" href="/sitemap.xml" />
+  <link rel="icon" href="/assets/favicon.ico" type="image/x-icon" />
+
+  <!-- Preconnects -->
+  <link rel="preconnect" href="https://bannerdrop.onrender.com" crossorigin>
+  <link rel="preconnect" href="https://gallium.onrender.com" crossorigin>
+
+  <!-- Cache Control -->
+  <meta http-equiv="Cache-Control" content="public, max-age=31536000, immutable" />
+
+  <!-- Load CSS properly -->
+  <link rel="stylesheet" href="/css/style.css" />
+
+  <!-- Inline critical layout fix -->
+  <style>
+    html,
+    body {
+      margin: 0;
+      padding: 0;
+      font-family: var(--font-base, sans-serif);
+      background-color: var(--color-bg, #fff);
+      color: var(--color-fg, #000);
+    }
+
+    .vflex {
+      display: flex;
+      flex-direction: column;
+      gap: 0.6rem;
+    }
+
+    .hvflex {
+      display: flex;
+      flex-wrap: wrap;
+    }
+
+    .hflexcen {
+      display: flex;
+      width: 100%;
+      max-width: 400px;
+      justify-content: center;
+    }
+
+    .vflexcen {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    /* 
+    .app {
+      max-width: var(--max-width, 1200px);
+      margin: 0 auto;
+      padding: var(--container-padding, 16px);
+    } */
+
+    main {
+      padding: 0.6rem;
+      min-height: 100vh;
+      /* margin-bottom: 4rem; */
+    }
+  </style>
+
+  <!-- Dynamic head updates -->
+  <script>
+    window.updateHeadTag = (name, value, attr = "content") => {
+      const el = document.querySelector(`${name.startsWith('meta') ? name : `meta[name='${name}']`}`);
+      if (el) el.setAttribute(attr, value);
+    };
+  </script>
+</head>
+
+<body>
+  <noscript>
+    <p>JavaScript is disabled in your browser. Please enable it for full functionality.</p>
+    <p>Alternatively, use the non-JavaScript version:
+      <a href="#">Plaintext HTML version</a>
+    </p>
+  </noscript>
+
+  <div id="app" class="app">
+    <header id="pageheader" class="pageheader"></header>
+    <nav id="primary-nav" class="primary-nav"></nav>
+    <div id="secondary-nav" class="secondary-nav"></div>
+    <main id="content" class="content-main"></main>
+    <div id="modalcon"></div>
+    <footer id="pagefooter" class="pagefooter"></footer>
+  </div>
+
+  <script type="module" src="/js/app.js"></script>
+</body>
+
+</html>

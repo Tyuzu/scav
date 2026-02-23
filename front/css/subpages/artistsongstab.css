@@ -1,0 +1,143 @@
+/* ===== Songs Table ===== */
+.songs-table {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    margin-top: 1rem;
+    width: 100%;
+    font-family: system-ui, sans-serif;
+  }
+  
+  /* ===== Song Row ===== */
+  .song-row {
+    display: grid;
+    grid-template-columns: auto 50px 1fr auto;
+    align-items: center;
+    gap: 12px;
+    padding: 8px 12px;
+    border-radius: 6px;
+    transition: background 0.2s ease;
+  }
+  
+  .song-row:hover {
+    background: rgba(255, 255, 255, 0.08);
+  }
+  
+  /* ===== Play Button ===== */
+  .song-play-btn {
+    /* background: none; */
+    border: none;
+    cursor: pointer;
+    width: 40px;
+    height: 40px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;
+    transition: background 0.2s ease, transform 0.2s ease;
+  }
+  
+  .song-play-btn:hover {
+    background: #1db954;
+    transform: scale(1.05);
+    color: #000;
+  }
+  
+  .song-play-btn svg {
+    width: 24px;
+    height: 24px;
+  }
+  
+  /* ===== Poster ===== */
+  .song-poster {
+    width: 50px;
+    height: 50px;
+    object-fit: cover;
+    border-radius: 4px;
+  }
+  
+  /* ===== Info Section ===== */
+  .song-info {
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+  }
+  
+  .song-title {
+    font-weight: 600;
+    font-size: 14px;
+    margin-bottom: 2px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  
+  .song-meta {
+    font-size: 13px;
+  }
+  
+  .song-desc {
+    font-size: 12px;
+    margin-top: 2px;
+  }
+  
+  /* ===== Actions ===== */
+  .song-actions {
+    display: flex;
+    gap: 6px;
+  }
+  
+  .song-actions .button {
+    border: 1px solid #444;
+    padding: 4px 8px;
+    font-size: 12px;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: background 0.2s ease, border-color 0.2s ease;
+  }
+  
+  .song-actions .button:hover {
+    background: #1db954;
+    border-color: #1db954;
+    color: #000;
+  }
+  
+  /* ===== Songs Footer ===== */
+  .songs-footer {
+    margin-top: 1rem;
+    padding: 12px 16px;
+    border-top: 1px solid #333;
+    border-radius: 6px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+  
+  .songs-footer button {
+    border: 1px solid #444;
+    padding: 6px 12px;
+    font-size: 13px;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: background 0.2s ease, border-color 0.2s ease;
+  }
+  
+  .songs-footer button:hover {
+    background: #1db954;
+    border-color: #1db954;
+    color: #000;
+  }
+  
+  .songs-footer button.active {
+    background: #1db954;
+    border-color: #1db954;
+    color: #000;
+  }
+  
+  .songs-footer audio {
+    flex: 1;
+    max-width: 600px;
+    border-radius: 4px;
+    visibility: hidden;
+  }
+  

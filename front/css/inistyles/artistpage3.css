@@ -1,0 +1,328 @@
+.artistpage {
+  max-width: 960px;
+  margin: auto;
+  border-radius: 8px;
+}
+
+/* Flex utilities */
+.hflex {
+  display: flex;
+  gap: 12px;
+}
+
+.hflex-sb {
+  display: flex;
+  width: 100%;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.hvflex-sb {
+  display: flex;
+  flex-wrap: wrap;
+  width: 100%;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.hcen {
+  justify-content: center;
+  margin: 16px 0;
+}
+
+/* Photo section */
+.photocon {
+  max-width: 720px;
+  width: 100%;
+  margin: 16px auto;
+  align-items: center;
+}
+
+.artist-photo {
+  flex: 1 3 30%;
+  border-radius: 50%;
+  aspect-ratio: 1 / 1;
+}
+
+.artist-banner {
+  flex: 3 1 70%;
+  border-radius: 8px;
+  aspect-ratio: 7 / 3;
+}
+
+.artist-photo, .artist-banner {
+  display: flex;
+  margin: 0 auto;
+  object-fit: cover;
+  position: relative;
+  background-color: #aaaaaaa7;
+  height: 100%;
+  width: 100%;
+}
+
+/* === Artist Container === */
+.artist-container {
+  padding: var(--space-sm);
+  /* max-width: var(--max-width-md); */
+  margin: var(--space-md) auto;
+}
+
+/* === Artist Name === */
+.artist-name {
+  font-family: var(--font-heading);
+  font-size: var(--font-size-xxl);
+  font-weight: var(--font-weight-bold);
+  line-height: var(--line-height-heading);
+  margin-bottom: var(--space-md);
+  color: var(--color-accent);
+}
+
+/* === Artist Details === */
+.artist-details p {
+  font-size: var(--font-size-base);
+  line-height: var(--line-height-base);
+  margin: var(--space-xs) 0;
+  color: var(--color-muted);
+}
+
+.artist-details strong {
+  color: var(--color-fg);
+  font-weight: var(--font-weight-medium);
+}
+
+/* === Band Members Section === */
+.band-members {
+  margin-top: var(--space-md);
+}
+
+.band-members p {
+  font-weight: var(--font-weight-bold);
+  margin-bottom: var(--space-sm);
+}
+
+/* === Member Grid === */
+.member-grid {
+  display: flex;
+  /* display: grid; */
+  /* grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); */
+  gap: var(--space-md);
+  margin-bottom: var(--space-md);
+  overflow-x: auto;
+  scroll-snap-type: x mandatory;
+}
+
+/* Optional horizontal scroll for mobile */
+@media (max-width: 640px) {
+  .member-grid {
+    display: flex;
+    overflow-x: auto;
+    gap: var(--space-md);
+    padding-bottom: var(--space-sm);
+    scroll-snap-type: x mandatory;
+  }
+  .member-card {
+    flex: 0 0 auto;
+    scroll-snap-align: start;
+    /* min-width: 120px; */
+  }
+}
+
+/* === Member Card === */
+.member-card {
+  background-color: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-full);
+  padding: var(--space-sm);
+  box-shadow: var(--shadow-elev-1);
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  transition: transform var(--transition-fast), box-shadow var(--transition-fast);
+}
+
+.member-card:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-elev-2);
+}
+
+.member-photo {
+  /* width: 72px; */
+  /* height: 72px; */
+  width: 6rem;
+  height: 6rem;
+  border-radius: var(--radius-full);
+  object-fit: cover;
+  /* border: 1px solid var(--color-input-border); */
+  background: var(--color-space);
+  margin-bottom: var(--space-sm);
+}
+
+.member-info {
+  display: flex;
+  flex-direction: column;
+}
+
+.member-info span {
+  font-size: var(--font-size-sm);
+  color: var(--color-fg);
+  margin-bottom: var(--space-sm);
+}
+
+/* === Buttons === */
+/* .buttonx {
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-medium);
+  padding: var(--space-xs) var(--space-md);
+  border-radius: var(--radius-sm);
+  border: none;
+  cursor: pointer;
+  transition: background var(--transition-fast), color var(--transition-fast);
+}
+
+.buttonx.button {
+  background: var(--color-btn-bg);
+  color: var(--color-btn-fg);
+}
+
+.buttonx.button:hover {
+  background: var(--color-btn-hover-bg);
+}
+
+.buttonx.secondary {
+  background: var(--color-surface);
+  color: var(--color-accent);
+  border: 1px solid var(--color-border);
+}
+
+.buttonx.secondary:hover {
+  background: var(--color-space);
+} */
+
+/* === Social Links === */
+.socials {
+  margin-top: var(--space-md);
+}
+
+.socials p {
+  font-weight: var(--font-weight-bold);
+  margin-bottom: var(--space-xs);
+}
+
+.social-link {
+  display: inline-block;
+  color: var(--color-link);
+  font-size: var(--font-size-sm);
+  text-decoration: none;
+  transition: color var(--transition-fast);
+}
+
+.social-link:hover {
+  color: var(--color-accent);
+  text-decoration: underline;
+}
+
+/* === Utility Buttons === */
+.edit-artist-btn,
+.del-artist-btn,
+.manage-members-btn {
+  margin-top: var(--space-sm);
+  display: inline-block;
+}
+
+.albums-container {
+  margin-top: 1.5rem;
+}
+
+.albums-wrapper {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  margin-top: 0.5rem;
+}
+
+.album-block {
+  border: 1px solid #ccc;
+  padding: 1rem;
+  border-radius: 6px;
+}
+
+.album-block h3 {
+  margin: 0 0 0.5rem 0;
+  font-size: 1.2rem;
+}
+
+.album-block p {
+  margin: 0.25rem 0;
+}
+
+
+/* Artist Info */
+/* .artist-container {
+  padding: 12px;
+} */
+
+/* .artist-name {
+  font-size: 1.75rem;
+  margin-bottom: 8px;
+}
+
+.artist-details p {
+  margin: 6px 0;
+  font-size: 0.95rem;
+} */
+
+/* Band Members */
+/* .band-members {
+  margin-top: 16px;
+}
+
+.band-members ul {
+  display: flex;
+  overflow: auto;
+}
+
+.member-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 12px;
+}
+
+.member-photo {
+  width: 60px;
+  height: 60px;
+  object-fit: cover;
+  border-radius: 50%;
+  box-shadow: 0 0 3px rgba(0, 0, 0, 0.1);
+}
+
+.member-text span {
+  font-size: 0.95rem;
+} */
+
+/* Socials */
+/* .socials {
+  margin-top: 16px;
+}
+
+.social-link {
+  display: inline-block;
+  margin-top: 4px;
+  color: #0077cc;
+  text-decoration: none;
+  font-size: 0.95rem;
+}
+
+.social-link:hover {
+  text-decoration: underline;
+} */
+
+/* Edit/Delete Buttons */
+/* .edit-artist-btn,
+.del-artist-btn {
+  margin-top: 16px;
+  margin-right: 8px;
+} */

@@ -1,0 +1,223 @@
+.farmpage {
+  max-width: 960px;
+  margin: 0 auto;
+}
+
+/* === Header & Breadcrumbs === */
+.farm-header .breadcrumbs {
+  font-size: var(--font-size-sm);
+  margin-bottom: var(--space-md);
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-xs);
+}
+
+/* === Layout === */
+.farm-layout {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-lg);
+}
+
+@media (min-width: 768px) {
+  .farm-layout {
+    flex-direction: row;
+    align-items: flex-start;
+  }
+
+  .farm-main {
+    flex: 3;
+  }
+
+  .farm-aside {
+    flex: 1;
+  }
+}
+
+/* === Banner === */
+
+.crop-banner {
+  aspect-ratio: 7/3;
+  object-fit: cover;
+  width: 100%;
+  position: relative;
+}
+
+.farm-banner {
+  position: relative;
+  margin-bottom: var(--space-md);
+}
+
+.farm-banner img {
+  width: 100%;
+  height: auto;
+  aspect-ratio: 7/3;
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-elev-1);
+  object-fit: cover;
+}
+
+
+/* === Farm Details === */
+.farm-detail h2 {
+  font-size: var(--font-size-xl);
+  margin-bottom: var(--space-sm);
+}
+
+.farm-detail p {
+  margin: var(--space-xs) 0;
+  font-size: var(--font-size-sm);
+}
+
+.farm-actions {
+  display: flex;
+  gap: var(--space-sm);
+  margin-top: var(--space-sm);
+}
+
+/* === Crop Header === */
+.farmpage .crop-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin: var(--space-md) 0;
+  flex-wrap: wrap;
+  gap: var(--space-sm);
+}
+
+.farmpage .crop-sort-select {
+  padding: var(--space-xs);
+  font-size: var(--font-size-sm);
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--color-border);
+}
+
+/* === Crop List === */
+.farmpage .crop-list {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: var(--space-md);
+}
+
+@media (min-width: 600px) {
+  .farmpage .crop-list {
+    grid-template-columns: 1fr 1fr;
+  }
+}
+
+.farmpage .crop-card {
+  background-color: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  padding: var(--space-md);
+  box-shadow: var(--shadow-elev-1);
+  /* text-align: center; */
+}
+
+.farmpage .crop__image {
+  width: 100%;
+  max-width: 200px;
+  height: auto;
+  border-radius: var(--radius-sm);
+  margin-bottom: var(--space-sm);
+}
+
+.farmpage .crop-card h4 {
+  font-size: var(--font-size-lg);
+  margin-bottom: var(--space-xs);
+}
+
+.farmpage .crop-card p {
+  font-size: var(--font-size-sm);
+  margin: var(--space-xs) 0;
+}
+
+.farmpage .crop-card .buttonx {
+  margin: var(--space-xs);
+}
+
+/* === Crop Edit Form === */
+.farmpage .crop-edit-form {
+  margin-top: var(--space-lg);
+  background-color: var(--color-surface);
+  padding: var(--space-lg);
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-elev-2);
+}
+
+.farmpage .crop-edit-form h2 {
+  font-size: var(--font-size-xl);
+  margin-bottom: var(--space-md);
+  text-align: center;
+}
+
+.farmpage .form-group {
+  display: flex;
+  flex-direction: column;
+  margin-bottom: var(--space-md);
+}
+
+.farmpage .form-group label {
+  font-size: var(--font-size-lg);
+  margin-bottom: var(--space-xs);
+  color: var(--color-muted);
+}
+
+.farmpage .form-group input,
+.farmpage .form-group select,
+.farmpage .form-group textarea {
+  padding: var(--space-sm);
+  font-size: var(--font-size-base);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  background-color: var(--color-bg);
+  color: var(--color-fg);
+}
+
+.farmpage .form-group textarea {
+  resize: vertical;
+  min-height: 80px;
+}
+
+.farmpage button[type="submit"] {
+  background-color: var(--color-btn-bg);
+  color: var(--color-btn-fg);
+  padding: var(--space-sm) var(--space-md);
+  border: none;
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  display: block;
+  margin: var(--space-md) auto 0;
+}
+
+/* === Aside Section === */
+.farmpage .farm-aside {
+  background-color: var(--color-surface);
+  padding: var(--space-md);
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-elev-1);
+}
+
+.farmpage .farm-aside .buttonx {
+  margin-bottom: var(--space-sm);
+  width: 100%;
+}
+
+.farmpage .crop-summary,
+.farmpage .crop-distribution,
+.farmpage .review-block {
+  margin-top: var(--space-md);
+  font-size: var(--font-size-sm);
+}
+
+.farmpage .review-block button {
+  margin-top: var(--space-xs);
+  width: 100%;
+}
+
+.deleted-crop {
+  opacity: 0.55;
+  filter: grayscale(1);
+  border: 2px dashed #b33;
+  padding: 12px;
+}

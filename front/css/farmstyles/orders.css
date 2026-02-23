@@ -1,0 +1,229 @@
+/* .orders-page {
+    padding: 20px;
+  } */
+  
+  /* 🔍 Filters */
+  .orders-page .filters {
+    display: flex;
+    gap: 15px;
+    flex-wrap: wrap;
+    margin-bottom: 20px;
+  }
+  .orders-page .filters label {
+    display: flex;
+    flex-direction: column;
+    font-weight: 500;
+  }
+  .orders-page .filters select,
+  .orders-page .filters input[type="date"],
+  .orders-page .filters button {
+    padding: 6px 10px;
+    border: 1px solid #ccc;
+    border-radius: 6px;
+    margin-top: 4px;
+  }
+  
+  /* ✅ Bulk Actions */
+  .orders-page .bulk-actions {
+    margin-bottom: 15px;
+  }
+  .orders-page .bulk-actions button {
+    margin-right: 10px;
+    background-color: #008236;
+    border: none;
+    padding: 8px 15px;
+    color: white;
+    border-radius: 6px;
+    cursor: pointer;
+  }
+  .orders-page .bulk-actions button:hover {
+    background-color: #027e3c;
+  }
+  
+  /* 📋 Orders Table */
+  .orders-page .orders-table {
+    width: 100%;
+    border-collapse: collapse;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+  }
+  .orders-page .orders-table th,
+  .orders-page .orders-table td {
+    padding: 12px;
+    border: 1px solid #ddd;
+    text-align: center;
+  }
+  .orders-page .orders-table th {
+    /* background-color: #edf2f7; */
+    font-weight: 600;
+  }
+  .orders-page .orders-table td button {
+    padding: 6px 10px;
+    margin: 2px;
+    background-color: #0056b9;
+    border: none;
+    color: white;
+    border-radius: 4px;
+    cursor: pointer;
+  }
+  .orders-page .orders-table td button:hover {
+    background-color: #015096;
+  }
+  
+  /* 📦 Checkbox Styling */
+  .orders-page input[type="checkbox"] {
+    transform: scale(1.2);
+  }
+  .orders-table {
+    width: 100%;
+    border-collapse: collapse;
+  }
+  
+  .orders-table th,
+  .orders-table td {
+    padding: 0.5rem;
+    border: 1px solid #ccc;
+    text-align: left;
+  }
+  
+  @media (max-width: 768px) {
+    .orders-table {
+      display: none;
+    }
+  
+    .orders-cards {
+      display: flex;
+      flex-direction: column;
+      gap: 1rem;
+    }
+  
+    .order-card {
+      border: 1px solid #ccc;
+      border-radius: 6px;
+      padding: 1rem;
+    }
+  
+    .order-card p {
+      margin: 0.25rem 0;
+    }
+  
+    .order-actions {
+      display: flex;
+      gap: 0.5rem;
+      flex-wrap: wrap;
+      margin-top: 0.5rem;
+    }
+  
+    .order-actions button {
+      flex: 1;
+    }
+  }
+  
+
+/**/
+
+
+/* .orders-page {
+    padding: 1rem;
+    font-family: sans-serif;
+  }
+   */
+  /* 🔍 Filters Section */
+  /* .orders-page .filters {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 1rem;
+    margin-bottom: 1.5rem;
+    align-items: center;
+  }
+  
+  .orders-page .filters label {
+    display: flex;
+    flex-direction: column;
+    font-weight: 500;
+    font-size: 0.95rem;
+  }
+  
+  .orders-page .filters select,
+  .orders-page .filters input[type="date"] {
+    padding: 0.4rem 0.6rem;
+    font-size: 0.9rem;
+    margin-top: 0.3rem;
+  }
+  
+  .orders-page .filters button {
+    padding: 0.5rem 1rem;
+    font-weight: 600;
+    background-color: #2c7be5;
+    color: #fff;
+    border: none;
+    border-radius: 3px;
+    cursor: pointer;
+    margin-top: 1.25rem;
+  }
+  
+  .orders-page .filters button:hover {
+    background-color: #1a68d1;
+  } */
+  
+  /* ✅ Bulk Actions */
+  /* .orders-page .bulk-actions {
+    display: flex;
+    gap: 0.75rem;
+    margin-bottom: 1rem;
+  }
+  
+  .orders-page .bulk-actions button {
+    padding: 0.5rem 1rem;
+    font-size: 0.9rem;
+    background: #e0e0e0;
+    border: none;
+    border-radius: 3px;
+    cursor: pointer;
+  }
+  
+  .orders-page .bulk-actions button:hover {
+    background: #d0d0d0;
+  }
+   */
+  /* 📋 Orders Table */
+  /* .orders-page .orders-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.9rem;
+  }
+  
+  .orders-page .orders-table thead {
+    background: #f5f5f5;
+  }
+  
+  .orders-page .orders-table th,
+  .orders-page .orders-table td {
+    padding: 0.75rem 0.6rem;
+    border: 1px solid #ddd;
+    text-align: left;
+    vertical-align: middle;
+  }
+  
+  .orders-page .orders-table th {
+    font-weight: 600;
+  }
+  
+  .orders-page .orders-table td button {
+    margin-right: 0.4rem;
+    padding: 0.3rem 0.6rem;
+    font-size: 0.85rem;
+    background: #e5e5e5;
+    border: none;
+    border-radius: 3px;
+    cursor: pointer;
+  }
+  
+  .orders-page .orders-table td button:hover {
+    background: #d5d5d5;
+  }
+  
+  .orders-page input[type="checkbox"] {
+    transform: scale(1.1);
+    cursor: pointer;
+  } */
+  

@@ -1,0 +1,57 @@
+.ad-card {
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    overflow: hidden;
+    background: #fff;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    position: relative;
+    transition: transform 0.3s ease;
+  }
+  
+  .ad-card:hover {
+    box-shadow: 0 3px 8px rgba(0, 0, 0, 0.637);
+  }
+  
+  .ad-card img {
+    width: 100%;
+    display: block;
+  }
+  
+  .ad-content {
+    padding: 0.8rem;
+  }
+  
+  .ad-content h3 {
+    margin: 0 0 0.4rem;
+    font-size: 1.1rem;
+  }
+  
+  .ad-content p {
+    margin: 0 0 0.8rem;
+    font-size: 0.9rem;
+    color: #555;
+  }
+  
+  .ad-content a {
+    color: var(--color-btn-bg);
+    text-decoration: none;
+    font-weight: 600;
+  }
+  
+  .ad-progress {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    height: 4px;
+    background: var(--color-btn-bg);
+    width: 0%;
+  }
+  
+  @keyframes progressAnim {
+    from { width: 0%; }
+    to { width: 100%; }
+  }
+  
+  .fade-in { opacity: 1; transition: opacity 0.3s ease-in; }
+  .fade-out { opacity: 0; transition: opacity 0.3s ease-out; }
+  

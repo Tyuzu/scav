@@ -1,0 +1,38 @@
+
+.rolling-ad-area {
+    position: relative;
+    max-width: 400px;   /* cap the width */
+    width: 100%;        /* responsive within parent */
+    margin: 0 auto;     /* center it horizontally */
+    box-sizing: border-box;
+    transition: opacity 0.5s ease-in-out;
+  }
+  .rolling-ad-area.fade-in {
+    opacity: 1;
+  }
+  .rolling-ad-area.fade-out {
+    opacity: 0;
+  }
+  .rolling-ad-link {
+    display: block;
+    text-decoration: none;
+    color: inherit;
+  }
+  .rolling-ad-caption {
+    position: absolute;
+    width: 100%;
+    bottom: 10px;
+    left: 10px;
+    background: rgba(0,0,0,0.5);
+    color: #fff;
+    padding: 6px 10px;
+    border-radius: 4px;
+    font-size: 0.9rem;
+  }
+  .rolling-ad-area img,
+  .rolling-ad-area picture {
+    width: 100%;
+    height: auto;
+    border-radius: 6px;
+  }
+  

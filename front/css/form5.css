@@ -1,0 +1,81 @@
+.crop-edit-form {
+  background-color: var(--color-surface);
+  padding: var(--space-lg);
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-elev-2);
+  max-width: 600px;
+  margin: 0 auto;
+  font-family: var(--font-body);
+  color: var(--color-fg);
+}
+
+.crop-edit-form h2 {
+  font-size: var(--font-size-xl);
+  font-family: var(--font-heading);
+  margin-bottom: var(--space-md);
+  text-align: center;
+}
+
+.form-group {
+  display: flex;
+  flex-direction: column;
+  margin-bottom: var(--space-md);
+}
+
+.form-group label {
+  font-size: var(--font-size-md);
+  margin-bottom: var(--space-xs);
+  color: var(--color-muted);
+}
+
+.form-group input,
+.form-group select,
+.form-group textarea {
+  padding: var(--space-sm);
+  font-size: var(--font-size-base);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  background-color: var(--color-bg);
+  color: var(--color-fg);
+  transition: border-color var(--transition-fast);
+}
+
+.form-group input:focus,
+.form-group select:focus,
+.form-group textarea:focus {
+  border-color: var(--color-accent);
+  outline: none;
+}
+
+.form-group textarea {
+  resize: vertical;
+  min-height: 80px;
+}
+
+.form-group input[type="checkbox"] {
+  width: auto;
+  margin-right: var(--space-sm);
+}
+
+button[type="submit"] {
+  background-color: var(--color-btn-bg);
+  color: var(--color-btn-fg);
+  font-size: var(--font-size-base);
+  padding: var(--space-sm) var(--space-md);
+  border: none;
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  transition: background-color var(--transition-fast);
+  display: block;
+  margin: var(--space-md) auto 0;
+}
+
+button[type="submit"]:hover {
+  background-color: var(--color-btn-hover-bg);
+}
+
+@media (max-width: 600px) {
+  .crop-edit-form {
+    padding: var(--space-md);
+  }
+}

@@ -1,0 +1,137 @@
+/* === Media Gallery Container === */
+#artist-fanmade,
+#artist-posts {
+  /* background-color: var(--color-bg); */
+  /* color: var(--color-fg); */
+  /* font-family: var(--font-body); */
+  /* padding: var(--space-md); */
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-card);
+  max-width: var(--max-width);
+  margin: 0 auto;
+}
+
+/* === Title === */
+.fanmade-title .media-title {
+  font-size: var(--font-size-xl);
+  font-weight: var(--font-weight-bold);
+  margin-bottom: var(--space-md);
+  line-height: var(--line-height-heading);
+}
+
+
+/* === Media List Layout === */
+.fanmade-list,
+.media-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-md);
+  margin-top: var(--space-md);
+}
+
+/* === Individual Media Group === */
+.fanmade-group,
+.media-group {
+  background-color: var(--color-card-bg);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-card);
+  box-shadow: var(--shadow-card);
+  padding: var(--space-sm);
+  width: calc(50% - var(--space-md));
+  box-sizing: border-box;
+}
+
+/* === Media Item === */
+.fanmade-item,
+.media-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+/* === Image and Video Thumbnails === */
+.fanmade-img,
+.fanmade-video-thumb {
+  width: 100%;
+  height: auto;
+  border-radius: var(--radius-sm);
+  object-fit: cover;
+  background-color: var(--color-space);
+}
+
+/* === Video Wrapper and Overlay === */
+.video-wrapper {
+  position: relative;
+  width: 100%;
+}
+
+.video-play-overlay {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  font-size: var(--font-size-xl);
+  color: var(--color-btn-fg);
+  background-color: var(--color-overlay);
+  padding: var(--space-xs);
+  border-radius: var(--radius-full);
+  pointer-events: none;
+}
+
+/* === Caption === */
+.fanmade-caption,
+.media-caption {
+  margin-top: var(--space-sm);
+  font-size: var(--font-size-sm);
+  color: var(--color-muted);
+  text-align: center;
+}
+
+/* === Translation Toggle === */
+.translate-toggle {
+  margin-top: var(--space-xs);
+  font-size: var(--font-size-xs);
+  color: var(--color-link);
+  cursor: pointer;
+  text-align: center;
+}
+
+/* === Translation Container === */
+.translation-container {
+  margin-top: var(--space-xs);
+  font-size: var(--font-size-sm);
+  color: var(--color-fg);
+}
+
+/* === Action Buttons === */
+.fanmade-actions,
+.media-actions {
+  display: flex;
+  justify-content: center;
+  gap: var(--space-sm);
+  margin-top: var(--space-sm);
+}
+
+.delete-fanmade-btn,
+.report-btn {
+  background-color: var(--color-surface);
+  color: var(--color-fg);
+  border: 1px solid var(--color-border);
+  padding: var(--space-xs) var(--space-sm);
+  border-radius: var(--radius-sm);
+  font-size: var(--font-size-sm);
+  cursor: pointer;
+  transition: background-color var(--transition-fast);
+}
+
+.delete-fanmade-btn:hover,
+.report-btn:hover {
+  background-color: var(--color-highlight);
+}
+
+/* === Responsive Layout === */
+@media (max-width: 768px) {
+  .fanmade-group {
+    width: 100%;
+  }
+}

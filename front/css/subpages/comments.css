@@ -1,0 +1,138 @@
+/* Scoped to .comments-section */
+.comments-section {
+  width: 100%;
+  backdrop-filter: blur(12px);
+  border-radius: 12px;
+  max-width: 720px;
+  margin: auto;
+}
+
+/* Sort dropdown */
+.comments-section .comment-sort {
+  font-size: 14px;
+  padding: 8px;
+  border-radius: 6px;
+  border: 1px solid #ccc;
+  margin-bottom: 16px;
+}
+
+/* Comment list */
+.comments-section .comments-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+/* Individual comment */
+.comments-section .comment {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  padding: 6px;
+  border-bottom: 1px solid var(--color-fg);
+  transition: box-shadow 0.3s ease;
+}
+
+.comments-section .comment:hover {
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+/* Avatar */
+.comments-section .comment-avatar {
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  object-fit: cover;
+  box-shadow: 0 0 0 2px #0078d4;
+}
+
+/* Right side of comment */
+.comments-section .comment-right {
+  flex: 1;
+}
+
+/* Header: username and timestamp */
+.comments-section .comment-header {
+  display: flex;
+  justify-content: space-between;
+  font-size: 13px;
+  margin-bottom: 6px;
+}
+
+.comments-section .comment-username {
+  font-weight: 600;
+  color: #0078d4;
+}
+
+.comments-section .comment-timestamp {
+  font-style: italic;
+}
+
+/* Body */
+.comments-section .comment-body p {
+  margin: 0;
+  font-size: 15px;
+}
+
+/* Actions */
+.comments-section .comment-actions {
+  margin-top: 8px;
+  display: flex;
+  gap: 8px;
+}
+
+
+/* Load more button */
+.comments-section .comment-load-more {
+  text-align: center;
+  margin-top: 16px;
+}
+
+.load-more-comments {
+  background-color: #0078d4;
+  color: white;
+  font-weight: 500;
+}
+
+.load-more-comments:hover {
+  background-color: #005ea2;
+}
+
+/* Comment form */
+.comments-section .comment-form {
+  margin-bottom: 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.comments-section .comment-input {
+  resize: vertical;
+  min-height: 60px;
+  padding: 10px;
+  font-size: 14px;
+  border-radius: 8px;
+  border: 1px solid #ccc;
+  transition: border-color 0.2s ease;
+}
+
+.comments-section .comment-input:focus {
+  border-color: #0078d4;
+  outline: none;
+}
+
+.comments-section .comment-form button[type="submit"] {
+  align-self: flex-end;
+  background-color: #0078d4;
+  color: white;
+  padding: 8px 16px;
+  font-size: 14px;
+  border-radius: 6px;
+  border: none;
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+}
+
+.comments-section .comment-form button[type="submit"]:hover {
+  background-color: #005ea2;
+}

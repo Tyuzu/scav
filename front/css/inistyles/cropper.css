@@ -1,0 +1,35 @@
+.crop-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.8);
+    z-index: 9999;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    flex-direction: column;
+  }
+  
+  .crop-container {
+    position: relative;
+    touch-action: none;
+    user-select: none;
+    flex-grow: 1;
+    width: 100vw;
+    height: 100vh;
+    overflow: hidden;
+  }
+  
+  .crop-box {
+    pointer-events: none;
+    border: 2px solid white;
+    box-shadow: 0 0 0 9999px rgba(0,0,0,0.5);
+    position: absolute;
+    z-index: 10;
+  }
+  
+  .crop-buttons {
+    margin-top: 10px;
+    display: flex;
+    gap: 10px;
+  }
+  

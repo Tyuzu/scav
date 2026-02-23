@@ -1,0 +1,135 @@
+.baitosdashpage {
+    max-width: 900px;
+    margin: auto;
+    border-radius: 10px;
+    /* box-shadow: 0 0 10px rgba(0,0,0,0.05); */
+  }
+  
+  /* Filter Section */
+  .filter-section {
+    margin-bottom: 20px;
+  }
+  
+  #status-filter {
+    padding: 8px;
+    border-radius: 6px;
+    border: 1px solid #ccc;
+    font-size: 0.95rem;
+  }
+  
+  /* Application Cards */
+  .application-list {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+  }
+  
+  .application-card {
+    padding: 16px;
+    border-radius: 8px;
+    box-shadow: 0 0 6px rgba(0,0,0,0.05);
+  }
+  
+  .application-card h4 {
+    font-size: 1.1rem;
+    margin-bottom: 8px;
+    color: #0077cc;
+  }
+  
+  .application-card .meta {
+    font-size: 0.9rem;
+    margin-bottom: 6px;
+  }
+  
+  .application-card .status {
+    font-weight: bold;
+    margin-bottom: 6px;
+  }
+  
+  .application-card p {
+    margin: 4px 0;
+    font-size: 0.9rem;
+  }
+  
+  /* Action Buttons */
+  .action-row {
+    display: flex;
+    gap: 10px;
+    margin-top: 10px;
+  }
+  
+  .btn {
+    padding: 8px 12px;
+    border-radius: 6px;
+    font-size: 0.9rem;
+    cursor: pointer;
+    border: none;
+    transition: background 0.3s ease;
+  }
+  
+  .btn-secondary {
+    background: #0077cc;
+    color: white;
+  }
+  
+  .btn-secondary:hover {
+    background: #005fa3;
+  }
+  
+  .btn-danger {
+    background: #ff4d4f;
+    color: white;
+  }
+  
+  .btn-danger:hover {
+    background: #d9363e;
+  }
+  
+  /* Posted Baitos Section */
+  /* .main-content {
+    max-width: 900px;
+    margin: 40px auto 20px;
+    padding: 20px;
+    background: #fff;
+    border-radius: 10px;
+    box-shadow: 0 0 10px rgba(0,0,0,0.05);
+  } 
+
+   */
+  .baito-admin-list {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+  }
+  
+  .baito-admin-card {
+    padding: 16px;
+    border-radius: 8px;
+    box-shadow: 0 0 6px rgba(0,0,0,0.05);
+  }
+  
+  .baito-admin-card h4 {
+    font-size: 1.1rem;
+    margin-bottom: 6px;
+    color: #0077cc;
+  }
+  
+  .baito-admin-card p {
+    font-size: 0.9rem;
+    margin-bottom: 10px;
+  }
+  
+  .btn-outline {
+    padding: 8px 12px;
+    border: 1px solid #0077cc;
+    background: transparent;
+    color: #0077cc;
+    border-radius: 6px;
+    cursor: pointer;
+  }
+  
+  .btn-outline:hover {
+    background: #0077cc;
+    color: white;
+  }
+  

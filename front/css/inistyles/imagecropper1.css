@@ -1,0 +1,103 @@
+.crop-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    background: rgba(0,0,0,0.75);
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    z-index: 10000;
+    padding: 1rem;
+    box-sizing: border-box;
+  }
+  
+  .crop-container {
+    position: relative;
+    width: 90vw;
+    max-width: 400px;
+    background: #111;
+    border-radius: 12px;
+    overflow: hidden;
+    touch-action: none;
+    user-select: none;
+    /* aspect-ratio controlled inline via JS */
+    box-shadow: 0 0 15px rgba(0,0,0,0.8);
+  }
+  
+  .crop-container img {
+    cursor: grab;
+    transition: transform 0.15s ease-out;
+    user-select: none;
+    -webkit-user-drag: none;
+  }
+  
+  .crop-container:active img,
+  .crop-container.dragging img {
+    cursor: grabbing;
+    transition: none;
+  }
+  
+  .crop-buttons {
+    margin-top: 1rem;
+    width: 90vw;
+    max-width: 400px;
+    display: flex;
+    justify-content: space-between;
+    gap: 1rem;
+  }
+  
+  .crop-buttons button {
+    flex: 1;
+    padding: 0.75rem 1rem;
+    font-size: 1rem;
+    border-radius: 8px;
+    border: none;
+    background-color: #222;
+    color: #eee;
+    cursor: pointer;
+    user-select: none;
+    transition: background-color 0.2s ease;
+    -webkit-tap-highlight-color: transparent;
+  }
+  
+  .crop-buttons button.btn-confirm {
+    background-color: #1a73e8;
+    color: white;
+  }
+  
+  .crop-buttons button.btn-confirm:hover,
+  .crop-buttons button.btn-confirm:focus {
+    background-color: #155ab6;
+    outline: none;
+  }
+  
+  .crop-buttons button.btn-cancel {
+    background-color: #444;
+    color: #ccc;
+  }
+  
+  .crop-buttons button.btn-cancel:hover,
+  .crop-buttons button.btn-cancel:focus {
+    background-color: #666;
+    outline: none;
+  }
+  
+  /* Mobile optimizations */
+  @media (max-width: 480px) {
+    .crop-container {
+      width: 95vw;
+      max-width: none;
+      border-radius: 8px;
+    }
+    .crop-buttons {
+      width: 95vw;
+    }
+    .crop-buttons button {
+      font-size: 1.1rem;
+      padding: 1rem;
+    }
+  }
+  

@@ -1,0 +1,91 @@
+/* .video-player {
+    width: 100%;
+    max-width: 800px;
+    border: 2px solid #ddd;
+    border-radius: 8px;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  }
+   */
+@import url(Sightbox.css);
+@import url(Vidpop.css);
+
+#video-player.fullscreen {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  z-index: 9999;
+  background: black;
+}
+
+#main-video {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+}
+
+.video-controls {
+  position: absolute;
+  bottom: 10px;
+  left: 0;
+  width: 100%;
+  background: rgba(0, 0, 0, 0.6);
+  transition: opacity 0.3s ease;
+}
+
+.video-controls.hidden {
+  opacity: 0;
+  pointer-events: none;
+}
+
+.controls {
+  position: absolute;
+  bottom: 10px;
+  left: 0;
+  width: 100%;
+  background: rgba(0, 0, 0, 0.6);
+  transition: opacity 0.3s ease;
+}
+
+.controls:not(.visible) {
+  opacity: 0;
+  pointer-events: none;
+}
+
+#video-player.fullscreen {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  background: black;
+  z-index: 9999;
+}
+
+.fullscreen-button {
+  position: absolute;
+  bottom: 15px;
+  right: 15px;
+  padding: 5px 10px;
+  background: white;
+  border: none;
+  cursor: pointer;
+}
+
+#video-player .controlcon {
+  width: 100%;
+}
+#video-player .controlcon {
+  display: flex;
+  flex-direction: column;
+  position: absolute;
+  bottom: 0;
+  width: 100%;
+  background: linear-gradient(0deg, black, transparent);
+  /* padding: 10px; */
+  color: #fff;
+  opacity: 0;
+  transform: translateY(100%);
+  transition: opacity 0.3s ease, transform 0.3s ease;
+}

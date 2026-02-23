@@ -1,0 +1,409 @@
+#feedpostcon {
+  max-width: 720px;
+  /* max-width: calc(100vw - 105px); */
+  width: 100%;
+  /* margin: 0 auto; */
+}
+
+/* Feed item container */
+#feedpostcon .feed-item {
+  border-radius: 12px;
+  margin-bottom: 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+/* Header */
+#feedpostcon .feed-item .post-header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  text-decoration: none;
+  color: inherit;
+}
+
+#feedpostcon .feed-item .user-icon {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+#feedpostcon .feed-item .user-icon img {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  object-fit: cover;
+}
+
+#feedpostcon .feed-item .user-time {
+  display: flex;
+  flex-direction: column;
+}
+
+#feedpostcon .feed-item .username {
+  font-weight: 600;
+  font-size: 15px;
+}
+
+#feedpostcon .feed-item .timestamp {
+  font-size: 13px;
+}
+
+/* Media */
+
+/* Media container */
+#feedpostcon .feed-item .post-media {
+  width: 100%;
+  position: relative;
+  border: 1px solid #ddd;
+}
+
+#feedpostcon .feed-item .video-container {
+  width: 100%;
+  position: relative;
+}
+
+#feedpostcon .feed-item .videocon video {
+  width: 100%;
+  height: auto;
+  max-height: 70vh;
+  display: block;
+  /* border-bottom: 1px solid #eee; */
+  background: #000;
+}
+
+/* Show Controls on Hover*/
+#feedpostcon .feed-item .videocon:hover .vcon {
+  opacity: 1;
+}
+
+#feedpostcon .feed-item .vcon {
+  position: absolute;
+  bottom: 0;
+  background: linear-gradient(0deg, rgb(0, 0, 0), transparent);
+  color: #fff;
+  opacity: 0;
+  transition: opacity 0.3s ease, transform 0.3s ease;
+  align-items: center;
+  padding: 0 6px;
+  /* border-top: 1px solid #eee; */
+}
+
+#feedpostcon .feed-item .quality-selector {
+  padding: 6px 8px;
+  border-radius: 6px;
+  border: 1px solid #ddd;
+  font-size: 14px;
+  width: auto;
+}
+
+#feedpostcon .feed-item .logoicon {
+  cursor: pointer;
+  padding: 6px;
+  border-radius: 6px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+#feedpostcon .feed-item .logoicon:hover {
+  filter: drop-shadow(1px 1px #ffffff);
+  background-color: black;
+  border-radius: 50%;
+}
+
+/* Meta */
+
+#feedpostcon .feed-item .post-header-actions {
+  border: 1px solid #ddd;
+  padding: 0.6rem;
+  border-radius: 6px;
+}
+
+#feedpostcon .feed-item .post-media-meta {
+  /* border: 1px solid #ddd; */
+  padding: 0.6rem;
+  border-radius: 6px;
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+}
+
+#feedpostcon .feed-item .post-meta {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 0 0.4rem;
+}
+
+#feedpostcon .feed-item .post-title {
+  font-size: 18px;
+  font-weight: 600;
+  margin: 0;
+}
+
+#feedpostcon .feed-item .post-description {
+  font-size: 14px;
+  margin: 0;
+}
+
+#feedpostcon .feed-item .tags {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+#feedpostcon .feed-item .tag {
+  background-color: #4f4f4f;
+  color: white;
+  font-size: 12px;
+  padding: 4px 10px;
+  border-radius: 20px;
+}
+
+/* Actions */
+.post-actions {
+  display: flex;
+  align-items: center;
+  gap: var(--space-md);
+  padding: var(--space-sm) var(--space-md);
+  font-family: var(--font-body);
+  color: var(--color-fg);
+}
+
+/* === Action Buttons === */
+.post-actions .more-btn,
+.post-actions .comment,
+.post-actions .like {
+  background: none;
+  border: none;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-xs);
+  font-size: var(--font-size-base);
+  color: var(--color-muted);
+  transition: color var(--transition-fast);
+}
+
+.post-actions button:hover {
+  color: var(--color-accent);
+}
+
+/* === Like Button === */
+.post-actions .like svg {
+  stroke: var(--color-muted);
+  transition: stroke var(--transition-fast);
+}
+
+.post-actions .like:hover svg {
+  stroke: var(--color-accent);
+}
+
+.post-actions .liked svg {
+  stroke: var(--color-error);
+}
+
+.post-actions .liked span {
+  color: var(--color-error);
+  font-weight: bold;
+}
+
+/* === Comment Button === */
+.post-actions .comment svg {
+  stroke: var(--color-muted);
+  transition: stroke var(--transition-fast);
+}
+
+.post-actions .comment:hover svg {
+  stroke: var(--color-accent);
+}
+
+/* === More Button and Dropdown === */
+.post-actions .more-wrapper {
+  position: relative;
+  display: flex;
+}
+
+.post-actions .more-btn svg {
+  stroke: var(--color-muted);
+  transition: stroke var(--transition-fast);
+}
+
+.post-actions .more-btn:hover svg {
+  stroke: var(--color-accent);
+}
+
+.post-actions .dropdown {
+  position: absolute;
+  bottom: calc(100% + var(--space-xs));
+  right: 0;
+  background-color: var(--color-bg);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  box-shadow: var(--shadow-elev-2);
+  display: flex;
+  flex-direction: column;
+  min-width: 120px;
+  z-index: 10;
+}
+
+.post-actions .dropdown.hidden {
+  display: none;
+}
+
+.post-actions .dropdown button {
+  padding: var(--space-sm) var(--space-md);
+  font-size: var(--font-size-sm);
+  text-align: left;
+  /* background: none; */
+  border: none;
+  color: var(--color-fg);
+  cursor: pointer;
+  transition: background-color var(--transition-fast);
+}
+
+.post-actions .dropdown button:hover {
+  background-color: var(--color-space);
+}
+
+/* === Edit Button Style === */
+.post-actions .edit-btn.button {
+  background-color: var(--color-btn-bg);
+  color: var(--color-btn-fg);
+  border-radius: var(--radius-sm);
+  margin: var(--space-xs);
+  padding: var(--space-xs) var(--space-sm);
+  font-size: var(--font-size-sm);
+  transition: background-color var(--transition-fast);
+}
+
+.post-actions .edit-btn.button:hover {
+  background-color: var(--color-btn-hover-bg);
+}
+
+
+/* base wrapper for videos inside posts */
+.video-wrapper {
+  position: relative;
+  display: block;
+  width: 100%;
+  max-width: 100%;
+  margin: 0;
+  transition: box-shadow .18s ease, transform .12s ease;
+  border-radius: 6px;
+  overflow: hidden;
+  background: #000;
+}
+
+/* video element inside wrapper */
+.video-wrapper video {
+  display: block;
+  width: 100%;
+  height: auto;
+  max-height: 60vh;
+  background: #000;
+}
+
+/* floating clone */
+.video-wrapper.floating {
+  position: fixed;
+  bottom: 10px;
+  right: 10px;
+  width: 370px;
+  max-width: calc(100vw - 32px);
+  max-height: 60vh;
+  z-index: 9999;
+  box-shadow: 0 18px 40px rgba(0,0,0,0.45);
+  border-radius: 10px;
+  overflow: hidden;
+  cursor: grab;
+  transition:
+    transform .12s ease,
+    right .12s ease,
+    left .12s ease,
+    top .12s ease,
+    bottom .12s ease,
+    box-shadow .18s ease;
+}
+
+/* smaller on narrow screens */
+@media (max-width: 480px) {
+  .video-wrapper.floating {
+    width: calc(100vw - 24px);
+    right: 12px;
+    bottom: 12px;
+    max-height: 50vh;
+    border-radius: 8px;
+  }
+}
+
+/* visual feedback while dragging */
+.video-wrapper.floating.dragging {
+  cursor: grabbing;
+  transform: scale(.995);
+  box-shadow: 0 22px 48px rgba(0,0,0,0.55);
+}
+
+/* close button */
+.video-close {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  width: 30px;
+  height: 30px;
+  padding: 0;
+  border: 0;
+  border-radius: 50%;
+  line-height: 30px;
+  font-size: 18px;
+  background: rgba(0,0,0,0.55);
+  color: #fff;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 2;
+  transition: background .12s ease, transform .08s ease;
+}
+
+/* hover affordance (desktop) */
+.video-close:hover { background: rgba(0,0,0,0.75); transform: scale(1.02); }
+
+/* when the floating clone is temporarily hidden */
+.video-wrapper.hidden {
+  visibility: hidden;
+  pointer-events: none;
+  opacity: 0;
+}
+
+/* minimal accessible focus for keyboard users */
+.video-close:focus {
+  outline: 2px solid #fff;
+  outline-offset: 2px;
+}
+
+
+
+/* Responsive */
+@media (max-width: 600px) {
+  /* #feedpostcon .feed-item {
+    padding: 12px;
+  } */
+
+  #feedpostcon .feed-item .video-player {
+    aspect-ratio: 16 / 9;
+  }
+
+  /* 
+  #feedpostcon .feed-item .post-actions {
+    flex-direction: column;
+    align-items: flex-start;
+  } */
+
+  /* #feedpostcon .feed-item .dropdown {
+    right: auto;
+    left: 0;
+  } */
+}

@@ -1,0 +1,148 @@
+  
+  /* === Music App Container === */
+  .musicon {
+    padding: var(--space-md);
+    max-width: var(--max-width);
+    margin: auto;
+  }
+  
+  /* === Toolbar Buttons === */
+  .music-toolbar button,
+  .back-btn {
+    background-color: var(--color-btn-bg);
+    color: var(--color-btn-fg);
+    border: none;
+    padding: var(--space-sm) var(--space-md);
+    margin: var(--space-xs);
+    border-radius: var(--radius-sm);
+    font-weight: var(--font-weight-medium);
+    cursor: pointer;
+    transition: background-color var(--transition-fast);
+  }
+  
+  .music-toolbar button:hover,
+  .back-btn:hover {
+    background-color: var(--color-btn-hover-bg);
+  }
+  
+  /* === Footer Controls === */
+  .songs-footer {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: var(--space-sm);
+    padding: var(--space-md);
+    background-color: var(--color-surface);
+    border-top: 1px solid var(--color-border);
+    box-shadow: var(--shadow-elev-1);
+  }
+  
+  .songs-footer button {
+    background-color: var(--color-btn-bg);
+    color: var(--color-btn-fg);
+    border: none;
+    padding: var(--space-xs) var(--space-sm);
+    border-radius: var(--radius-full);
+    cursor: pointer;
+    transition: background-color var(--transition-fast);
+  }
+  
+  .songs-footer button:hover {
+    background-color: var(--color-btn-hover-bg);
+  }
+  
+  .songs-footer input[type="range"] {
+    margin-left: var(--space-sm);
+    accent-color: var(--color-accent);
+  }
+  
+  /* === Playlist Cards === */
+  .playlist-card {
+    background-color: var(--color-card-bg);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-card);
+    box-shadow: var(--shadow-card);
+    padding: var(--space-md);
+    margin-bottom: var(--space-sm);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--space-sm);
+  }
+  
+  .playlist-card p {
+    font-weight: var(--font-weight-bold);
+    margin: 0;
+  }
+  
+  .playlist-card small {
+    color: var(--color-muted);
+  }
+  
+  .playlist-card button {
+    background-color: var(--color-btn-bg);
+    color: var(--color-btn-fg);
+    border: none;
+    padding: var(--space-xs) var(--space-sm);
+    border-radius: var(--radius-sm);
+    cursor: pointer;
+  }
+  
+  /* === Music Section === */
+  .music-section h3 {
+    font-family: var(--font-heading);
+    font-size: var(--font-size-lg);
+    margin-top: var(--space-lg);
+    margin-bottom: var(--space-sm);
+  }
+  
+  /* === Songs Table === */
+  .songs-table {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-sm);
+  }
+  
+  .song-row {
+    display: flex;
+    align-items: center;
+    gap: var(--space-sm);
+    padding: var(--space-sm);
+    background-color: var(--color-surface);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-sm);
+    box-shadow: var(--shadow-elev-1);
+  }
+  
+  .song-play-btn,
+  .add-to-playlist-btn {
+    background-color: var(--color-btn-bg);
+    color: var(--color-btn-fg);
+    border: none;
+    padding: var(--space-xs) var(--space-sm);
+    border-radius: var(--radius-sm);
+    cursor: pointer;
+  }
+  
+  .song-play-btn:hover,
+  .add-to-playlist-btn:hover {
+    background-color: var(--color-btn-hover-bg);
+  }
+  
+  .song-poster {
+    width: 48px;
+    height: 48px;
+    border-radius: var(--radius-sm);
+    object-fit: cover;
+  }
+  
+  .song-title {
+    font-weight: var(--font-weight-medium);
+    flex-grow: 1;
+  }
+  
+  .song-meta {
+    color: var(--color-muted);
+    font-size: var(--font-size-sm);
+  }
+  

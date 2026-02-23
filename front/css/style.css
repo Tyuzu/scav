@@ -1,0 +1,56 @@
+/**
+ * Main CSS Bundle
+ * 
+ * This file organizes all CSS imports into logical groups:
+ * - Core/Foundation (variables, reset)
+ * - Layout components (header, nav, footer, etc)
+ * - Forms
+ * - Page layouts
+ * - Features (organized by domain: farm, inistyles, subpages)
+ * - UI components
+ * 
+ * This structure:
+ * ✓ Reduces from 50+ top-level imports to 8
+ * ✓ Makes dependency relationships clear
+ * ✓ Enables better tree-shaking
+ * ✓ Improves CSS bundle parsing
+ */
+
+/* Foundation & Core Styles */
+@import url(_core.css);
+
+/* Layout Components */
+@import url(_layout.css);
+
+/* Form Styles */
+@import url(_forms.css);
+
+/* Page Layouts */
+@import url(_pages.css);
+
+/* Feature Bundles */
+@import url(_features-farm.css);
+@import url(_features-inistyles.css);
+@import url(_features-subpages.css);
+
+/* UI Components */
+@import url(_ui.css);
+
+
+/**
+ * CLEANUP TODO:
+ * 
+ * Delete these unused/temp files:
+ * - temp.css (review content, move to appropriate files if needed)
+ * - temp1.css (review content, move to appropriate files if needed)
+ * - inistyles/merechat1.css (currently commented out)
+ * - inistyles/fanmade2.css (currently commented out)
+ * - inistyles/maps.css (currently commented out)
+ * - subpages/seatMap.css (currently commented out)
+ * 
+ * Next Phase - CSS Optimization:
+ * - Migrate to CSS modules or scoped CSS (one per component)
+ * - Extract color/typography/spacing vars to theme1.css
+ * - Remove unused selectors with PurgeCSS
+ * - Add autoprefixer for browser compatibility
+ */

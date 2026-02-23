@@ -1,0 +1,51 @@
+.notification-card {
+    display: flex;
+    align-items: center;
+    background-color: #2c2f33;
+    color: #fff;
+    padding: 12px 16px;
+    margin: 8px 0;
+    border-radius: 8px;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.2);
+    transition: background 0.3s ease;
+  }
+  
+  .notification-card:hover {
+    background-color: #3c3f44;
+  }
+  
+  .notification-icon {
+    flex-shrink: 0;
+    margin-right: 12px;
+    font-size: 24px;
+  }
+  
+  .notification-content {
+    flex-grow: 1;
+  }
+  
+  .notification-message {
+    margin: 0;
+    font-size: 14px;
+  }
+  
+  .notification-time {
+    font-size: 12px;
+    color: #bbb;
+  }
+  
+  .notification-action {
+    background-color: #7289da;
+    color: #fff;
+    border: none;
+    padding: 6px 10px;
+    margin-left: 12px;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: background 0.2s ease;
+  }
+  
+  .notification-action:hover {
+    background-color: #5b6eae;
+  }
+  

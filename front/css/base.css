@@ -1,0 +1,380 @@
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  font-family: var(--font-base);
+  background-color: var(--color-bg);
+  color: var(--color-fg);
+  line-height: 1.5;
+  font-size: var(--font-size-base);
+  margin: 0 auto;
+  width: 100%;
+}
+
+a {
+  color: var(--color-link);
+  text-decoration: none;
+}
+
+a:hover {
+  text-decoration: underline;
+}
+
+p {
+  overflow-wrap: break-word;
+}
+
+hr {
+  border: none;
+  border-top: 1px solid var(--color-border);
+  margin: var(--space-md) 0;
+}
+
+
+.card {
+  background-color: var(--color-bg);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  padding: var(--space-md);
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.05);
+}
+
+/* .input {
+  width: 100%;
+  padding: var(--space-sm) var(--space-md);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  font-size: var(--font-size-base);
+  background-color: var(--color-fg);
+  color: var(--color-bg);
+}
+
+.input:focus {
+  border-color: var(--color-accent);
+  outline: none;
+} */
+
+.label {
+  display: block;
+  margin-bottom: var(--space-xs);
+  font-size: var(--font-size-sm);
+  color: var(--color-muted);
+}
+
+.container {
+  max-width: 960px;
+  margin: 0 auto;
+  padding: var(--space-lg) var(--space-md);
+}
+
+.flex {
+  display: flex;
+  gap: var(--space-md);
+}
+
+.flex-column {
+  flex-direction: column;
+}
+
+.flex-center {
+  align-items: center;
+  justify-content: center;
+}
+
+svg {
+  fill: none;
+  stroke-width: 1.8;
+  stroke: var(--stroke-svg);
+  display: block;
+  /* filter: drop-shadow(1px 1px #ddd); */
+}
+
+.bonw svg {
+  stroke: #fff !important;
+}
+
+video{width: 100%;}
+
+/* ===== Buttons (reuse your .buttonx classes) ===== */
+/* .buttonx{
+  margin-right: 5px;
+  margin-bottom: 5px;
+  border: 1px solid var(--border);
+  background: var(--color-bg);
+  color: var(--color-fg);
+  padding: 6px 8px;
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  transition: transform .06s ease, box-shadow .12s ease, border-color .12s ease, background .2s ease;
+  box-shadow: var(--shadow-elev-1);
+  user-select: none;
+} */
+
+
+.buttonx {
+  width: fit-content;
+  margin: 0 5px 5px 0;
+  padding: 8px 12px;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  background-color: #00796b;
+  color: white;
+}
+
+.buttonx.primary {
+  background-color: #00796b;
+  color: white;
+}
+
+.buttonx.secondary {
+  background-color: #e0f2f1;
+  color: #00796b;
+}
+
+.buttonx:hover {
+  background-color: #004d40;
+  opacity: 0.9;
+}
+
+.buttonx:active {
+  transform: translateY(0);
+}
+
+/* .buttonx.primary{
+  background: linear-gradient(180deg, color-mix(in srgb, var(--accent) 92%, white 8%), var(--accent));
+  color: #fff;
+  border-color: color-mix(in srgb, var(--accent) 65%, var(--border));
+} */
+.buttonx.primary:hover {
+  /* background: linear-gradient(180deg, color-mix(in srgb, var(--accent) 98%, white 2%), var(--accent)); */
+  color: var(--color-bg);
+  background-color: var(--color-fg);
+}
+
+/* .buttonx.secondary{
+  background: color-mix(in srgb, var(--card) 92%, transparent);
+} */
+/* 
+.button {
+  display: inline-block;
+  background-color: var(--color-btn-bg);
+  color: var(--color-btn-fg);
+  border: none;
+  border-radius: var(--radius-md);
+  cursor: pointer;
+  transition: background-color 0.2s ease-in-out;
+}
+
+.button:hover {
+  background-color: var(--color-btn-hover-bg);
+}
+
+.button:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+} */
+
+ul li {
+  list-style-type: none;
+}
+
+textarea {
+  padding: 0.4rem;
+}
+/* 
+main {
+  padding: 0.6rem;
+  min-height: 100vh;
+  margin-bottom: 4rem;
+} */
+
+.places-main,
+.catalogue-main,
+.events-main,
+.baitos-main,
+.worker-main,
+.posts-main,
+.recipes-main,
+.artists-main,
+.workers-main,
+.cropspage {
+  flex: 4;
+  /* padding: 0.4rem; */
+}
+
+.places-main h2,
+.catalogue-main h2,
+.events-main h2,
+.baitosmain h2,
+.worker-main h2,
+.posts-main h2,
+.recipes-main h2,
+.artists-main h2,
+.cropspage h2 {
+  font-size: 1.8rem;
+
+}
+
+aside {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  padding: 0.6rem;
+  gap: 0.8rem;
+}
+
+aside h3 {
+  margin-bottom: 0.4rem;
+  font-size: 1.6rem;
+}
+/* 
+.hvflex {
+  display: flex;
+  flex-wrap: wrap;
+}
+
+.hflexcen {
+  display: flex;
+  width: 100%;
+  max-width: 400px;
+  justify-content: center;
+}
+
+.vflexcen {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+} */
+
+.gap20 {
+  gap: 20px;
+}
+
+.gap10 {
+  gap: 10px;
+}
+
+.pad10 {
+  padding: 10px;
+}
+
+/* For text containers like <div>, <p>, <span>, etc. */
+.word-safe {
+  word-break: break-word;
+  /* Break long words if needed */
+  overflow-wrap: anywhere;
+  /* Wrap anywhere as a last resort */
+}
+
+/* Optional layout control */
+.word-safe {
+  max-width: 100%;
+  white-space: normal;
+  /* Ensure it wraps */
+}
+
+#modalcon input {
+  padding: 0.4rem;
+}
+
+ .chipscon {
+  margin-bottom: 1rem;
+  display: grid;
+} 
+
+.category-chips {
+  flex-wrap: nowrap;
+  display: flex;
+  overflow-x: auto;
+  width: 100%;
+  overflow-y: hidden;
+  padding-right: 0.4rem;
+}
+
+.category-chip {
+  /* flex-grow: 1; */
+  flex-shrink: 0;
+  opacity: 0.9;
+  margin: 0.2rem 4px;
+  overflow: hidden;
+  border-radius: 3px;
+  text-align: center;
+}
+
+.chipper {
+  margin: 0;
+  line-height: 1;
+  display: block;
+  font-weight: 600;
+  transition: background-color .15s ease-in-out;
+  text-decoration: none;
+  padding: 10px;
+}
+
+.category-chip:hover {
+  background-color: #e0e0e0;
+}
+
+/**/
+
+.category-chips::-webkit-scrollbar {
+  width: 0px;
+  height: 0px;
+}
+
+.category-chips::-webkit-scrollbar-thumb {
+  background-color: #555;
+}
+
+.category-chips div:nth-child(7n-6) {
+  background: #81a1ff url(#);
+}
+
+.category-chips div:nth-child(7n-5) {
+  background: #ecec84 url(#);
+}
+
+.category-chips div:nth-child(7n-4) {
+  background: #ffb69b url(#);
+}
+
+.category-chips div:nth-child(7n-3) {
+  background: #ffacbb url(#);
+}
+
+.category-chips div:nth-child(7n-2) {
+  background: #8bc3e5 url(#);
+}
+
+.category-chips div:nth-child(7n-1) {
+  background: #c8bcff url(#);
+}
+
+.category-chips div:nth-child(7n) {
+  background: #7ccaae url(#);
+}
+
+/**/
+
+/* @media (max-width: 600px) {
+  .category-chips {
+    flex-wrap: nowrap;
+    overflow-x: auto;
+    justify-content: flex-start;
+    scrollbar-width: none;
+  }
+
+  .category-chips::-webkit-scrollbar {
+    display: none;
+  }
+
+  .category-chip {
+    flex: 0 0 auto;
+    font-size: 13px;
+    padding: 6px 12px;
+  }
+} */

@@ -1,0 +1,162 @@
+.recipes-page {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-lg);
+  max-width: var(--max-width);
+  margin: 0 auto;
+  background-color: var(--color-bg);
+  color: var(--color-fg);
+}
+
+/* .recipes-main {
+  flex: 1 1 70%;
+} */
+
+.recipes-aside {
+  /* flex: 1 1 25%; */
+  flex: 1;
+  background-color: var(--color-surface);
+  padding: var(--space-md);
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-elev-1);
+}
+
+.recipes-main h1,
+.recipes-aside h3,
+.recipes-aside h4 {
+  font-family: var(--font-heading);
+  font-size: var(--font-size-xl);
+  margin-bottom: var(--space-md);
+}
+/* ────────── Main container ────────── */
+.recipes-main {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 20px;
+  font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+  color: #222;
+}
+
+/* ────────── Header ────────── */
+.recipes-main h1 {
+  font-size: 2rem;
+  margin-bottom: 15px;
+}
+
+/* ────────── Actions / Button container ────────── */
+.recipe-actions {
+  margin-bottom: 20px;
+}
+
+.buttonx {
+  padding: 8px 16px;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+  font-weight: 600;
+  transition: all 0.2s ease;
+}
+
+.buttonx.primary {
+  background-color: #28a745;
+  color: #fff;
+}
+
+.buttonx.primary:hover {
+  background-color: #218838;
+}
+
+/* ────────── Advertisement slot ────────── */
+.advert {
+  margin: 25px 0;
+  padding: 10px;
+  border: 1px solid #ccc;
+  text-align: center;
+  border-radius: 4px;
+}
+
+.advert .ad-slot {
+  min-height: 80px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.9rem;
+}
+
+/* ────────── Recipe list grid ────────── */
+.recipe-list {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+  gap: 20px;
+}
+
+/* ────────── Individual recipe card ────────── */
+.recipe-card {
+  background-color: #fff;
+  border-radius: 8px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+  padding: 15px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.recipe-card:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 4px 16px rgba(0,0,0,0.15);
+}
+
+.recipe-card img.thumbnail {
+  width: 100%;
+  height: 160px;
+  object-fit: cover;
+  border-radius: 6px;
+  margin-bottom: 12px;
+}
+
+.recipe-card h3 {
+  font-size: 1.25rem;
+  margin: 8px 0;
+  text-align: center;
+}
+
+.recipe-card p {
+  font-size: 0.95rem;
+  margin: 4px 0;
+  text-align: center;
+  color: #555;
+}
+
+/* ────────── Tags ────────── */
+.recipe-card .tags {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  margin: 10px 0;
+}
+
+.recipe-card .tag {
+  background-color: #e0e0e0;
+  color: #333;
+  font-size: 0.8rem;
+  padding: 4px 8px;
+  border-radius: 12px;
+  margin: 2px;
+}
+
+/* ────────── Recipe card button ────────── */
+.recipe-card .buttonx {
+  margin-top: auto;
+  width: 100%;
+  text-align: center;
+}
+
+.recipe-card .buttonx.primary {
+  background-color: #007bff;
+  color: #fff;
+}
+
+.recipe-card .buttonx.primary:hover {
+  background-color: #0056b3;
+}

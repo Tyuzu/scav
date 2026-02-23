@@ -1,0 +1,181 @@
+
+
+  .admin-btn {
+    padding: 0.4rem 0.8rem;
+    font-size: 0.9rem;
+    border: 1px solid #ccc;
+    cursor: pointer;
+    transition: background-color 0.2s ease;
+  }
+  
+  .admin-btn:hover:enabled {
+    background-color: #e2e2e2;
+  }
+  
+  .admin-btn:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+  
+  .admin-filters {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 1rem;
+    margin-bottom: 1rem;
+    align-items: center;
+  }
+  
+  .filter-wrapper {
+    display: flex;
+    align-items: center;
+  }
+  
+  .filter-wrapper label {
+    font-weight: bold;
+  }
+  
+  .filter-input {
+    padding: 0.4rem;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    flex: 1;
+  }
+  
+  .admin-summary {
+    margin-bottom: 1rem;
+    font-size: 0.95rem;
+    padding: 0.5rem 0.75rem;
+    border-left: 4px solid #666;
+  }
+  
+  .admin-wrapper {
+    display: flex;
+    gap: 1.5rem;
+  }
+  
+  .admin-reported-list {
+    flex: 2;
+  }
+  
+  .report-card {
+    border: 1px solid #ccc;
+    margin-bottom: 1rem;
+    border-radius: 4px;
+    overflow: hidden;
+    box-shadow: 0 1px 2px rgba(0,0,0,0.05);
+  }
+  
+  .report-header {
+    padding: 0.5rem 1rem;
+    display: flex;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    align-items: center;
+  }
+  
+  .report-header span {
+    margin-right: 1rem;
+    font-size: 0.85rem;
+  }
+  
+  .report-type {
+    font-weight: bold;
+  }
+  
+  .status-pending {
+    background-color: #ffe4b3;
+  }
+  
+  .status-reviewed {
+    background-color: #d7f0ff;
+  }
+  
+  .status-resolved {
+    background-color: #d4f9d2;
+  }
+  
+  .status-rejected {
+    background-color: #fcd6d6;
+  }
+  
+  .report-expanded {
+    padding: 1rem;
+    border-top: 1px solid #ccc;
+  }
+  
+  .report-item p {
+    margin: 0.3rem 0;
+    font-size: 0.85rem;
+  }
+  
+  .status-text {
+    font-weight: bold;
+  }
+  
+  .status-pending.status-text {
+    color: #b36b00;
+  }
+  
+  .notified-pending {
+    font-size: 0.8rem;
+    margin-top: 0.3rem;
+    display: inline-block;
+  }
+  
+  .update-wrapper {
+    margin-top: 0.75rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+  }
+  
+  .update-wrapper select,
+  .update-wrapper textarea {
+    padding: 0.4rem;
+    border: 1px solid #bbb;
+    border-radius: 4px;
+    width: 100%;
+    font-size: 0.9rem;
+  }
+  
+  .update-wrapper textarea {
+    resize: vertical;
+  }
+  
+  .entity-section {
+    border: 1px solid #ccc;
+    padding: 1rem;
+    font-family: monospace;
+    font-size: 0.75rem;
+    border-radius: 4px;
+    overflow-x: auto;
+    max-height: 600px;
+  }
+  
+  .entity-section h4 {
+    margin-top: 0;
+    margin-bottom: 0.5rem;
+    font-size: 1rem;
+  }
+  
+  pre {
+    padding: 0.5rem;
+    white-space: pre-wrap;
+    word-wrap: break-word;
+  }
+  
+  .admin-entity-preview {
+    flex: 1;
+  }
+  
+  .pagination-controls {
+    margin-top: 1rem;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+  }
+  
+  .page-indicator {
+    font-size: 0.9rem;
+  }
+  

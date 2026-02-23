@@ -1,0 +1,124 @@
+#audio-player-container {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  max-width: 600px;
+  margin: auto;
+  /* background: #f4f4f4; */
+  border-radius: 6px;
+  padding: 10px;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+}
+
+.audio-poster {
+  width: 100%;
+  border-radius: 10px;
+  object-fit: cover;
+  max-height: 250px;
+}
+
+.controls-container {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px;
+  justify-content: space-between;
+}
+
+.controls-container button,
+.controls-container select,
+.controls-container input[type="range"] {
+  flex: 1;
+  padding: 8px;
+  border-radius: 6px;
+  border: 1px solid #ccc;
+  font-size: 14px;
+}
+.controls-container input[type="range"] {
+  padding: 0;
+}
+
+.seek-bar,
+.volume-slider {
+  width: 100%;
+}
+
+#lyrics-container {
+  max-height: 200px;
+  overflow-y: auto;
+  background-color: #fff;
+  padding: 10px;
+  border-radius: 8px;
+  /* font-family: sans-serif; */
+  font-size: 14px;
+  line-height: 1.6;
+  border: 1px solid #ddd;
+}
+
+#lyrics-container p {
+  margin: 5px 0;
+  transition: color 0.3s ease;
+}
+
+#lyrics-container p.active {
+  color: var(--color-btn-bg);
+  font-weight: bold;
+}
+
+/* Toggle Buttons */
+.toggle-controls {
+  display: flex;
+  justify-content: space-between;
+  gap: 10px;
+  margin-top: 10px;
+}
+
+.toggle-controls button {
+  flex: 1;
+  cursor: pointer;
+}
+
+/* === DARK MODE === */
+#audio-player-container.dark-mode {
+  background-color: #1e1e1e;
+  color: #f0f0f0;
+}
+
+#audio-player-container.dark-mode .controls-container button,
+#audio-player-container.dark-mode .controls-container select,
+#audio-player-container.dark-mode .controls-container input[type="range"],
+#audio-player-container.dark-mode .toggle-controls button {
+  background-color: #333;
+  color: #fff;
+  border: 1px solid #555;
+}
+
+#audio-player-container.dark-mode #lyrics-container {
+  background-color: #2a2a2a;
+  border-color: #444;
+}
+
+#audio-player-container.dark-mode #lyrics-container p.active {
+  color: #1e90ff;
+}
+
+/* === MINI PLAYER MODE === */
+#audio-player-container.mini-mode .audio-poster,
+#audio-player-container.mini-mode #lyrics-container {
+  display: none;
+}
+
+#audio-player-container.mini-mode {
+  padding: 4px;
+  max-width: 400px;
+}
+.time-display {
+  margin: 0 8px;
+  font-family: monospace;
+}
+
+.buffering-indicator {
+  color: orange;
+  font-size: 0.9em;
+  margin-left: 8px;
+}

@@ -1,0 +1,4 @@
+.weather-extra {
+    display: flex;
+    flex-direction: column;
+}

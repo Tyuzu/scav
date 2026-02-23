@@ -1,0 +1,49 @@
+.plypzstp {
+    position: relative;
+    /* Default: part of normal flow */
+    z-index: 10;
+    display: flex;
+    background-color: var(--color-bg);
+    justify-content: space-around;
+    border: none;
+    width: 100%;
+}
+
+.logoicon {
+    margin: 0 0.2rem;
+    align-items: center;
+    background: none;
+    justify-content: center;
+    display: flex;
+    cursor: pointer;
+}
+
+.logoicon span {
+    align-items: center;
+    display: flex;
+}
+
+
+.play,
+.pause,
+.stop,
+.dld,
+.edit {
+    border: none;
+    cursor: pointer;
+    outline: none;
+    padding: 0;
+}
+
+/* Portrait mobile: fixed at bottom */
+@media (max-width: 767px) and (orientation: portrait) {
+    .plypzstp {
+        position: fixed;
+        width: 100%;
+        height: 42px;
+        bottom: 0;
+        left: 0;
+        top: auto;
+        border-top: 1px solid #ddd;
+    }
+}

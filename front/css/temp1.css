@@ -1,0 +1,15 @@
+.seatingcon {
+    max-height: 600px;
+}
+.seating-wrapper { position:relative; width:100%; max-width:1200px; margin:0 auto; max-height: 600px; }
+.seating-controls { display:flex; gap:8px; align-items:center; padding:8px 0; }
+.seating-tooltip { position:absolute; pointer-events:none; background:rgba(0,0,0,0.8); color:#fff; padding:6px 8px; border-radius:4px; font-size:0.85rem; display:none; z-index:2000; }
+.seating-svg-wrap { border:1px solid #e4e4e4; border-radius:6px; overflow:hidden; background:#fff; }
+.seating-footer { display:flex; gap:12px; align-items:center; padding:8px 0; }
+.selected-list { display:flex; gap:8px; align-items:center; }
+.legend-item { display:flex; gap:6px; align-items:center; font-size:0.9rem; }
+.legend-swatch { width:14px; height:14px; border-radius:2px; display:inline-block; }
+/* seat states (SVG group gets class, inner circle inherits via selector) */
+g.seat-selected > circle { stroke: #000 !important; stroke-width: 2.5 !important; fill: #ffd54f !important; }
+g.seat-sold > circle { fill: #bbb !important; stroke: #999 !important; cursor: not-allowed !important; }
+g.seat-obstructed > circle { fill: #999 !important; }

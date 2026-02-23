@@ -1,0 +1,199 @@
+  /* Layout container */
+  .catalogue-layout {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 24px;
+    margin-top: 1rem;
+  }
+
+  /* Main content */
+  .catalogue-main {
+    flex: 3;
+  }
+
+  /* Sidebar */
+  .catalogue-aside {
+    flex: 1;
+    padding: 10px;
+    border-radius: 12px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+  }
+
+  .catalogue-aside h3 {
+    margin-bottom: 12px;
+    border-bottom: 1px solid #ddd;
+    padding-bottom: 6px;
+  }
+
+  /* Top controls */
+  .top-controls {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px;
+    margin-bottom: 16px;
+  }
+
+  .search-box,
+  .sort-box {
+    padding: 10px 14px;
+    border: 1px solid var(--color-fg);
+    border-radius: 8px;
+    font-size: 14px;
+    background: var(--color-bg);
+    background-blend-mode: color-dodge;
+    color: var(--color-fg);
+    transition: border-color 0.2s ease;
+  }
+
+  .search-box:focus,
+  .sort-box:focus {
+    border-color: #0078d4;
+    outline: none;
+  }
+
+  /* Tabs */
+  .tabs {
+    margin-bottom: 16px;
+  }
+
+  .tabs button {
+    background-color: #0078d4;
+    color: white;
+    border: none;
+    padding: 10px 16px;
+    border-radius: 8px;
+    font-weight: 600;
+    cursor: pointer;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
+  }
+
+  .tabs button.active {
+    background-color: #005a9e;
+  }
+
+  /* Crop grid */
+  .tab-content {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px;
+  }
+
+  /* Crop card */
+  .catalogue-main .crop-card {
+    border-radius: 12px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+    /* padding: 8px; */
+    max-width: 240px;
+    width: 100%;
+    transition: transform 0.2s ease;
+  }
+
+  .catalogue-main .nimgcon {
+    padding: 1rem;
+  }
+
+  .catalogue-main .crop-card:hover {
+    transform: translateY(-4px);
+  }
+
+  .catalogue-main .crop-card img {
+    width: 100%;
+    border-radius: 8px;
+    /* margin-bottom: 12px; */
+    object-fit: cover;
+    aspect-ratio: 4 / 3;
+  }
+
+  .catalogue-main .crop-card h4 {
+    font-size: 18px;
+    margin-bottom: 8px;
+  }
+
+  .crop-info {
+    font-size: 14px;
+    margin-bottom: 8px;
+  }
+
+  .season-indicator {
+    font-size: 14px;
+    font-weight: bold;
+    margin-bottom: 8px;
+  }
+
+  .off-season {
+    color: #d13438;
+  }
+
+  /* View Farms button */
+  /* .crop-card button {
+    background-color: #0078d4;
+    color: white;
+    border: none;
+    padding: 8px 12px;
+    border-radius: 8px;
+    cursor: pointer;
+    font-weight: 500;
+    transition: background-color 0.2s ease;
+  }
+  
+  .crop-card button:hover {
+    background-color: #005a9e;
+  } */
+
+  /* Aside buttons */
+  .cta-list {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-bottom: 16px;
+  }
+
+
+  .action-btn {
+    background-color: #0078d4;
+    color: white;
+  }
+
+  .action-btn:hover {
+    background-color: #005a9e;
+  }
+
+  /* Promo boxes */
+  .promo-box {
+    border-radius: 8px;
+    padding: 12px;
+    margin-top: 8px;
+  }
+
+  .promo-link {
+    display: block;
+    margin-bottom: 6px;
+    color: #0078d4;
+    text-decoration: none;
+    font-size: 14px;
+  }
+
+  .promo-link:hover {
+    text-decoration: underline;
+  }
+
+  .promo-box p {
+    font-size: 14px;
+    margin: 6px 0;
+  }
+
+  /* Responsive tweaks */
+  @media (max-width: 768px) {
+    .catalogue-layout {
+      flex-direction: column;
+    }
+
+    .catalogue-main,
+    .catalogue-aside {
+      min-width: 100%;
+    }
+
+    .tab-content {
+      justify-content: center;
+    }
+  }

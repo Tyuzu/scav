@@ -1,0 +1,23 @@
+.owl {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+  }
+  
+  .owl-image {
+    /* width: 150px; */
+    height: 150px;
+    object-fit: cover;
+    cursor: pointer;
+    border-radius: 4px;
+    transition: transform 0.2s;
+  }
+  .owl img {
+    width: 100%;
+    max-width: 200px;
+    margin: 0.5rem;
+  }
+  
+  .owl-image:hover {
+    transform: scale(1.05);
+  }

@@ -1,0 +1,59 @@
+.insta,
+.yt,
+.soundcloud,
+.twitter,
+.spotify,
+.tiktok,
+.facebook {
+    width: 2.6rem;
+    height: 2.6rem;
+    border-radius: 6px;
+    /* stroke: red;
+    fill: red;
+    background: linear-gradient(270deg, pink, red, pink, red, pink, red, pink, red, pink, red, pink, red, pink, red, pink, red, pink, red, pink, red, pink, red, pink, red, pink, red, pink, red, pink, red, pink, red, pink); */
+}
+
+.insta {
+    stroke: rgb(179, 0, 255);
+    fill: rgb(255, 0, 170);
+}
+
+.yt {
+    stroke: red;
+    fill: red;
+}
+
+.soundcloud {
+    stroke: rgb(255, 115, 0);
+    fill: red;
+}
+
+.twitter {
+    stroke: rgb(0, 51, 255);
+    fill: rgb(0, 34, 255);
+}
+
+.spotify {
+    stroke: rgb(22, 198, 2);
+    fill: rgb(3, 188, 0);
+}
+
+.tiktok {
+    stroke: rgb(0, 0, 0);
+    fill: rgb(0, 0, 0);
+}
+
+.facebook {
+    stroke: rgba(52, 2, 162, 0.382);
+    fill: rgb(14, 0, 163);
+}
+
+.bluesky {
+    stroke: rgba(52, 2, 162, 0.382);
+    fill: rgb(14, 0, 163);
+}
+
+.xitter {
+    stroke: rgba(52, 2, 162, 0.382);
+    fill: rgb(14, 0, 163);
+}

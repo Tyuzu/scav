@@ -1,0 +1,90 @@
+.ticket-card {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  background-color: #ffffff;
+  border-radius: 12px;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+  overflow: hidden;
+  width: 100%;
+  max-width: 320px;
+  margin: 1rem auto;
+  transition: transform 0.3s ease;
+}
+
+.ticket-card:hover {
+  transform: scale(1.02);
+}
+
+
+/* Decorative corner */
+.ticket-card .corner {
+  position: absolute;
+  top: 0;
+  right: 0;
+  width: 0;
+  height: 0;
+  border-top: 40px solid var(--color-btn-bg);
+  border-left: 40px solid transparent;
+}
+
+/* Stripe */
+.stripe-container {
+  height: 8px;
+  background-color: var(--color-btn-bg);
+}
+
+/* Perforation */
+.perforation {
+  height: 6px;
+  background-image: radial-gradient(circle, #fff 1px, transparent 1px);
+  background-size: 6px 6px;
+  background-repeat: repeat-x;
+}
+
+/* Content */
+.ticket-card .content {
+  padding: 1rem;
+}
+
+.ticket-card h2 {
+  margin: 0 0 0.5rem;
+  font-size: 1.5rem;
+  color: var(--color-btn-bg);
+}
+
+.ticket-card p {
+  margin: 0 0 1rem;
+  font-size: 1rem;
+  color: #333;
+}
+
+/* Info section */
+.ticket-card .tickinfo {
+  display: flex;
+  justify-content: space-between;
+  font-size: 0.95rem;
+  color: #555;
+}
+
+.ticket-card .tickinfo span {
+  flex: 1;
+}
+
+/* Responsive */
+@media (max-width: 480px) {
+  .ticket-card {
+    max-width: 100%;
+    margin: 1rem;
+  }
+
+  .ticket-card .tickinfo {
+    flex-direction: column;
+    gap: 0.5rem;
+  }
+
+  .ticket-card .button {
+    font-size: 0.8rem;
+    padding: 5px 10px;
+  }
+}

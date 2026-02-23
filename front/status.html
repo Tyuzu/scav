@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Status Page</title>
+  <style>
+    body {
+      font-family: monospace;
+      background: #0e0e0e;
+      color: #e0e0e0;
+      padding: 2rem;
+    }
+    h1 { color: #00ff90; }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 1rem;
+    }
+    th, td {
+      border-bottom: 1px solid #333;
+      padding: 0.5rem;
+      text-align: left;
+    }
+    .status-up { color: #00ff90; }
+    .status-down { color: #ff4b4b; }
+    .updated { font-size: 0.9em; color: #888; margin-top: 1rem; }
+  </style>
+</head>
+<body>
+  <h1>Status Page</h1>
+  <table id="status-table">
+    <thead>
+      <tr>
+        <th>Service</th>
+        <th>Status</th>
+        <th>Code</th>
+        <th>Latency</th>
+      </tr>
+    </thead>
+    <tbody id="status-body"></tbody>
+  </table>
+  <div class="updated" id="last-updated">Last checked: never</div>
+
+  <script>
+    const services = [
+      { name: "Main", url: "https://gallium.onrender.com/health" },
+      { name: "BannerDrop", url: "https://bannerdrop.onrender.com/health" },
+      { name: "Live", url: "https://vlive.onrender.com/health" },
+      { name: "Chat", url: "https://newchat-4b20.onrender.com/health" },
+      { name: "Mere", url: "https://merechat.onrender.com/health" },
+      { name: "Music", url: "https://musicon.onrender.com/health" }
+    ];
+
+    const createCell = (text, className = "") => {
+      const td = document.createElement("td");
+      td.textContent = text;
+      if (className) td.className = className;
+      return td;
+    };
+
+    async function checkService(service) {
+      const start = performance.now();
+      try {
+        const controller = new AbortController();
+        const timeout = setTimeout(() => controller.abort(), 5000);
+
+        const response = await fetch(service.url, {
+          method: "GET",
+          mode: "cors",
+          signal: controller.signal
+        });
+
+        clearTimeout(timeout);
+        const latency = Math.round(performance.now() - start);
+
+        // Any response means server is up
+        return {
+          name: service.name,
+          status: "up",
+          code: response.status,
+          latency
+        };
+      } catch {
+        return {
+          name: service.name,
+          status: "down",
+          code: "-",
+          latency: "-"
+        };
+      }
+    }
+
+    async function updateStatus() {
+      const tbody = document.getElementById("status-body");
+      tbody.replaceChildren();
+
+      const results = await Promise.all(services.map(checkService));
+
+      results.forEach(result => {
+        const row = document.createElement("tr");
+        const statusClass = result.status === "up" ? "status-up" : "status-down";
+
+        row.appendChild(createCell(result.name));
+        row.appendChild(createCell(result.status.toUpperCase(), statusClass));
+        row.appendChild(createCell(result.code.toString()));
+        row.appendChild(createCell(result.latency === "-" ? "-" : `${result.latency}ms`));
+
+        tbody.appendChild(row);
+      });
+
+      document.getElementById("last-updated").textContent =
+        "Last checked: " + new Date().toLocaleTimeString();
+    }
+
+    updateStatus();
+    setInterval(updateStatus, 30000);
+  </script>
+</body>
+</html>

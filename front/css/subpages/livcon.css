@@ -1,0 +1,106 @@
+/* Wrapper */
+.livcon {
+    display: grid;
+    gap: 1rem;
+    margin-top: 1rem;
+  }
+  
+  /* Grid layout */
+  .livcon.grid {
+    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  }
+  
+  /* List layout */
+  .livcon.list {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+  }
+  
+  /* Card */
+  .live-item {
+    border-radius: 8px;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    transition: box-shadow 0.2s ease, transform 0.2s ease;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.08);
+  }
+  
+  .livcon.list .live-item {
+    flex-direction: row;
+    align-items: stretch;
+  }
+  
+  /* Hover effect - Fluent feel */
+  .live-item:hover {
+    box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+    transform: translateY(-2px);
+  }
+  
+  /* Image wrapper */
+  .live-image {
+    flex-shrink: 0;
+    overflow: hidden;
+  }
+  
+  .live-image img {
+    width: 100%;
+    height: 160px;
+    object-fit: cover;
+  }
+  
+  .livcon.list .live-image img {
+    width: 200px;
+    height: 100%;
+  }
+  
+  /* Details section */
+  .live-details {
+    padding: 0.75rem 1rem;
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 0.35rem;
+  }
+  
+  .live-details h4 {
+    font-size: 1.1rem;
+    font-weight: 600;
+    margin: 0;
+  }
+  
+  .live-details p {
+    font-size: 0.9rem;
+    margin: 0;
+  }
+  
+  /* Buttons */
+  .live-item button {
+    margin: 0.75rem 1rem 1rem 1rem;
+    align-self: flex-start;
+    padding: 0.5rem 0.9rem;
+    border: none;
+    background: #0078d4; /* Fluent blue */
+    color: white;
+    border-radius: 4px;
+    font-size: 0.9rem;
+    cursor: pointer;
+    transition: background 0.2s ease;
+  }
+  
+  .live-item button:hover {
+    background: #106ebe;
+  }
+  
+  /* Responsive adjustments */
+  @media (max-width: 600px) {
+    .livcon.grid {
+      grid-template-columns: 1fr;
+    }
+    
+    .livcon.list .live-image img {
+      width: 140px;
+    }
+  }
+  

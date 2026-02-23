@@ -1,0 +1,73 @@
+  /* === Gallery Lists === */
+  .fanmade-list,
+  .media-list {
+    column-count: 3;
+    column-gap: var(--space-md);
+    column-width: 200px;
+  }
+
+  /* === Gallery Groups === */
+  .fanmade-group,
+  .media-group {
+    margin-top: 1rem;
+    display: flex;
+    justify-content: center;
+  }
+
+  /* === Gallery Items === */
+  .fanmade-item,
+  .media-item {
+    background-color: var(--color-surface);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-md);
+    box-shadow: var(--shadow-elev-1);
+    overflow: hidden;
+    max-width: 100%;
+    text-align: center;
+  }
+
+  .fanmade-img,
+  .media-img {
+    width: 100%;
+    height: auto;
+    display: block;
+    border-bottom: 1px solid var(--color-border);
+  }
+
+  /* === Captions === */
+  .fanmade-caption,
+  .media-caption {
+    font-size: var(--font-size-sm);
+    color: var(--color-muted);
+    padding: var(--space-sm);
+  }
+
+  /* === Actions === */
+  .fanmade-actions,
+  .media-actions {
+    display: flex;
+    justify-content: space-around;
+    padding: var(--space-sm);
+    background-color: var(--color-space);
+    border-top: 1px solid var(--color-border);
+  }
+
+  .delete-fanmade-btn,
+  .delete-media-btn,
+  .report-btn {
+    background-color: var(--color-error);
+    color: var(--color-btn-fg);
+  }
+
+  .report-btn {
+    background-color: var(--color-warning);
+  }
+
+  .delete-fanmade-btn:hover,
+  .delete-media-btn:hover {
+    background-color: #dc2626;
+  }
+
+  .report-btn:hover {
+    background-color: #eab308;
+  }

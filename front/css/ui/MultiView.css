@@ -1,0 +1,46 @@
+.multiview-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  background: rgba(0, 0, 0, 0.8);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 9999;
+}
+
+.multiview-content {
+  position: relative;
+  overflow: hidden;
+  max-width: 100%;
+  justify-content: center;
+  width: 100%;
+  max-height: 100%;
+  display: flex;
+}
+
+.multiview-content img {
+  display: block;
+  max-width: 100%;
+  max-height: 100vh;
+  cursor: grab;
+  transition: transform 0.3s ease-in-out;
+}
+
+.multiview-content img:active {
+  cursor: grabbing;
+}
+
+.multiview-close-btn {
+  position: absolute;
+  background: rgba(0, 0, 0, 0.6);
+  color: white;
+  border: none;
+  padding: 10px 15px;
+  cursor: pointer;
+  z-index: 10;
+}
+
+.multiview-close-btn { top: 10px; right: 10px; }

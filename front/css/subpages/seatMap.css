@@ -1,0 +1,158 @@
+/* seatingMap.css */
+
+/* Wrapper */
+.seating-wrapper {
+    position: relative;
+    width: 100%;
+    max-width: 1200px;
+    margin: 0 auto;
+    font-family: Arial, sans-serif;
+  }
+  
+  /* Controls above seating map */
+  .seating-controls {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+    padding: 8px 0;
+  }
+/*   
+  .seating-controls .buttonx {
+    padding: 4px 10px;
+    font-size: 14px;
+    cursor: pointer;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    transition: 0.2s;
+  }
+  
+  .seating-controls .buttonx:hover {
+    background: #e0e0e0;
+  }
+   */
+  /* Legend */
+  .seating-legend {
+    margin-left: auto;
+    display: flex;
+    gap: 8px;
+    align-items: center;
+  }
+  
+  .legend-item {
+    display: flex;
+    gap: 6px;
+    align-items: center;
+    font-size: 0.9rem;
+  }
+  
+  .legend-color {
+    width: 14px;
+    height: 14px;
+    border-radius: 2px;
+    display: inline-block;
+  }
+  
+  /* SVG container */
+  .seating-svg-wrap {
+    border: 1px solid #e4e4e4;
+    border-radius: 6px;
+    overflow: hidden;
+    background: #fff;
+    margin-bottom: 12px;
+  }
+  
+  /* Stage */
+  .stage-rect {
+    fill: #111;
+    opacity: 0.08;
+  }
+  
+  .stage-label {
+    fill: #333;
+    font-size: 14px;
+    font-weight: bold;
+  }
+  
+  /* Seats */
+  .seat {
+    stroke-width: 1.25;
+    cursor: pointer;
+  }
+  
+  .seat.available {
+    stroke: #fff;
+  }
+  
+  .seat.sold {
+    fill: #bbb;
+    stroke: #999;
+    cursor: not-allowed;
+  }
+  
+  .seat.selected {
+    stroke: #000;
+    stroke-width: 2.5;
+    fill: #ffd54f !important;
+  }
+  
+  /* Seat labels */
+  .seat-label {
+    font-size: 8px;
+    fill: #fff;
+    pointer-events: none;
+  }
+  
+  /* Tooltip */
+  .seating-tooltip {
+    position: absolute;
+    pointer-events: none;
+    background: rgba(0, 0, 0, 0.8);
+    color: #fff;
+    padding: 6px 8px;
+    border-radius: 4px;
+    font-size: 0.85rem;
+    display: none;
+    z-index: 2000;
+  }
+  
+  /* Footer with selected seats and buy button */
+  .seating-footer {
+    display: flex;
+    gap: 12px;
+    align-items: center;
+    padding: 8px 0;
+  }
+  
+  .selected-list {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+    font-size: 0.9rem;
+  }
+  
+  .seating-footer .primary {
+    background-color: var(--color-btn-bg);
+    color: #fff;
+    border: none;
+    border-radius: 4px;
+    padding: 6px 12px;
+    cursor: pointer;
+    transition: 0.2s;
+  }
+  
+  .seating-footer .primary:hover {
+    background-color: #0069d9;
+  }
+  
+  .seating-footer .primary.disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+  
+  /* Optional: make the seat map responsive */
+  .seating-svg-wrap svg {
+    width: 100%;
+    height: auto;
+    display: block;
+  }
+  

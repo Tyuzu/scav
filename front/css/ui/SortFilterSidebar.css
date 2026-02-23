@@ -1,0 +1,77 @@
+.sort-filter-horizontal {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 20px;
+  border: 1px solid #ddd;
+  background-color: #fff;
+  margin-bottom: 20px;
+}
+
+.sort-section, .filter-section {
+  margin-right: 20px; /* Spacing between sections */
+}
+
+.sort-section h4, .filter-section h4 {
+  margin-bottom: 10px;
+  font-size: 18px;
+  color: #333;
+}
+
+.sort-form, .filter-form {
+  display: flex;
+  flex-direction: column;
+}
+
+.sort-option, .filter-option {
+  display: flex;
+  align-items: center;
+  margin-bottom: 10px;
+}
+
+.sort-option input, .filter-option input {
+  margin-right: 8px;
+}
+
+.sort-option input[type="radio"], .filter-option input[type="checkbox"] {
+  cursor: pointer;
+}
+
+.sort-option span, .filter-option span {
+  font-size: 16px;
+  color: #555;
+}
+
+.filter-option input[type="checkbox"]:checked + span {
+  font-weight: bold;
+  color: var(--color-btn-bg);
+}
+
+/* Hover and focus effects for better UX */
+.sort-option input[type="radio"]:hover, .filter-option input[type="checkbox"]:hover {
+  background-color: #f0f0f0;
+  border-radius: 5px;
+}
+
+.sort-option input[type="radio"]:focus, .filter-option input[type="checkbox"]:focus {
+  outline: 2px solid var(--color-btn-bg);
+}
+
+/* Responsiveness: Stacking vertically on smaller screens */
+@media (max-width: 768px) {
+  .sort-filter-horizontal {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .sort-section, .filter-section {
+    margin-right: 0;
+    margin-bottom: 15px; /* Space between the sections when stacked */
+  }
+}
+
+@media (max-width: 480px) {
+  .sort-filter-horizontal {
+    padding: 10px;
+  }
+}

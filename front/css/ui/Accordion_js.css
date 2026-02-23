@@ -1,0 +1,33 @@
+.accordion {
+    border-radius: 5px;
+    width: 100%;
+  }
+  
+  .accordion-section {
+    border-top: 1px solid #ccc;
+    margin-bottom: 1rem;
+  }
+  
+  .accordion-section:first-child {
+    border-top: none;
+  }
+  
+  .accordion-section:before {
+    content: ">";
+    float: left;
+    padding: 0.7rem;
+}
+  
+  .accordion-header {
+    padding: 10px;
+    /* background: linear-gradient(180deg, #a2a2a2, #777777, #a2a2a2); */
+    background: linear-gradient(180deg, #dddddd, #ffffff, #dddddd);
+    cursor: pointer;
+    color: rgb(0, 0, 0);
+}
+  
+  .accordion-body {
+    padding: 10px;
+    background-color: #fff;
+  }
+  
