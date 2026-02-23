@@ -53,7 +53,7 @@ func updateLastMessage(
 
 	preview := models.MessagePreview{
 		Text:      msg.Content,
-		SenderID:  msg.UserID,
+		UserID:    msg.UserID,
 		Timestamp: msg.CreatedAt,
 	}
 
