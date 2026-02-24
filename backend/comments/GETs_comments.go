@@ -116,7 +116,7 @@ func GetComments(app *infra.Deps) httprouter.Handle {
 		opts := db.FindManyOptions{
 			Limit: limit,
 			Skip:  skip,
-			Sortb: sort,
+			Sort:  sort,
 		}
 
 		var comments []models.Comment

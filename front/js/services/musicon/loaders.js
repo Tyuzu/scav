@@ -66,7 +66,7 @@ async function loadSongs(fetchFunction, fetchParams, container, player, options 
     renderSongsSection(title, songs, content, player, batchSelection, loadMoreFunction);
 
     if (enableSearch) {
-        const searchInput = createElement("input", { placeholder: "Search songs...", style: "margin:5px 0;" });
+        const searchInput = createElement("input", { placeholder: "Search songs...", style: "margin:5px 0;", class:"sort-box" });
         searchInput.addEventListener("input", () => {
             const query = searchInput.value.toLowerCase();
             content.querySelectorAll(".song-row").forEach(row => {

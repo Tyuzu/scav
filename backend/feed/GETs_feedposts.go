@@ -12,6 +12,7 @@ import (
 	"naevis/infra/db"
 
 	"github.com/julienschmidt/httprouter"
+	"go.mongodb.org/mongo-driver/bson"
 )
 
 // GetPost returns a single post enriched with like count
@@ -64,7 +65,7 @@ func GetPosts(app *infra.Deps) httprouter.Handle {
 
 		opts := db.FindManyOptions{
 			Limit: 100,
-			Sort:  map[string]int{"timestamp": -1},
+			Sort:  bson.D{{Key: "timestamp", Value: -1}},
 			Skip:  0,
 		}
 		var posts []models.FeedPost

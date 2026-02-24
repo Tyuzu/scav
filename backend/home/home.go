@@ -140,9 +140,7 @@ func HomeCardsHandler(app *infra.Deps) httprouter.Handle {
 		opts := db.FindManyOptions{
 			Skip:  skip,
 			Limit: limit,
-			Sort: map[string]int{
-				"created_at": -1,
-			},
+			Sort:  bson.D{{Key: "createdAt", Value: -1}},
 		}
 
 		var docs []bson.M

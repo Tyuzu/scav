@@ -10,6 +10,7 @@ import (
 	"naevis/infra/db"
 
 	"github.com/julienschmidt/httprouter"
+	"go.mongodb.org/mongo-driver/bson"
 )
 
 type Post struct {
@@ -51,7 +52,7 @@ func GetRelatedPosts(app *infra.Deps) httprouter.Handle {
 
 		opts := db.FindManyOptions{
 			Limit: 10,
-			Sort:  map[string]int{"createdAt": -1},
+			Sort:  bson.D{{Key: "createdAt", Value: -1}},
 		}
 
 		var related []Post

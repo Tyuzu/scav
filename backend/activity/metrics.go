@@ -81,9 +81,7 @@ func GetActivityFeed(app *infra.Deps) httprouter.Handle {
 
 		opts := db.FindManyOptions{
 			Limit: limit,
-			Sort: map[string]int{
-				"timestamp": -1,
-			},
+			Sort:  bson.D{{Key: "timestamp", Value: -1}},
 		}
 
 		var activities []models.Activity

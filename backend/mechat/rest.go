@@ -14,6 +14,7 @@ import (
 	"naevis/utils"
 
 	"github.com/julienschmidt/httprouter"
+	"go.mongodb.org/mongo-driver/bson"
 )
 
 //
@@ -121,7 +122,7 @@ func GetChatMessages(app *infra.Deps) httprouter.Handle {
 		opts := db.FindManyOptions{
 			Limit: limit,
 			Skip:  skip,
-			Sort:  map[string]int{"createdAt": 1},
+			Sort:  bson.D{{Key: "createdAt", Value: -1}},
 		}
 
 		var msgs []models.Message
@@ -180,7 +181,7 @@ func GetUserChats(app *infra.Deps) httprouter.Handle {
 		opts := db.FindManyOptions{
 			Skip:  skip,
 			Limit: limit,
-			Sort:  map[string]int{"updatedAt": -1},
+			Sort:  bson.D{{Key: "updatedAt", Value: -1}},
 		}
 
 		var chats []models.Chat

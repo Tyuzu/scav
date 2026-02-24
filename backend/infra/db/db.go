@@ -9,9 +9,8 @@ import (
 type FindManyOptions struct {
 	Limit      int
 	Skip       int
-	Sort       map[string]int
-	Sortb      bson.D
-	Projection []string // field allow-list
+	Sort       bson.D
+	Projection []string
 }
 
 type Database interface {

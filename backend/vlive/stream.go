@@ -153,11 +153,11 @@ func ListStreams(app *infra.Deps) httprouter.Handle {
 		}
 
 		opts := db.FindManyOptions{
-			Sort: map[string]int{
-				"state":        1,
-				"scheduled_at": 1,
-				"started_at":   -1,
-				"created_at":   -1,
+			Sort: bson.D{
+				{Key: "state", Value: 1},
+				{Key: "scheduled_at", Value: 1},
+				{Key: "started_at", Value: -1},
+				{Key: "created_at", Value: -1},
 			},
 		}
 

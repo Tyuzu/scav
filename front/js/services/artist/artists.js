@@ -32,9 +32,9 @@ export async function displayArtists(container, isLoggedIn) {
   main.append(createElement("h1", {}, ["Artists"]));
 
   // ---------- FILTERS ----------
-  const filterContainer = createElement("div", { class: "artists-filters" });
-  const searchInput = createElement("input", { type: "text", placeholder: "Search by name..." });
-  const categorySelect = createElement("select", {}, [
+  const filterContainer = createElement("div", { class: "top-controls" });
+  const searchInput = createElement("input", { type: "text", placeholder: "Search by name...", class:"sort-box" });
+  const categorySelect = createElement("select", {class:"sort-box"}, [
     createElement("option", { value: "" }, ["All Categories"])
   ]);
   filterContainer.append(searchInput, categorySelect);

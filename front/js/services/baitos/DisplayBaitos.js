@@ -42,13 +42,14 @@ export async function displayBaitos(container, isLoggedIn) {
 
   // ---------- TITLE ----------
   main.append(createElement("h1", {}, ["Baitos"]));
-  main.append(adspace("inbody"));
-
+  
   // ---------- FILTERS ----------
   const filterContainer = createElement("div", { class: "baitos-filters" });
-  const searchInput = createElement("input", { type: "text", placeholder: "Search jobs..." });
+  const searchInput = createElement("input", { type: "text", placeholder: "Search jobs...", class:"sort-box" });
   filterContainer.append(searchInput);
   main.append(filterContainer);
+
+  main.append(adspace("inbody"));
 
   // ---------- FETCH JOBS ----------
   let allJobs = [];

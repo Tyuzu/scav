@@ -10,6 +10,7 @@ import (
 	"naevis/infra/db"
 
 	"github.com/julienschmidt/httprouter"
+	"go.mongodb.org/mongo-driver/bson"
 )
 
 // --- Get single post ---
@@ -59,7 +60,7 @@ func GetAllPosts(app *infra.Deps) httprouter.Handle {
 		opts := db.FindManyOptions{
 			Limit: limit,
 			Skip:  skip,
-			Sort:  map[string]int{"createdAt": -1},
+			Sort:  bson.D{{Key: "createdAt", Value: -1}},
 		}
 
 		var posts []models.BlogPost

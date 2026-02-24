@@ -59,37 +59,49 @@ export function createPlayButton(song, idx, player = null) {
 }
 
 export function createLikeButton(song, isLoggedIn) {
-    const btn = createElement("button", { class: "like-btn" }, [song.liked ? "❤️" : "🤍"]);
+    const btn = createElement("button", { class: "like-btn" }, [
+        song.liked ? "❤️" : "🤍"
+    ]);
+
+    let pending = false;
+
     btn.addEventListener("click", async () => {
-        if (!isLoggedIn) return Notify("You must be logged in to like songs", { type: "info" });
+        if (!isLoggedIn) {
+            Notify("Login required", { type: "info" });
+            return;
+        }
+
+        if (pending) return;
+        pending = true;
+        btn.disabled = true;
+
+        const previousState = song.liked;
 
         try {
-            if (song.liked) {
-                const res = await MusicAPI.unlikeSong(song.songid);
-                if (res?.success) {
-                    song.liked = false;
-                    setButtonTextSafely(btn, "🤍");
-                    Notify(`Removed "${song.title}" from liked songs`);
-                } else {
-                    Notify(`Failed to remove like: ${res?.error || "unknown"}`, { type: "error" });
-                }
+            const res = previousState
+                ? await MusicAPI.unlikeSong(song.songid)
+                : await MusicAPI.likeSong(song.songid);
+
+            if (res?.success) {
+                const newState =
+                    typeof res?.data?.liked === "boolean"
+                        ? res.data.liked
+                        : !previousState;
+
+                song.liked = newState;
+                setButtonTextSafely(btn, newState ? "❤️" : "🤍");
             } else {
-                const res = await MusicAPI.likeSong(song.songid);
-                if (res?.success) {
-                    song.liked = true;
-                    setButtonTextSafely(btn, "❤️");
-                    Notify(`Liked "${song.title}"`);
-                } else if (res?.error && (String(res.error).toLowerCase().includes("unauthorized") || String(res.error).toLowerCase().includes("401") || String(res.error).toLowerCase().includes("403"))) {
-                    Notify("You are not authorized. Please log in.", { type: "info" });
-                } else {
-                    Notify(`Failed to like song: ${res?.error || "unknown"}`, { type: "error" });
-                }
+                Notify(res?.error || "Failed to update like", { type: "error" });
             }
-        } catch (err) {
-            console.error("[like] Error:", err);
+
+        } catch {
             Notify("Network error while updating liked songs", { type: "error" });
+        } finally {
+            pending = false;
+            btn.disabled = false;
         }
     });
+
     return btn;
 }
 

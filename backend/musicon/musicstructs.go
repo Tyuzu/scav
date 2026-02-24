@@ -26,6 +26,7 @@ type Playlist struct {
 	Duration      int       `json:"duration" bson:"duration"`
 	IsCompilation bool      `json:"isCompilation" bson:"isCompilation"`
 	Copyrights    string    `json:"copyrights" bson:"copyrights"`
+	CoverURL      string    `bson:"coverUrl,omitempty"`
 }
 
 type Song struct {

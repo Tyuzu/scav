@@ -36,11 +36,12 @@ func GetNotices(app *infra.Deps) httprouter.Handle {
 		}
 
 		sortBy := r.URL.Query().Get("sort")
-		sort := map[string]int{}
+		var sort bson.D
+
 		if sortBy == "old" {
-			sort["createdAt"] = 1
+			sort = bson.D{{Key: "createdAt", Value: 1}}
 		} else {
-			sort["createdAt"] = -1
+			sort = bson.D{{Key: "createdAt", Value: -1}}
 		}
 
 		filter := bson.M{

@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"log"
 	"naevis/infra"
+	"naevis/infra/db"
 	"naevis/utils"
 	"net/http"
 	"strconv"
@@ -27,7 +28,7 @@ func fetchSongsByIDs(ctx context.Context, ids []string, app *infra.Deps) ([]Song
 		"published": true,
 	}
 
-	var songs []Song = []Song{}
+	var songs []Song
 	if err := app.DB.FindMany(ctx, songsCollection, filter, &songs); err != nil {
 		return nil, err
 	}
@@ -50,6 +51,7 @@ func respondError(w http.ResponseWriter, status int, message string) {
 		"message": message,
 	})
 }
+
 func getPaginationParams(r *http.Request) (limit int, page int) {
 	limit = 20
 	page = 1
@@ -69,59 +71,15 @@ func getPaginationParams(r *http.Request) (limit int, page int) {
 	return
 }
 
-// --------------------------- Likes ---------------------------
-
-func SetUserLikes(app *infra.Deps) httprouter.Handle {
-	return func(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
-		userID := utils.GetUserIDFromRequest(r)
-		songID := ps.ByName("songid")
-		playlistID := fmt.Sprintf("likes_%s", userID)
-
-		ctx, cancel := context.WithTimeout(r.Context(), 5*time.Second)
-		defer cancel()
-
-		filter := bson.M{
-			"playlistid": playlistID,
-			"userid":     userID,
-		}
-
-		update := bson.M{
-			"$addToSet": bson.M{"songs": songID},
-			"$set": bson.M{
-				"updatedAt": time.Now(),
-				"name":      "Liked Songs",
-			},
-			"$setOnInsert": bson.M{
-				"playlistid":  playlistID,
-				"userid":      userID,
-				"createdAt":   time.Now(),
-				"description": "Auto-generated playlist for liked songs",
-				"public":      false,
-			},
-		}
-
-		if err := app.DB.Upsert(ctx, playlistsCollection, filter, update); err != nil {
-			respondError(w, http.StatusInternalServerError, "Database error")
-			return
-		}
-
-		log.Printf("Song %s added to likes for user %s", songID, userID)
-
-		respondJSON(w, http.StatusOK, map[string]string{
-			"playlist_id": playlistID,
-			"song_id":     songID,
-		}, "Song added to liked songs")
-	}
-}
-
 // --------------------------- Albums & Songs ---------------------------
 
 func GetAlbums(app *infra.Deps) httprouter.Handle {
 	return func(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
+
 		ctx, cancel := context.WithTimeout(r.Context(), 5*time.Second)
 		defer cancel()
 
-		var albums []Album = []Album{}
+		var albums []Album
 		if err := app.DB.FindMany(ctx, albumsCollection, bson.M{"published": true}, &albums); err != nil {
 			respondError(w, http.StatusInternalServerError, "Failed to fetch albums")
 			return
@@ -133,6 +91,7 @@ func GetAlbums(app *infra.Deps) httprouter.Handle {
 
 func GetAlbumSongs(app *infra.Deps) httprouter.Handle {
 	return func(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
+
 		albumID := ps.ByName("albumid")
 
 		ctx, cancel := context.WithTimeout(r.Context(), 5*time.Second)
@@ -156,6 +115,7 @@ func GetAlbumSongs(app *infra.Deps) httprouter.Handle {
 
 func GetPlaylistSongs(app *infra.Deps) httprouter.Handle {
 	return func(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
+
 		playlistID := ps.ByName("playlistid")
 
 		ctx, cancel := context.WithTimeout(r.Context(), 5*time.Second)
@@ -178,10 +138,14 @@ func GetPlaylistSongs(app *infra.Deps) httprouter.Handle {
 }
 
 // --------------------------- Artist Songs ---------------------------
-
 func GetArtistsSongs(app *infra.Deps) httprouter.Handle {
 	return func(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
+
 		artistID := ps.ByName("artistid")
+		if artistID == "" {
+			respondError(w, http.StatusBadRequest, "Missing artist ID")
+			return
+		}
 
 		ctx, cancel := context.WithTimeout(r.Context(), 5*time.Second)
 		defer cancel()
@@ -189,44 +153,26 @@ func GetArtistsSongs(app *infra.Deps) httprouter.Handle {
 		limit, page := getPaginationParams(r)
 		skip := (page - 1) * limit
 
-		pipeline := bson.A{
-			bson.M{"$match": bson.M{"artistid": artistID}},
-			bson.M{"$unwind": "$songs"},
-			bson.M{"$match": bson.M{"songs.published": true}},
-			bson.M{"$replaceRoot": bson.M{"newRoot": "$songs"}},
-			bson.M{"$skip": skip},
-			bson.M{"$limit": limit},
+		filter := bson.M{
+			"artistid":  artistID,
+			"published": true,
 		}
 
-		var songs []Song = []Song{}
-		if err := app.DB.Aggregate(ctx, songsCollection, pipeline, &songs); err != nil {
+		opts := db.FindManyOptions{
+			Limit: limit,
+			Skip:  skip,
+			Sort: bson.D{{
+				Key: "uploadedAt", Value: -1,
+			}},
+		}
+
+		var songs []Song
+		if err := app.DB.FindManyWithOptions(ctx, songsCollection, filter, opts, &songs); err != nil {
+			log.Printf("GetArtistsSongs error: %v", err)
 			respondError(w, http.StatusInternalServerError, "Failed to fetch artist songs")
 			return
 		}
 
 		respondJSON(w, http.StatusOK, songs, fmt.Sprintf("Songs for artist %s fetched", artistID))
-	}
-}
-
-// --------------------------- User Likes ---------------------------
-
-func GetUserLikes(app *infra.Deps) httprouter.Handle {
-	return func(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
-		userID := utils.GetUserIDFromRequest(r)
-		if userID == "" {
-			respondError(w, http.StatusUnauthorized, "Unauthorized or missing user ID")
-			return
-		}
-
-		ctx, cancel := context.WithTimeout(r.Context(), 5*time.Second)
-		defer cancel()
-
-		var likes []Playlist
-		if err := app.DB.FindMany(ctx, likesCollection, bson.M{"userid": userID}, &likes); err != nil {
-			respondError(w, http.StatusInternalServerError, "Failed to fetch likes")
-			return
-		}
-
-		respondJSON(w, http.StatusOK, likes, "Likes fetched successfully")
 	}
 }

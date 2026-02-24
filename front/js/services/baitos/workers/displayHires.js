@@ -31,7 +31,7 @@ export async function displayHireWorkers(isLoggedIn, container) {
 
   // ---------- FILTERS ----------
   const filterContainer = createElement("div", { class: "workers-filters" });
-  const searchInput = createElement("input", { type: "text", placeholder: "Search by name/skills/profession..." });
+  const searchInput = createElement("input", { type: "text", placeholder: "Search by name/skills/profession...", class:"sort-box" });
   filterContainer.append(searchInput);
   main.append(filterContainer);
 

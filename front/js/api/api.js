@@ -221,63 +221,84 @@ AUTH_CHANNEL.addEventListener("message", e => {
 ========================= */
 
 async function apixFetch(endpoint, method = "GET", body = null, options = {}, retry = false) {
-    const token = getState("token");
-    const nearExpiry = token && isTokenNearExpiry(token);
-
-    // Pre-request refresh if token is near expiry and we haven't already retried
-    if (nearExpiry && !retry) {
-        const ok = await refreshToken();
-        if (!ok) throw new Error("Unauthorized");
-    }
-
-    const fetchOptions = {
-        method,
-        credentials: options.credentials ?? "include",
-        signal: options.signal,
-        headers: {}
-    };
-
-    if (options.auth !== false && getState("token")) {
-        fetchOptions.headers.Authorization = `Bearer ${getState("token")}`;
-    }
-
-    if (body) {
-        if (body instanceof FormData) {
-            fetchOptions.body = body;
-        } else if (typeof body === "object") {
-            fetchOptions.headers["Content-Type"] = "application/json";
-            fetchOptions.body = JSON.stringify(body);
-        } else {
-            fetchOptions.body = body;
-        }
-    }
-
-    const res = await fetch(endpoint, fetchOptions);
-
-    if (res.status === 401 && !retry && !nearExpiry) {
-        // maybe token expired unexpectedly — try a refresh then retry once
-        const refreshed = await refreshToken();
-        if (refreshed) {
-            return apixFetch(endpoint, method, body, options, true);
-        }
-        throw new Error("Unauthorized");
-    }
-
-    if (!res.ok) {
-        const text = await res.text().catch(() => "");
-        throw new Error(text || `HTTP ${res.status}`);
-    }
-
-    // No content
-    if (res.status === 204) return null;
-
-    const text = await res.text().catch(() => "");
-    if (!text) return null;
-
     try {
-        return JSON.parse(text);
-    } catch {
-        throw new Error("Invalid JSON response");
+        const token = getState("token");
+        const nearExpiry = token && isTokenNearExpiry(token);
+
+        if (nearExpiry && !retry) {
+            const ok = await refreshToken();
+            if (!ok) {
+                return { success: false, error: "Unauthorized" };
+            }
+        }
+
+        const fetchOptions = {
+            method,
+            credentials: options.credentials ?? "include",
+            signal: options.signal,
+            headers: {}
+        };
+
+        if (options.auth !== false && getState("token")) {
+            fetchOptions.headers.Authorization = `Bearer ${getState("token")}`;
+        }
+
+        if (body) {
+            if (body instanceof FormData) {
+                fetchOptions.body = body;
+            } else if (typeof body === "object") {
+                fetchOptions.headers["Content-Type"] = "application/json";
+                fetchOptions.body = JSON.stringify(body);
+            } else {
+                fetchOptions.body = body;
+            }
+        }
+
+        const res = await fetch(endpoint, fetchOptions);
+
+        if (res.status === 401 && !retry && !nearExpiry) {
+            const refreshed = await refreshToken();
+            if (refreshed) {
+                return apixFetch(endpoint, method, body, options, true);
+            }
+            return { success: false, error: "Unauthorized" };
+        }
+
+        let data = null;
+        let text = "";
+
+        try {
+            text = await res.text();
+        } catch {
+            text = "";
+        }
+
+        if (text) {
+            try {
+                data = JSON.parse(text);
+            } catch {
+                return {
+                    success: false,
+                    error: "Invalid JSON response"
+                };
+            }
+        }
+
+        if (!res.ok) {
+            return {
+                success: false,
+                error: data?.message || data?.error || `HTTP ${res.status}`,
+                status: res.status
+            };
+        }
+
+        return data ?? { success: true };
+
+    } catch (err) {
+        return {
+            success: false,
+            error: err?.message || "Network failure"
+        };
     }
 }
 

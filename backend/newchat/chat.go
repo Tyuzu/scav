@@ -13,6 +13,7 @@ import (
 	"time"
 
 	"github.com/julienschmidt/httprouter"
+	"go.mongodb.org/mongo-driver/bson"
 )
 
 func GetChat(app *infra.Deps) httprouter.Handle {
@@ -39,7 +40,7 @@ func GetChat(app *infra.Deps) httprouter.Handle {
 
 		var messages []models.Message
 		opts := db.FindManyOptions{
-			Sort: map[string]int{"createdAt": 1},
+			Sort: bson.D{{Key: "createdAt", Value: 1}},
 		}
 		if err := app.DB.FindManyWithOptions(ctx, messagesCollection, map[string]any{
 			"chatid": chatID,
@@ -270,7 +271,7 @@ func GetUserChats(app *infra.Deps) httprouter.Handle {
 
 		var chats []models.Chat
 		opts := db.FindManyOptions{
-			Sort:  map[string]int{"updatedAt": -1},
+			Sort:  bson.D{{Key: "updatedAt", Value: -1}},
 			Limit: 15,
 		}
 		if err := app.DB.FindManyWithOptions(ctx, chatsCollection, map[string]any{"users": map[string]any{"$in": []string{userID}}}, opts, &chats); err != nil {

@@ -36,7 +36,7 @@ func GetLatestBaitos(app *infra.Deps) httprouter.Handle {
 			bson.M{},
 			db.FindManyOptions{
 				Limit: 20,
-				Sort:  map[string]int{"createdAt": -1},
+				Sort:  bson.D{{Key: "createdAt", Value: -1}},
 			},
 			&baitos,
 		)
@@ -72,7 +72,7 @@ func GetRelatedBaitos(app *infra.Deps) httprouter.Handle {
 			filter,
 			db.FindManyOptions{
 				Limit: 10,
-				Sort:  map[string]int{"createdAt": -1},
+				Sort:  bson.D{{Key: "createdAt", Value: -1}},
 			},
 			&baitos,
 		)
@@ -95,7 +95,7 @@ func GetRelatedBaitos(app *infra.Deps) httprouter.Handle {
 				fallback,
 				db.FindManyOptions{
 					Limit: 10,
-					Sort:  map[string]int{"createdAt": -1},
+					Sort:  bson.D{{Key: "createdAt", Value: -1}},
 				},
 				&baitos,
 			)
@@ -137,7 +137,7 @@ func GetMyBaitos(app *infra.Deps) httprouter.Handle {
 			BaitoCollection,
 			bson.M{"ownerId": userID},
 			db.FindManyOptions{
-				Sort: map[string]int{"createdAt": -1},
+				Sort: bson.D{{Key: "createdAt", Value: -1}},
 			},
 			&baitos,
 		)

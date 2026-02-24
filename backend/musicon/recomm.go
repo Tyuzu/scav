@@ -12,22 +12,42 @@ import (
 	"go.mongodb.org/mongo-driver/bson"
 )
 
+// --------------------------- Helpers ---------------------------
+
+func sanitizePagination(limit, page int) (int, int) {
+	if limit <= 0 {
+		limit = 20
+	}
+	if limit > 100 {
+		limit = 100
+	}
+	if page <= 0 {
+		page = 1
+	}
+	return limit, page
+}
+
 // --------------------------- Recommendations ---------------------------
 
 func GetRecommendedSongs(app *infra.Deps) httprouter.Handle {
 	return func(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
+
 		ctx, cancel := context.WithTimeout(r.Context(), 5*time.Second)
 		defer cancel()
 
 		limit, page := getPaginationParams(r)
+		limit, page = sanitizePagination(limit, page)
+
 		opts := db.FindManyOptions{
 			Limit: limit,
 			Skip:  (page - 1) * limit,
-			Sort:  map[string]int{"plays": -1}, // most played first
+			Sort:  bson.D{{Key: "plays", Value: -1}, {Key: "_id", Value: -1}},
 		}
 
-		songs := []Song{} // always initialize to empty slice
-		if err := app.DB.FindManyWithOptions(ctx, songsCollection, bson.M{"published": true}, opts, &songs); err != nil {
+		filter := bson.M{"published": true}
+
+		songs := []Song{}
+		if err := app.DB.FindManyWithOptions(ctx, songsCollection, filter, opts, &songs); err != nil {
 			respondError(w, http.StatusInternalServerError, "Failed to fetch recommended songs")
 			return
 		}
@@ -38,18 +58,23 @@ func GetRecommendedSongs(app *infra.Deps) httprouter.Handle {
 
 func GetRecommendedAlbums(app *infra.Deps) httprouter.Handle {
 	return func(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
+
 		ctx, cancel := context.WithTimeout(r.Context(), 5*time.Second)
 		defer cancel()
 
 		limit, page := getPaginationParams(r)
+		limit, page = sanitizePagination(limit, page)
+
 		opts := db.FindManyOptions{
 			Limit: limit,
 			Skip:  (page - 1) * limit,
-			Sort:  map[string]int{"release_date": -1}, // newest albums first
+			Sort:  bson.D{{Key: "release_date", Value: -1}, {Key: "_id", Value: -1}},
 		}
 
-		albums := []Album{} // always initialize to empty slice
-		if err := app.DB.FindManyWithOptions(ctx, albumsCollection, bson.M{"published": true}, opts, &albums); err != nil {
+		filter := bson.M{"published": true}
+
+		albums := []Album{}
+		if err := app.DB.FindManyWithOptions(ctx, albumsCollection, filter, opts, &albums); err != nil {
 			respondError(w, http.StatusInternalServerError, "Failed to fetch recommended albums")
 			return
 		}
@@ -60,31 +85,38 @@ func GetRecommendedAlbums(app *infra.Deps) httprouter.Handle {
 
 func GetRecommendations(app *infra.Deps) httprouter.Handle {
 	return func(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
+
 		ctx, cancel := context.WithTimeout(r.Context(), 5*time.Second)
 		defer cancel()
 
-		basedOn := strings.ToLower(r.URL.Query().Get("based_on"))
+		basedOn := strings.ToLower(strings.TrimSpace(r.URL.Query().Get("based_on")))
+
 		filter := bson.M{"published": true}
-		sort := map[string]int{}
+		sort := bson.D{{Key: "_id", Value: -1}} // default stable sort
 
 		switch basedOn {
+
 		case "recently_played":
 			filter["plays"] = bson.M{"$gt": 0}
-			sort["plays"] = -1
+			sort = bson.D{{Key: "plays", Value: -1}, {Key: "_id", Value: -1}}
+
 		case "language_en":
 			filter["language"] = "en"
+
 		case "genre_pop":
 			filter["genre"] = "Pop"
 		}
 
 		limit, page := getPaginationParams(r)
+		limit, page = sanitizePagination(limit, page)
+
 		opts := db.FindManyOptions{
 			Limit: limit,
 			Skip:  (page - 1) * limit,
 			Sort:  sort,
 		}
 
-		songs := []Song{} // always initialize to empty slice
+		songs := []Song{}
 		if err := app.DB.FindManyWithOptions(ctx, songsCollection, filter, opts, &songs); err != nil {
 			respondError(w, http.StatusInternalServerError, "Failed to fetch recommendations")
 			return

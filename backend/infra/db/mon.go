@@ -154,18 +154,32 @@ func (m *MongoDatabase) FindMany(ctx context.Context, collection string, filter 
 	return cur.All(ctx, result)
 }
 
-func (m *MongoDatabase) FindManyWithOptions(ctx context.Context, collection string, filter any, opts FindManyOptions, result any) error {
+func (m *MongoDatabase) FindManyWithOptions(
+	ctx context.Context,
+	collection string,
+	filter any,
+	opts FindManyOptions,
+	result any,
+) error {
+
 	filter = m.normalizeFilter(filter)
 
 	findOpts := options.Find()
+
 	if opts.Limit > 0 {
 		findOpts.SetLimit(int64(opts.Limit))
 	}
+
 	if opts.Skip > 0 {
 		findOpts.SetSkip(int64(opts.Skip))
 	}
+
 	if len(opts.Sort) > 0 {
 		findOpts.SetSort(opts.Sort)
+	}
+
+	if len(opts.Projection) > 0 {
+		findOpts.SetProjection(buildProjection(opts.Projection))
 	}
 
 	cur, err := m.collection(collection).Find(ctx, filter, findOpts)
@@ -173,6 +187,7 @@ func (m *MongoDatabase) FindManyWithOptions(ctx context.Context, collection stri
 		return err
 	}
 	defer cur.Close(ctx)
+
 	return cur.All(ctx, result)
 }
 
@@ -238,10 +253,19 @@ func (m *MongoDatabase) UpdateMany(ctx context.Context, collection string, filte
 	return err
 }
 
-func (m *MongoDatabase) Upsert(ctx context.Context, collection string, filter any, document any) error {
+func (m *MongoDatabase) Upsert(ctx context.Context, collection string, filter any, update any) error {
+
 	filter = m.normalizeFilter(filter)
-	_, err := m.collection(collection).
-		UpdateOne(ctx, filter, bson.M{"$set": document}, options.Update().SetUpsert(true))
+
+	opts := options.Update().SetUpsert(true)
+
+	_, err := m.collection(collection).UpdateOne(
+		ctx,
+		filter,
+		update,
+		opts,
+	)
+
 	return err
 }
 

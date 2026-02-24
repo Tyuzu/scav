@@ -14,6 +14,7 @@ import (
 	"naevis/utils"
 
 	"github.com/julienschmidt/httprouter"
+	"go.mongodb.org/mongo-driver/bson"
 )
 
 // --- Get single recipe ---
@@ -64,15 +65,14 @@ func GetRecipes(app *infra.Deps) httprouter.Handle {
 		}
 
 		skip, limit := utils.ParsePagination(r, 10, 100)
-
 		sort := utils.ParseSort(
 			r.URL.Query().Get("sort"),
-			map[string]int{"createdAt": -1},
-			map[string]map[string]int{
-				"newest":   {"createdAt": -1},
-				"oldest":   {"createdAt": 1},
-				"views":    {"views": -1},
-				"prepTime": {"prepTime": 1},
+			bson.D{{Key: "createdAt", Value: -1}},
+			map[string]bson.D{
+				"newest":   {{Key: "createdAt", Value: -1}},
+				"oldest":   {{Key: "createdAt", Value: 1}},
+				"views":    {{Key: "views", Value: -1}},
+				"prepTime": {{Key: "prepTime", Value: 1}},
 			},
 		)
 

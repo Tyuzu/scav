@@ -727,38 +727,133 @@ func AddStripeRoutes(router *httprouter.Router, app *infra.Deps, rateLimiter *ra
 
 func AddMusicRoutes(router *httprouter.Router, app *infra.Deps, rateLimiter *ratelim.RateLimiter) {
 	authmidware := middleware.Authenticate(app)
+
 	// --------------------------- PLAYLISTS ---------------------------
+	router.GET(
+		"/api/v1/musicon/user/playlists",
+		rateLimiter.Limit(authmidware(musicon.GetUserPlaylists(app))),
+	)
+
+	router.GET(
+		"/api/v1/musicon/user/liked",
+		rateLimiter.Limit(authmidware(musicon.GetUserLikes(app))),
+	)
+
+	router.POST(
+		"/api/v1/musicon/playlists",
+		rateLimiter.Limit(authmidware(musicon.CreatePlaylist(app))),
+	)
+
+	router.DELETE(
+		"/api/v1/musicon/playlists/:playlistid",
+		rateLimiter.Limit(authmidware(musicon.DeletePlaylist(app))),
+	)
+
+	// Add / Remove songs to playlist
+	router.POST(
+		"/api/v1/musicon/playlists/:playlistid/songs",
+		rateLimiter.Limit(authmidware(musicon.AddSongToPlaylist(app))),
+	)
+
+	router.DELETE(
+		"/api/v1/musicon/playlists/:playlistid/songs/:songid",
+		rateLimiter.Limit(authmidware(musicon.RemoveSongFromPlaylist(app))),
+	)
+
+	// Playlist details
+	router.GET(
+		"/api/v1/musicon/playlists/:playlistid/songs",
+		rateLimiter.Limit(authmidware(musicon.GetPlaylistSongs(app))),
+	)
+
+	// Rename / Update playlist info
+	router.PATCH(
+		"/api/v1/musicon/playlists/:playlistid",
+		rateLimiter.Limit(authmidware(musicon.UpdatePlaylistInfo(app))),
+	)
+
+	// --------------------------- LIKES ---------------------------
+
+	// Like song (idempotent)
+	router.POST(
+		"/api/v1/musicon/user/liked/:songid",
+		rateLimiter.Limit(authmidware(musicon.LikeSong(app))),
+	)
+
+	// Unlike song (idempotent)
+	router.DELETE(
+		"/api/v1/musicon/user/liked/:songid",
+		rateLimiter.Limit(authmidware(musicon.UnlikeSong(app))),
+	)
+
+	// --------------------------- ARTISTS ---------------------------
+	router.GET(
+		"/api/v1/musicon/artists/:artistid/songs",
+		rateLimiter.Limit(middleware.OptionalAuth(musicon.GetArtistsSongs(app))),
+	)
+
+	// --------------------------- ALBUMS ---------------------------
+	router.GET(
+		"/api/v1/musicon/albums",
+		rateLimiter.Limit(middleware.OptionalAuth(musicon.GetAlbums(app))),
+	)
+
+	router.GET(
+		"/api/v1/musicon/albums/:albumid/songs",
+		rateLimiter.Limit(middleware.OptionalAuth(musicon.GetAlbumSongs(app))),
+	)
+
+	router.GET(
+		"/api/v1/musicon/recommended/albums",
+		rateLimiter.Limit(middleware.OptionalAuth(musicon.GetRecommendedAlbums(app))),
+	)
+
+	// --------------------------- SONGS & RECOMMENDATIONS ---------------------------
+	router.GET(
+		"/api/v1/musicon/recommended",
+		rateLimiter.Limit(middleware.OptionalAuth(musicon.GetRecommendedSongs(app))),
+	)
+
+	router.GET(
+		"/api/v1/musicon/recommendations",
+		rateLimiter.Limit(middleware.OptionalAuth(musicon.GetRecommendations(app))),
+	)
+}
+
+/* func AddMusicRoutes(router *httprouter.Router, app *infra.Deps, rateLimiter *ratelim.RateLimiter) {
+	authmidware := middleware.Authenticate(app)
+	--------------------------- PLAYLISTS ---------------------------
 	router.GET("/api/v1/musicon/user/playlists", rateLimiter.Limit(middleware.OptionalAuth(musicon.GetUserPlaylists(app))))
 	router.GET("/api/v1/musicon/user/liked", rateLimiter.Limit(middleware.OptionalAuth(musicon.GetUserLikes(app))))
 	router.POST("/api/v1/musicon/playlists", rateLimiter.Limit(authmidware(musicon.CreatePlaylist(app))))
 	router.DELETE("/api/v1/musicon/playlists/:playlistid", rateLimiter.Limit(authmidware(musicon.DeletePlaylist(app))))
 
-	// Add / Remove songs to playlist
-	// router.POST("/api/v1/musicon/playlists/:playlistid/songs/:songid", rateLimiter.Limit(authmidware(musicon.AddSongToPlaylist)))
+	Add / Remove songs to playlist
+	router.POST("/api/v1/musicon/playlists/:playlistid/songs/:songid", rateLimiter.Limit(authmidware(musicon.AddSongToPlaylist)))
 	router.POST("/api/v1/musicon/playlists/:playlistid/songs", rateLimiter.Limit(authmidware(musicon.AddSongToPlaylist(app))))
 	router.POST("/api/v1/musicon/user/liked/:songid", rateLimiter.Limit(middleware.OptionalAuth(musicon.SetUserLikes(app))))
 	router.DELETE("/api/v1/musicon/playlists/:playlistid/songs/:songid", rateLimiter.Limit(authmidware(musicon.RemoveSongFromPlaylist(app))))
 
-	// Playlist details
+	Playlist details
 	router.GET("/api/v1/musicon/playlists/:playlistid/songs", rateLimiter.Limit(middleware.OptionalAuth(musicon.GetPlaylistSongs(app))))
 
-	// Rename / Update playlist info
+	Rename / Update playlist info
 	router.PATCH("/api/v1/musicon/playlists/:playlistid", rateLimiter.Limit(authmidware(musicon.UpdatePlaylistInfo(app))))
 
-	// --------------------------- ARTISTS ---------------------------
+	--------------------------- ARTISTS ---------------------------
 	router.GET("/api/v1/musicon/artists/:artistid/songs", rateLimiter.Limit(middleware.OptionalAuth(musicon.GetArtistsSongs(app))))
 
-	// --------------------------- ALBUMS ---------------------------
+	--------------------------- ALBUMS ---------------------------
 	router.GET("/api/v1/musicon/albums", rateLimiter.Limit(middleware.OptionalAuth(musicon.GetAlbums(app))))
 	router.GET("/api/v1/musicon/albums/:albumid/songs", rateLimiter.Limit(middleware.OptionalAuth(musicon.GetAlbumSongs(app))))
 	router.GET("/api/v1/musicon/recommended/albums", rateLimiter.Limit(middleware.OptionalAuth(musicon.GetRecommendedAlbums(app))))
 
-	// --------------------------- SONGS & RECOMMENDATIONS ---------------------------
+	--------------------------- SONGS & RECOMMENDATIONS ---------------------------
 	router.GET("/api/v1/musicon/recommended", rateLimiter.Limit(middleware.OptionalAuth(musicon.GetRecommendedSongs(app))))
 
-	// Dynamic personalized recommendations
+	Dynamic personalized recommendations
 	router.GET("/api/v1/musicon/recommendations", rateLimiter.Limit(middleware.OptionalAuth(musicon.GetRecommendations(app))))
-}
+} */
 
 // func AddDiscordRoutes(router *httprouter.Router, app *infra.Deps, rateLimiter *ratelim.RateLimiter) {
 // 	// authmidware := middleware.Authenticate(app)

@@ -36,17 +36,20 @@ func GetItems(app *infra.Deps) httprouter.Handle {
 		}
 
 		skip, limit := utils.ParsePagination(r, 10, 100)
+		var sortMap bson.D
 
-		sortMap := map[string]int{}
 		switch r.URL.Query().Get("sort") {
 		case "price_asc":
-			sortMap["price"] = 1
+			sortMap = bson.D{{Key: "price", Value: 1}}
+
 		case "price_desc":
-			sortMap["price"] = -1
+			sortMap = bson.D{{Key: "price", Value: -1}}
+
 		case "name_desc":
-			sortMap["name"] = -1
+			sortMap = bson.D{{Key: "name", Value: -1}}
+
 		default:
-			sortMap["name"] = 1
+			sortMap = bson.D{{Key: "name", Value: 1}}
 		}
 
 		opts := db.FindManyOptions{

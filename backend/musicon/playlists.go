@@ -16,6 +16,7 @@ import (
 
 func GetUserPlaylists(app *infra.Deps) httprouter.Handle {
 	return func(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
+
 		userID := utils.GetUserIDFromRequest(r)
 		if userID == "" {
 			respondError(w, http.StatusUnauthorized, "Unauthorized or missing user ID")
@@ -25,8 +26,16 @@ func GetUserPlaylists(app *infra.Deps) httprouter.Handle {
 		ctx, cancel := context.WithTimeout(r.Context(), 5*time.Second)
 		defer cancel()
 
-		var playlists []Playlist = []Playlist{}
-		if err := app.DB.FindMany(ctx, playlistsCollection, bson.M{"userid": userID}, &playlists); err != nil {
+		// Exclude special likes playlist from normal playlists list
+		filter := bson.M{
+			"userid": userID,
+			"playlistid": bson.M{
+				"$ne": "likes_" + userID,
+			},
+		}
+
+		var playlists []Playlist
+		if err := app.DB.FindMany(ctx, playlistsCollection, filter, &playlists); err != nil {
 			respondError(w, http.StatusInternalServerError, "Failed to fetch playlists")
 			return
 		}
@@ -37,6 +46,7 @@ func GetUserPlaylists(app *infra.Deps) httprouter.Handle {
 
 func CreatePlaylist(app *infra.Deps) httprouter.Handle {
 	return func(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
+
 		userID := utils.GetUserIDFromRequest(r)
 		if userID == "" {
 			respondError(w, http.StatusUnauthorized, "Unauthorized or missing user ID")
@@ -62,14 +72,15 @@ func CreatePlaylist(app *infra.Deps) httprouter.Handle {
 		now := time.Now()
 
 		newPlaylist := Playlist{
-			PlaylistID:  "pl_" + utils.GenerateRandomString(12),
-			UserID:      userID,
-			Name:        req.Name,
-			Description: req.Description,
-			Songs:       []string{},
-			Duration:    0,
-			CreatedAt:   now,
-			UpdatedAt:   now,
+			PlaylistID:    "pl_" + utils.GenerateRandomString(12),
+			UserID:        userID,
+			Name:          req.Name,
+			Description:   req.Description,
+			Songs:         []string{},
+			Duration:      0,
+			IsCompilation: false,
+			CreatedAt:     now,
+			UpdatedAt:     now,
 		}
 
 		ctx, cancel := context.WithTimeout(r.Context(), 5*time.Second)
@@ -86,8 +97,20 @@ func CreatePlaylist(app *infra.Deps) httprouter.Handle {
 
 func DeletePlaylist(app *infra.Deps) httprouter.Handle {
 	return func(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
+
 		userID := utils.GetUserIDFromRequest(r)
+		if userID == "" {
+			respondError(w, http.StatusUnauthorized, "Unauthorized or missing user ID")
+			return
+		}
+
 		playlistID := ps.ByName("playlistid")
+
+		// Prevent deletion of special likes playlist
+		if playlistID == "likes_"+userID {
+			respondError(w, http.StatusForbidden, "Cannot delete liked songs playlist")
+			return
+		}
 
 		ctx, cancel := context.WithTimeout(r.Context(), 5*time.Second)
 		defer cancel()
@@ -110,8 +133,20 @@ func DeletePlaylist(app *infra.Deps) httprouter.Handle {
 
 func AddSongToPlaylist(app *infra.Deps) httprouter.Handle {
 	return func(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
+
 		userID := utils.GetUserIDFromRequest(r)
+		if userID == "" {
+			respondError(w, http.StatusUnauthorized, "Unauthorized or missing user ID")
+			return
+		}
+
 		playlistID := ps.ByName("playlistid")
+
+		// Prevent manual modification of likes playlist
+		if playlistID == "likes_"+userID {
+			respondError(w, http.StatusForbidden, "Liked songs playlist cannot be modified directly")
+			return
+		}
 
 		var body struct {
 			SongID string `json:"songid"`
@@ -154,9 +189,21 @@ func AddSongToPlaylist(app *infra.Deps) httprouter.Handle {
 
 func RemoveSongFromPlaylist(app *infra.Deps) httprouter.Handle {
 	return func(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
+
 		userID := utils.GetUserIDFromRequest(r)
+		if userID == "" {
+			respondError(w, http.StatusUnauthorized, "Unauthorized or missing user ID")
+			return
+		}
+
 		playlistID := ps.ByName("playlistid")
 		songID := ps.ByName("songid")
+
+		// Prevent manual modification of likes playlist
+		if playlistID == "likes_"+userID {
+			respondError(w, http.StatusForbidden, "Liked songs playlist cannot be modified directly")
+			return
+		}
 
 		ctx, cancel := context.WithTimeout(r.Context(), 5*time.Second)
 		defer cancel()
@@ -185,8 +232,20 @@ func RemoveSongFromPlaylist(app *infra.Deps) httprouter.Handle {
 
 func UpdatePlaylistInfo(app *infra.Deps) httprouter.Handle {
 	return func(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
+
 		userID := utils.GetUserIDFromRequest(r)
+		if userID == "" {
+			respondError(w, http.StatusUnauthorized, "Unauthorized or missing user ID")
+			return
+		}
+
 		playlistID := ps.ByName("playlistid")
+
+		// Prevent editing of likes playlist
+		if playlistID == "likes_"+userID {
+			respondError(w, http.StatusForbidden, "Liked songs playlist cannot be modified")
+			return
+		}
 
 		type Req struct {
 			Name        string `json:"name"`
@@ -208,6 +267,11 @@ func UpdatePlaylistInfo(app *infra.Deps) httprouter.Handle {
 		ctx, cancel := context.WithTimeout(r.Context(), 5*time.Second)
 		defer cancel()
 
+		filter := bson.M{
+			"playlistid": playlistID,
+			"userid":     userID,
+		}
+
 		update := bson.M{
 			"$set": bson.M{
 				"name":        req.Name,
@@ -215,11 +279,6 @@ func UpdatePlaylistInfo(app *infra.Deps) httprouter.Handle {
 				"coverUrl":    req.CoverURL,
 				"updatedAt":   time.Now(),
 			},
-		}
-
-		filter := bson.M{
-			"playlistid": playlistID,
-			"userid":     userID,
 		}
 
 		if err := app.DB.UpdateOne(ctx, playlistsCollection, filter, update); err != nil {
