@@ -54,7 +54,7 @@ func ToggleLike(app *infra.Deps) httprouter.Handle {
 
 		// Already liked → unlike
 		if err == nil {
-			if err := app.DB.DeleteOne(ctx, likesCollection, filter); err != nil {
+			if _, err := app.DB.DeleteOne(ctx, likesCollection, filter); err != nil {
 				http.Error(w, "Failed to unlike", http.StatusInternalServerError)
 				return
 			}

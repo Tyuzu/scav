@@ -102,7 +102,7 @@ func DeleteTier(app *infra.Deps) httprouter.Handle {
 		ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 		defer cancel()
 
-		if err := app.DB.DeleteOne(ctx, tiersCollection, map[string]any{"id": tierId}); err != nil {
+		if _, err := app.DB.DeleteOne(ctx, tiersCollection, map[string]any{"id": tierId}); err != nil {
 			http.Error(w, "db error", http.StatusInternalServerError)
 			return
 		}
@@ -156,7 +156,7 @@ func DeleteSlot(app *infra.Deps) httprouter.Handle {
 		ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 		defer cancel()
 
-		if err := app.DB.DeleteOne(ctx, slotsCollection, map[string]any{"id": slotId}); err != nil {
+		if _, err := app.DB.DeleteOne(ctx, slotsCollection, map[string]any{"id": slotId}); err != nil {
 			http.Error(w, "db error", http.StatusInternalServerError)
 			return
 		}

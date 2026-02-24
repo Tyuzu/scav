@@ -56,7 +56,7 @@ func deleteByField(
 		}
 	}
 
-	if err := app.DB.DeleteOne(ctx, collection, bson.M{fieldKey: entityID}); err != nil {
+	if _, err := app.DB.DeleteOne(ctx, collection, bson.M{fieldKey: entityID}); err != nil {
 		http.Error(w, "delete failed", http.StatusInternalServerError)
 		return
 	}
@@ -277,7 +277,7 @@ func RemoveUserFile(ctx context.Context, userID, postID, hash string, app *infra
 
 	if len(file.UserPosts) == 0 {
 		_ = os.Remove(file.PostURLs[postID])
-		_ = app.DB.DeleteOne(ctx, filesCollection, bson.M{"hash": hash})
+		_, _ = app.DB.DeleteOne(ctx, filesCollection, bson.M{"hash": hash})
 	}
 }
 
@@ -301,7 +301,7 @@ func DeleteEvent(app *infra.Deps) httprouter.Handle {
 				return nil
 			},
 			func(ctx context.Context, entityID, userID string) {
-				_ = deleteRelatedData(ctx, entityID, app)
+				_, _ = deleteRelatedData(ctx, entityID, app)
 				userdata.DelUserData("event", entityID, userID, app)
 			},
 		)
@@ -497,15 +497,15 @@ func DeleteItinerary(app *infra.Deps) httprouter.Handle {
 /* Cross-collection cleanup                             */
 /* ---------------------------------------------------- */
 
-func deleteRelatedData(ctx context.Context, eventID string, app *infra.Deps) error {
+func deleteRelatedData(ctx context.Context, eventID string, app *infra.Deps) (int64, error) {
 	if err := app.DB.DeleteMany(ctx, ticketsCollection, bson.M{"eventid": eventID}); err != nil {
-		return err
+		return 0, err
 	}
 	if err := app.DB.DeleteMany(ctx, mediaCollection, bson.M{"eventid": eventID}); err != nil {
-		return err
+		return 0, err
 	}
 	if err := app.DB.DeleteMany(ctx, merchCollection, bson.M{"eventid": eventID}); err != nil {
-		return err
+		return 0, err
 	}
 	return app.DB.DeleteOne(ctx, artistEventsCollection, bson.M{"eventid": eventID})
 }

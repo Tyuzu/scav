@@ -52,8 +52,8 @@ type Database interface {
 	AddToSet(ctx context.Context, collection string, filter any, field string, value any) error
 
 	/* Delete */
-	Delete(ctx context.Context, collection string, filter any) error
-	DeleteOne(ctx context.Context, collection string, filter any) error
+	Delete(ctx context.Context, collection string, filter any) (int64, error)
+	DeleteOne(ctx context.Context, collection string, filter any) (int64, error)
 	DeleteMany(ctx context.Context, collection string, filter any) error
 
 	/* Atomic */

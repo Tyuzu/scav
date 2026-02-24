@@ -43,7 +43,7 @@ func DeleteMedia(app *infra.Deps) httprouter.Handle {
 		}
 
 		// Delete media using Database interface
-		if err := app.DB.DeleteOne(ctx, mediaCollection, map[string]string{"mediaid": mediaID}); err != nil {
+		if _, err := app.DB.DeleteOne(ctx, mediaCollection, map[string]string{"mediaid": mediaID}); err != nil {
 			http.Error(w, "Failed to delete media", http.StatusInternalServerError)
 			return
 		}

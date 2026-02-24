@@ -197,7 +197,7 @@ func DeleteFarm(app *infra.Deps) httprouter.Handle {
 			return
 		}
 
-		if err := app.DB.DeleteOne(ctx, farmsCollection, bson.M{"farmid": farmID}); err != nil {
+		if _, err := app.DB.DeleteOne(ctx, farmsCollection, bson.M{"farmid": farmID}); err != nil {
 			utils.RespondWithJSON(w, http.StatusInternalServerError, utils.M{
 				"success": false,
 			})

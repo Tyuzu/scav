@@ -28,7 +28,7 @@ func DeleteBaito(app *infra.Deps) httprouter.Handle {
 			"ownerid": userID,
 		}
 
-		err := app.DB.DeleteOne(ctx, BaitoCollection, filter)
+		_, err := app.DB.DeleteOne(ctx, BaitoCollection, filter)
 		if err != nil {
 			if err == mongo.ErrNoDocuments {
 				utils.RespondWithError(w, http.StatusForbidden, "Baito not found or unauthorized")

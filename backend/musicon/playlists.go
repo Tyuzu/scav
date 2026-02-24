@@ -97,7 +97,7 @@ func DeletePlaylist(app *infra.Deps) httprouter.Handle {
 			"userid":     userID,
 		}
 
-		if err := app.DB.DeleteOne(ctx, playlistsCollection, filter); err != nil {
+		if _, err := app.DB.DeleteOne(ctx, playlistsCollection, filter); err != nil {
 			respondError(w, http.StatusNotFound, "Playlist not found or unauthorized")
 			return
 		}

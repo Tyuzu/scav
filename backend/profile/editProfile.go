@@ -78,7 +78,7 @@ func DeleteProfile(app *infra.Deps) httprouter.Handle {
 		_ = UpdateCachedUsername(ctx, app.Cache, claims.UserID)
 
 		// Delete user in DB
-		if err := DeleteUserByID(ctx, app.DB, claims.UserID); err != nil {
+		if _, err := DeleteUserByID(ctx, app.DB, claims.UserID); err != nil {
 			http.Error(w, "Failed to delete profile", http.StatusInternalServerError)
 			return
 		}
@@ -154,6 +154,6 @@ func DeleteUserByID(
 	ctx context.Context,
 	database db.Database,
 	userID string,
-) error {
+) (int64, error) {
 	return database.DeleteOne(ctx, usersCollection, map[string]any{"userid": userID})
 }

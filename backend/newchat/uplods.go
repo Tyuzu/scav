@@ -48,7 +48,7 @@ func DeletexMessage(userID string, id string, app *infra.Deps) error {
 		"senderid":  userID,
 	}
 
-	err := app.DB.DeleteOne(ctx, messagesCollection, filter)
+	_, err := app.DB.DeleteOne(ctx, messagesCollection, filter)
 	if err != nil {
 		if strings.Contains(err.Error(), "no documents") {
 			return errors.New("message not found or unauthorized")

@@ -140,7 +140,7 @@ func UpdateCart(app *infra.Deps) httprouter.Handle {
 		}
 
 		// Clear existing items in this category
-		if err := app.DB.Delete(
+		if _, err := app.DB.Delete(
 			ctx,
 			cartCollection,
 			bson.M{
@@ -394,7 +394,7 @@ func PlaceOrder(app *infra.Deps) httprouter.Handle {
 			return
 		}
 
-		if err := app.DB.Delete(ctx, cartCollection, bson.M{"userId": userID}); err != nil {
+		if _, err := app.DB.Delete(ctx, cartCollection, bson.M{"userId": userID}); err != nil {
 			log.Println("Cart cleanup error:", err)
 		}
 

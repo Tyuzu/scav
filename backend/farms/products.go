@@ -122,7 +122,7 @@ func deleteItem(app *infra.Deps) httprouter.Handle {
 		ctx, cancel := context.WithTimeout(r.Context(), 5*time.Second)
 		defer cancel()
 
-		if err := app.DB.DeleteOne(ctx, productsCollection, bson.M{"productid": id}); err != nil {
+		if _, err := app.DB.DeleteOne(ctx, productsCollection, bson.M{"productid": id}); err != nil {
 			http.Error(w, "Failed to delete item", http.StatusInternalServerError)
 			return
 		}

@@ -209,7 +209,7 @@ func DeleteReview(app *infra.Deps) httprouter.Handle {
 			return
 		}
 
-		if err := app.DB.Delete(
+		if _, err := app.DB.Delete(
 			r.Context(),
 			reviewsCollection,
 			bson.M{"reviewid": reviewId},

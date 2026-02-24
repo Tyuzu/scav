@@ -208,7 +208,7 @@ func DeletesMessage(app *infra.Deps) httprouter.Handle {
 			return
 		}
 
-		if err := app.DB.DeleteOne(ctx, messagesCollection, map[string]any{"messageid": msgID}); err != nil {
+		if _, err := app.DB.DeleteOne(ctx, messagesCollection, map[string]any{"messageid": msgID}); err != nil {
 			http.Error(w, "Delete failed", http.StatusInternalServerError)
 			return
 		}

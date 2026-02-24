@@ -194,7 +194,7 @@ func DeleteProduct(app *infra.Deps) httprouter.Handle {
 		ctx, cancel := context.WithTimeout(r.Context(), 5*time.Second)
 		defer cancel()
 
-		if err := app.DB.DeleteOne(ctx,
+		if _, err := app.DB.DeleteOne(ctx,
 			productsCollection,
 			map[string]any{"_id": id},
 		); err != nil {

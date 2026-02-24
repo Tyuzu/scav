@@ -1,4 +1,4 @@
-import "../../css/subpages/controlcenter.css";
+import "../../css/ui/controlcenter.css";
 import { createElement } from "../components/createElement.js";
 import { navigate } from "../routes/index.js";
 

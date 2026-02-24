@@ -261,14 +261,19 @@ func (m *MongoDatabase) AddToSet(ctx context.Context, collection string, filter 
 
 /* -------------------- Delete -------------------- */
 
-func (m *MongoDatabase) Delete(ctx context.Context, collection string, filter any) error {
+func (m *MongoDatabase) Delete(ctx context.Context, collection string, filter any) (int64, error) {
 	return m.DeleteOne(ctx, collection, filter)
 }
 
-func (m *MongoDatabase) DeleteOne(ctx context.Context, collection string, filter any) error {
+func (m *MongoDatabase) DeleteOne(ctx context.Context, collection string, filter any) (int64, error) {
 	filter = m.normalizeFilter(filter)
-	_, err := m.collection(collection).DeleteOne(ctx, filter)
-	return err
+
+	res, err := m.collection(collection).DeleteOne(ctx, filter)
+	if err != nil {
+		return 0, err
+	}
+
+	return res.DeletedCount, nil
 }
 
 func (m *MongoDatabase) DeleteMany(ctx context.Context, collection string, filter any) error {

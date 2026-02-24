@@ -182,7 +182,7 @@ func DeleteComment(app *infra.Deps) httprouter.Handle {
 			"createdby": utils.GetUserIDFromRequest(r),
 		}
 
-		err := app.DB.Delete(ctx, commentsCollection, filter)
+		_, err := app.DB.Delete(ctx, commentsCollection, filter)
 		if err != nil {
 			if err == mongo.ErrNoDocuments {
 				utils.RespondWithError(w, http.StatusForbidden, "Comment not found or forbidden")

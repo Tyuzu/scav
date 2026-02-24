@@ -131,7 +131,7 @@ func EditMerch(app *infra.Deps) httprouter.Handle {
 // ---------------------- Delete Merch ----------------------
 func DeleteMerch(app *infra.Deps) httprouter.Handle {
 	return func(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
-		err := app.DB.DeleteOne(
+		_, err := app.DB.DeleteOne(
 			r.Context(),
 			merchCollection,
 			bson.M{

@@ -149,7 +149,7 @@ func DeleteSong(app *infra.Deps) httprouter.Handle {
 
 		filter := bson.M{"artistid": artistID, "songid": songID}
 
-		err := app.DB.Delete(ctx, SongsCollection, filter)
+		_, err := app.DB.Delete(ctx, SongsCollection, filter)
 		if err != nil {
 			utils.RespondWithError(w, http.StatusInternalServerError, "Failed to delete song")
 			return

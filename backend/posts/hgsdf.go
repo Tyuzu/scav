@@ -217,7 +217,7 @@ func DeletePost(app *infra.Deps) httprouter.Handle {
 			"createdBy": userID,
 		}
 
-		err := app.DB.DeleteOne(ctx, blogPostsCollection, filter)
+		_, err := app.DB.DeleteOne(ctx, blogPostsCollection, filter)
 		if err != nil {
 			utils.RespondWithError(w, http.StatusInternalServerError, "Failed to delete post")
 			return
