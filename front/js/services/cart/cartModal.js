@@ -9,12 +9,9 @@ export async function openCartModal() {
   });
 
   let cart = [];
-  let cartSummary = {};
   try {
-    // Backend returns enriched cart data with prices and totals
     const resp = await apiFetch("/cart", "GET");
-    cart = Array.isArray(resp?.items) ? resp.items : [];
-    cartSummary = resp?.summary || {};
+    cart = Array.isArray(resp?.crops) ? resp.crops : [];
   } catch {
     wrapper.appendChild(createElement("p", {}, ["❌ Failed to load cart."]));
   }
@@ -29,7 +26,6 @@ export async function openCartModal() {
     grouped.forEach(item => {
       const label = `${item.itemName} (${item.quantity} ${item.unit || "kg"})`;
       const entityInfo = item.entityName ? ` from ${item.entityName}` : "";
-      // Display ONLY backend-verified prices
       const price = `₹${(item.price * item.quantity).toFixed(2)}`;
 
       const li = createElement("li", {
@@ -41,8 +37,7 @@ export async function openCartModal() {
       list.appendChild(li);
     });
 
-    // Use backend-calculated total
-    const total = cartSummary.total || grouped.reduce((sum, item) => sum + item.quantity * item.price, 0);
+    const total = grouped.reduce((sum, item) => sum + item.quantity * item.price, 0);
 
     wrapper.appendChild(createElement("h4", {}, ["🛒 Your Cart"]));
     wrapper.appendChild(list);

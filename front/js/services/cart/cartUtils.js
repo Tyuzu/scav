@@ -74,7 +74,6 @@ export function renderCartCategory({
   }
 
   function createCard(it = {}, index) {
-    // Backend provides enriched data including validated item details
     const details = [
       createElement("p", {}, [`Item: ${it.itemName || "Item"}`])
     ];
@@ -98,7 +97,6 @@ export function renderCartCategory({
       Button("+", "qty-inc", { click: () => updateQty(index, 1) }, "buttonx subtle")
     ]);
 
-    // Display prices ONLY from backend-validated data
     const pricing = [
       createElement("p", {}, [`Unit Price: ₹${it.price || 0}`]),
       createElement("p", {}, [
@@ -148,17 +146,9 @@ export function renderCartCategory({
 
   async function syncCategory() {
     try {
-      // Send ONLY itemId and quantity updates, backend validates everything
-      const updates = items.map(item => ({
-        itemId: item.itemId,
-        quantity: item.quantity
-      }));
-      
-      await apiFetch("/cart/sync", "POST", JSON.stringify({
+      await apiFetch("/cart/update", "POST", {
         category,
-        updates
-      }), {
-        headers: { "Content-Type": "application/json" }
+        items
       });
     } catch (err) {
       console.error(`Cart sync failed for ${category}:`, err);

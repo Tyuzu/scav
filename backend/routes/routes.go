@@ -346,9 +346,9 @@ func AddEventsRoutes(router *httprouter.Router, app *infra.Deps, rateLimiter *ra
 func AddCartRoutes(router *httprouter.Router, app *infra.Deps, rateLimiter *ratelim.RateLimiter) {
 	authmidware := middleware.Authenticate(app)
 	// Cart operations
-	router.POST("/api/v1/cart/add", rateLimiter.Limit(authmidware(cart.AddToCart(app))))
+	router.POST("/api/v1/cart", rateLimiter.Limit(authmidware(cart.AddToCart(app))))
 	router.GET("/api/v1/cart", authmidware(cart.GetCart(app)))
-	router.POST("/api/v1/cart/sync", rateLimiter.Limit(authmidware(cart.UpdateCart(app))))
+	router.POST("/api/v1/cart/update", rateLimiter.Limit(authmidware(cart.UpdateCart(app))))
 	router.POST("/api/v1/cart/checkout", rateLimiter.Limit(authmidware(cart.InitiateCheckout(app))))
 
 	// Checkout session creation

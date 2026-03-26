@@ -6,19 +6,16 @@ import { showPaymentModal } from "../pay/pay.js";
 const formatINR = val =>
   Intl.NumberFormat("en-IN", { style: "currency", currency: "INR" }).format(val);
 
-/**
- * Use backend-calculated totals from session data.
- * Frontend DOES NOT calculate prices/taxes/totals - trusts backend
- */
-function getTotals(sessionData = {}) {
-  // Backend already calculated these
-  return {
-    subtotal: sessionData.subtotal || 0,
-    discount: sessionData.discount || 0,
-    tax: sessionData.tax || 0,
-    delivery: sessionData.delivery || 0,
-    total: sessionData.total || 0
-  };
+function calculateTotals(items = {}, discount = 0, delivery = 20, taxRate = 0.05) {
+  const flat = Object.values(items).flat();
+  const subtotal = flat.reduce(
+    (sum, { price = 0, quantity = 0 }) => sum + price * quantity,
+    0
+  );
+  const taxable = Math.max(0, subtotal - discount);
+  const tax = +(taxable * taxRate).toFixed(2);
+  const total = +(taxable + tax + delivery).toFixed(2);
+  return { subtotal, discount, tax, delivery, total };
 }
 
 /* ---------------- Renderers ---------------- */
@@ -53,8 +50,10 @@ export function displayPayment(container, sessionData = {}) {
     createElement("h2", {}, ["Order Summary"])
   );
 
-  // Backend provides pre-calculated totals
-  const totals = getTotals(sessionData);
+  const totals = calculateTotals(
+    sessionData.items || {},
+    sessionData.discount || 0
+  );
 
   container.append(
     createElement("h3", {}, ["Delivery Address"]),

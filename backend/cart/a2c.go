@@ -3,7 +3,6 @@ package cart
 import (
 	"context"
 	"encoding/json"
-	"fmt"
 	"log"
 	"net/http"
 	"time"
@@ -16,19 +15,15 @@ import (
 	"naevis/utils"
 )
 
-/* ───────────────────────── Add To Cart (Event-Based) ───────────────────────── */
+/* ───────────────────────── Add To Cart ───────────────────────── */
 
 func AddToCart(app *infra.Deps) httprouter.Handle {
 	return func(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
 		ctx, cancel := context.WithTimeout(r.Context(), 10*time.Second)
 		defer cancel()
 
-		// Accept ONLY itemId and quantity from frontend
-		var req struct {
-			ItemID   string `json:"itemId"`
-			Quantity int    `json:"quantity"`
-		}
-		if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		var item models.CartItem
+		if err := json.NewDecoder(r.Body).Decode(&item); err != nil {
 			log.Println("AddToCart decode error:", err)
 			http.Error(w, "Invalid JSON payload", http.StatusBadRequest)
 			return
@@ -40,52 +35,36 @@ func AddToCart(app *infra.Deps) httprouter.Handle {
 			return
 		}
 
-		if req.ItemID == "" || req.Quantity <= 0 {
+		if item.ItemID == "" || item.ItemName == "" || item.Category == "" || item.Quantity <= 0 {
 			http.Error(w, "Missing or invalid fields", http.StatusBadRequest)
 			return
 		}
 
-		// Backend looks up item details from database
-		itemDetails, err := lookupItemDetails(ctx, req.ItemID, app)
-		if err != nil || itemDetails == nil {
-			http.Error(w, "Item not found or invalid", http.StatusNotFound)
-			return
-		}
-
-		// Create enriched cart item with backend-verified data
-		cartItem := models.CartItem{
-			ItemID:     req.ItemID,
-			ItemName:   itemDetails.Name,
-			ItemType:   itemDetails.Type,
-			Category:   itemDetails.Category,
-			Price:      itemDetails.Price, // Backend-verified
-			Unit:       itemDetails.Unit,
-			EntityID:   itemDetails.EntityID,
-			EntityName: itemDetails.EntityName,
-			EntityType: itemDetails.EntityType,
-		}
+		item.UserID = userID
 
 		filter := bson.M{
-			"userId":   userID,
-			"itemId":   req.ItemID,
-			"entityId": itemDetails.EntityID,
+			"userId":     userID,
+			"itemId":     item.ItemID,
+			"category":   item.Category,
+			"entityId":   item.EntityID,
+			"entityType": item.EntityType,
 		}
 
 		update := bson.M{
 			"$inc": bson.M{
-				"quantity": req.Quantity,
+				"quantity": item.Quantity,
 			},
 			"$setOnInsert": bson.M{
 				"userId":     userID,
-				"itemId":     cartItem.ItemID,
-				"itemName":   cartItem.ItemName,
-				"itemType":   cartItem.ItemType,
-				"category":   cartItem.Category,
-				"price":      cartItem.Price,
-				"unit":       cartItem.Unit,
-				"entityId":   cartItem.EntityID,
-				"entityName": cartItem.EntityName,
-				"entityType": cartItem.EntityType,
+				"itemId":     item.ItemID,
+				"itemName":   item.ItemName,
+				"itemType":   item.ItemType,
+				"unit":       item.Unit,
+				"price":      item.Price,
+				"category":   item.Category,
+				"entityId":   item.EntityID,
+				"entityName": item.EntityName,
+				"entityType": item.EntityType,
 				"addedAt":    time.Now(),
 			},
 		}
@@ -113,13 +92,9 @@ func UpdateCart(app *infra.Deps) httprouter.Handle {
 		ctx, cancel := context.WithTimeout(r.Context(), 10*time.Second)
 		defer cancel()
 
-		// Accept category and array of minimal update objects: {itemId, quantity}
 		var payload struct {
-			Category string `json:"category"`
-			Updates  []struct {
-				ItemID   string `json:"itemId"`
-				Quantity int    `json:"quantity"`
-			} `json:"updates"`
+			Category string            `json:"category"`
+			Items    []models.CartItem `json:"items"`
 		}
 
 		if err := json.NewDecoder(r.Body).Decode(&payload); err != nil {
@@ -139,7 +114,6 @@ func UpdateCart(app *infra.Deps) httprouter.Handle {
 			return
 		}
 
-		// Clear existing items in this category
 		if _, err := app.DB.Delete(
 			ctx,
 			cartCollection,
@@ -153,39 +127,18 @@ func UpdateCart(app *infra.Deps) httprouter.Handle {
 			return
 		}
 
-		// Process updates and look up items
-		if len(payload.Updates) > 0 {
+		if len(payload.Items) > 0 {
 			now := time.Now()
-			docs := make([]any, 0, len(payload.Updates))
+			docs := make([]any, 0, len(payload.Items))
 
-			for _, update := range payload.Updates {
-				if update.ItemID == "" || update.Quantity <= 0 {
+			for _, it := range payload.Items {
+				if it.ItemID == "" || it.Quantity <= 0 {
 					continue
 				}
-
-				// Look up current item details from database
-				itemDetails, err := lookupItemDetails(ctx, update.ItemID, app)
-				if err != nil || itemDetails == nil {
-					log.Printf("Item lookup failed for %s: %v\n", update.ItemID, err)
-					continue // Skip invalid items
-				}
-
-				// Create enriched cart item with backend-verified data
-				cartItem := models.CartItem{
-					UserID:     userID,
-					ItemID:     update.ItemID,
-					ItemName:   itemDetails.Name,
-					ItemType:   itemDetails.Type,
-					Category:   payload.Category,
-					Price:      itemDetails.Price, // Backend-verified
-					Unit:       itemDetails.Unit,
-					EntityID:   itemDetails.EntityID,
-					EntityName: itemDetails.EntityName,
-					EntityType: itemDetails.EntityType,
-					Quantity:   update.Quantity,
-					AddedAt:    now,
-				}
-				docs = append(docs, cartItem)
+				it.UserID = userID
+				it.Category = payload.Category
+				it.AddedAt = now
+				docs = append(docs, it)
 			}
 
 			if len(docs) > 0 {
@@ -219,8 +172,15 @@ func InitiateCheckout(app *infra.Deps) httprouter.Handle {
 
 func CreateCheckoutSession(app *infra.Deps) httprouter.Handle {
 	return func(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
-		ctx, cancel := context.WithTimeout(r.Context(), 10*time.Second)
+		_, cancel := context.WithTimeout(r.Context(), 10*time.Second)
 		defer cancel()
+
+		var session models.CheckoutSession
+		if err := json.NewDecoder(r.Body).Decode(&session); err != nil {
+			log.Println("CreateCheckoutSession decode error:", err)
+			http.Error(w, "Invalid session data", http.StatusBadRequest)
+			return
+		}
 
 		userID := utils.GetUserIDFromRequest(r)
 		if userID == "" {
@@ -228,81 +188,8 @@ func CreateCheckoutSession(app *infra.Deps) httprouter.Handle {
 			return
 		}
 
-		// Decode checkout request with items array
-		var req struct {
-			Address     string `json:"address"`
-			CouponCode  string `json:"couponCode"`
-			PaymentType string `json:"paymentType"`
-			Items       []struct {
-				ItemID   string `json:"itemId"`
-				Quantity int    `json:"quantity"`
-			} `json:"items"`
-		}
-
-		if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
-			log.Println("CreateCheckoutSession decode error:", err)
-			http.Error(w, "Invalid session data", http.StatusBadRequest)
-			return
-		}
-
-		// Validate items and calculate totals from backend-verified prices
-		var subtotal float64 = 0
-		itemsMap := make(map[string][]models.CartItem)
-
-		for _, item := range req.Items {
-			// Look up item details from database
-			itemDetails, err := lookupItemDetails(ctx, item.ItemID, app)
-			if err != nil || itemDetails == nil {
-				http.Error(w, fmt.Sprintf("Item %s not found", item.ItemID), http.StatusBadRequest)
-				return
-			}
-
-			cartItem := models.CartItem{
-				UserID:     userID,
-				ItemID:     item.ItemID,
-				ItemName:   itemDetails.Name,
-				ItemType:   itemDetails.Type,
-				Category:   itemDetails.Category,
-				Price:      itemDetails.Price,
-				Unit:       itemDetails.Unit,
-				EntityID:   itemDetails.EntityID,
-				EntityName: itemDetails.EntityName,
-				EntityType: itemDetails.EntityType,
-				Quantity:   item.Quantity,
-				AddedAt:    time.Now(),
-			}
-
-			itemsMap[itemDetails.Category] = append(itemsMap[itemDetails.Category], cartItem)
-			subtotal += itemDetails.Price * float64(item.Quantity)
-		}
-
-		// Apply coupon if provided
-		var discount float64 = 0
-		if req.CouponCode != "" {
-			// Validate coupon and get discount (implementation depends on coupon service)
-			// For now, assume coupon validation returns discount percentage or amount
-			// TODO: Call coupon validation service
-		}
-
-		// Calculate tax and delivery (backend-determined rates)
-		taxRate := 0.10    // 10% tax - adjust as needed
-		deliveryFee := 5.0 // Base delivery fee - adjust as needed
-
-		taxable := subtotal - discount
-		tax := taxable * taxRate
-
-		session := models.CheckoutSession{
-			UserID:        userID,
-			Items:         itemsMap,
-			Address:       req.Address,
-			PaymentMethod: req.PaymentType,
-			Subtotal:      subtotal,
-			Discount:      discount,
-			Tax:           tax,
-			Delivery:      deliveryFee,
-			Total:         taxable + tax + deliveryFee,
-			CreatedAt:     time.Now(),
-		}
+		session.UserID = userID
+		session.CreatedAt = time.Now()
 
 		utils.RespondWithJSON(w, http.StatusCreated, session)
 	}
@@ -357,31 +244,6 @@ func PlaceOrder(app *infra.Deps) httprouter.Handle {
 
 		checkout.UserID = userID
 
-		// Verify prices haven't changed since checkout session was created
-		// Re-lookup each item and compare prices
-		for _, items := range checkout.Items {
-			for _, item := range items {
-				currentDetails, err := lookupItemDetails(ctx, item.ItemID, app)
-				if err != nil || currentDetails == nil {
-					http.Error(w, fmt.Sprintf("Item %s no longer available", item.ItemID), http.StatusBadRequest)
-					return
-				}
-
-				// Check for significant price discrepancy (allow 1% tolerance for rounding)
-				priceDiff := (currentDetails.Price - item.Price) / item.Price
-				if priceDiff > 0.01 || priceDiff < -0.01 {
-					http.Error(w, fmt.Sprintf("Price for %s has changed. Please re-checkout", item.ItemID), http.StatusConflict)
-					return
-				}
-
-				// Check availability
-				if currentDetails.Available < item.Quantity {
-					http.Error(w, fmt.Sprintf("Insufficient stock for %s (%d available)", item.ItemName, currentDetails.Available), http.StatusBadRequest)
-					return
-				}
-			}
-		}
-
 		farmOrders, err := processFarmOrders(ctx, checkout, app)
 		if err != nil {
 			http.Error(w, "Failed to process farm orders", http.StatusInternalServerError)
@@ -434,6 +296,7 @@ func processFarmOrders(ctx context.Context, checkout models.CheckoutSession, app
 			ApprovedBy: []string{},
 			Items:      map[string][]models.CartItem{"crops": items},
 			CreatedAt:  time.Now(),
+			Quantity:   len(items),
 		}
 
 		if err := app.DB.Insert(ctx, farmOrdersCollection, order); err != nil {
@@ -474,5 +337,3 @@ func processGeneralOrders(ctx context.Context, checkout models.CheckoutSession, 
 	}
 	return &order, nil
 }
-
-/* ───────────────────────── Order Placement ───────────────────────── */

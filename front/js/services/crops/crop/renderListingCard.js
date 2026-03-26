@@ -34,10 +34,17 @@ export function renderListingCard(listing, cropName, isLoggedIn) {
   };
 
   const handleAddToCart = () => {
-    // Event-based: backend validates and looks up all details
+    alert("ok");
     addToCart({
+      category: "crops",
+      itemName: listing.name,
       itemId: listing.cropid,
+      itemType: listing.breed,
+      entityName: listing.farmName,
+      entityId: listing.farmid,
+      entityType: "farm",
       quantity,
+      unit: "kg",
       isLoggedIn
     });
   };

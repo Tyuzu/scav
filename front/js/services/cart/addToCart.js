@@ -1,13 +1,10 @@
 import { apiFetch } from "../../api/api.js";
 import Notify from "../../components/ui/Notify.mjs";
 
-/**
- * Add items to cart (event-based)
- * Frontend only sends: itemId and quantity
- * Backend validates, verifies, and looks up all details
- */
 export async function addToCart({
   itemId = "",
+  entityId = "",
+  entityType = "",
   quantity = 0,
   isLoggedIn = false
 }) {
@@ -29,15 +26,17 @@ export async function addToCart({
     return;
   }
 
-  // Send ONLY what and how much
   const payload = {
     itemId,
     quantity: qty
   };
 
+  if (entityId) payload.entityId = entityId;
+  if (entityType) payload.entityType = entityType;
+
   try {
     await apiFetch(
-      "/cart/add",
+      "/cart",
       "POST",
       JSON.stringify(payload),
       {

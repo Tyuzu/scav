@@ -151,17 +151,12 @@ export async function displayCheckout(container, passedItems = null) {
         btn.replaceChildren("Preparing checkout…");
 
         try {
-          // Send minimal data: address, coupon, and itemIds with quantities
-          // Backend calculates everything (prices, discounts, taxes, totals)
-          const session = await apiFetch("/checkout/session", "POST", JSON.stringify({
+          // IMPORTANT: no totals, no amount, no method
+          const session = await apiFetch("/checkout/session", "POST", {
             address,
             couponCode,
-            items: items.map(i => ({
-              itemId: i.itemId,
-              quantity: i.quantity
-            }))
-          }), {
-            headers: { "Content-Type": "application/json" }
+            discount: coupon.discount,
+            items: groupItems(items)
           });
 
           displayPayment(container, session);
