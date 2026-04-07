@@ -4,7 +4,9 @@ import { makeDraggable } from "../makeDraggable.js";
 
 /** Floating Action Button (FAB) */
 const FloatingActionButton = (icon, id, navItems = defaultNavItems) => {
-    if (document.getElementById(id)) return;
+    if (document.getElementById(id)) {
+return;
+}
 
     const fabContainer = document.createElement("div");
     fabContainer.className = "fab-container";
@@ -63,9 +65,13 @@ const FloatingActionButton = (icon, id, navItems = defaultNavItems) => {
     document.addEventListener("click", handleOutsideClick);
 
     // Drag detection integration
-    fabContainer.addEventListener("dragstart", () => { isDragging = true; });
+    fabContainer.addEventListener("dragstart", () => {
+ isDragging = true; 
+});
     fabContainer.addEventListener("dragend", () => {
-        setTimeout(() => { isDragging = false; }, 100);
+        setTimeout(() => {
+ isDragging = false; 
+}, 100);
     });
 
     // Append elements (batching for performance)

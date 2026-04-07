@@ -104,7 +104,9 @@ async function generateVideoPlayer(mediaSrc, poster, qualities, subtitles, video
       const selectedQualityLabel = event.target.value;
       const selectedQuality = qualities.find(q => q.label === selectedQualityLabel);
 
-      if (!selectedQuality || selectedQuality.src === video.src) return;
+      if (!selectedQuality || selectedQuality.src === video.src) {
+return;
+}
 
       console.log("Switching to quality:", selectedQuality.label);
 
@@ -121,7 +123,9 @@ async function generateVideoPlayer(mediaSrc, poster, qualities, subtitles, video
 
       video.addEventListener("loadedmetadata", () => {
         video.currentTime = currentTime;
-        if (!isPaused) video.play();
+        if (!isPaused) {
+video.play();
+}
       }, { once: true });
     });
   }
@@ -133,7 +137,9 @@ async function generateVideoPlayer(mediaSrc, poster, qualities, subtitles, video
         lockOrientation("landscape");
       }
     } else {
-      if (isMobile()) unlockOrientation();
+      if (isMobile()) {
+unlockOrientation();
+}
     }
   });
 

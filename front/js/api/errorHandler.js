@@ -19,7 +19,9 @@ class ErrorTracker {
    * Log error locally and optionally track remotely
    */
   async track(error, context = {}) {
-    if (!this.enabled) return;
+    if (!this.enabled) {
+return;
+}
 
     const errorData = this._normalizeError(error, context);
     
@@ -30,7 +32,9 @@ class ErrorTracker {
     }
 
     // Log to console in development
-    if (this.environment === "development") {
+    // Use import.meta.env.DEV for Vite or check environment string
+    const isDev = import.meta?.env?.DEV || this.environment === "development";
+    if (isDev) {
       console.error("[ErrorTracker]", errorData);
     }
 
@@ -76,7 +80,9 @@ class ErrorTracker {
    * Send error to remote tracking service
    */
   async _trackRemote(errorData) {
-    if (!this.trackingEndpoint) return;
+    if (!this.trackingEndpoint) {
+return;
+}
 
     try {
       await fetch(this.trackingEndpoint, {
@@ -88,7 +94,9 @@ class ErrorTracker {
       });
     } catch (err) {
       // Silently fail - don't create infinite loop
-      if (process.env.NODE_ENV === "development") {
+      // Use import.meta.env.DEV for Vite or check environment string
+      const isDev = import.meta?.env?.DEV || this.environment === "development";
+      if (isDev) {
         console.warn("Error tracking failed:", err);
       }
     }

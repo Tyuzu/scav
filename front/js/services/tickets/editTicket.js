@@ -52,7 +52,9 @@ async function editTicket(ticketId, eventId) {
 
         ["USD", "EUR", "GBP", "CAD", "AUD", "JPY"].forEach(c => {
             const opt = createElement("option", { value: c }, [c]);
-            if (ticketData.currency === c) opt.selected = true;
+            if (ticketData.currency === c) {
+opt.selected = true;
+}
             currencySelect.append(opt);
         });
 
@@ -136,7 +138,9 @@ function clearTicketForm() {
 
 async function refreshTicketList(eventId) {
     const ticketList = document.getElementById("ticket-list");
-    if (!ticketList) return;
+    if (!ticketList) {
+return;
+}
 
     const tickets = await apiFetch(
         `/ticket/event/${eventId}`,
@@ -148,7 +152,9 @@ async function refreshTicketList(eventId) {
 
 /* ────────── Delete Ticket ────────── */
 async function deleteTicket(ticketId, eventId) {
-    if (!confirm("Delete this ticket?")) return;
+    if (!confirm("Delete this ticket?")) {
+return;
+}
 
     try {
         await apiFetch(

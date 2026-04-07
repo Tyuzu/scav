@@ -13,8 +13,12 @@ export function uid() {
 
 // --- Helper to determine file type ---
 function getFileType(file) {
-  if (file.type.startsWith("image/")) return "image";
-  if (file.type.startsWith("video/")) return "video";
+  if (file.type.startsWith("image/")) {
+return "image";
+}
+  if (file.type.startsWith("video/")) {
+return "video";
+}
   return "unknown";
 }
 
@@ -67,7 +71,9 @@ export function showMediaUploadForm(isLoggedIn, entityType, entityId, mediaList)
     onClose: () => {
       // Cleanup URLs to prevent blob leaks
       UploadStore.uploads.forEach((u) => {
-        if (u.previewURL) URL.revokeObjectURL(u.previewURL);
+        if (u.previewURL) {
+URL.revokeObjectURL(u.previewURL);
+}
       });
       UploadStore.clear();
     },
@@ -102,10 +108,12 @@ export function showMediaUploadForm(isLoggedIn, entityType, entityId, mediaList)
 function validateFile(file) {
   const MAX_SIZE_MB = 100;
   const validTypes = ["image/", "video/"];
-  if (!validTypes.some((t) => file.type.startsWith(t)))
-    throw new Error(`${file.name}: Unsupported file type`);
-  if (file.size > MAX_SIZE_MB * 1024 * 1024)
-    throw new Error(`${file.name}: File too large`);
+  if (!validTypes.some((t) => file.type.startsWith(t))) {
+throw new Error(`${file.name}: Unsupported file type`);
+}
+  if (file.size > MAX_SIZE_MB * 1024 * 1024) {
+throw new Error(`${file.name}: File too large`);
+}
 }
 
 // --- Handle files ---
@@ -155,8 +163,9 @@ async function uploadFileAndTrack(u, uploadsDiv, submit) {
 // --- Submit grouped uploads ---
 async function submitGroupedUploads(caption, uploadsDiv, entityType, entityId, modal) {
   const ready = UploadStore.uploads.filter((u) => u.dropData && !u.serverData);
-  if (!ready.length)
-    return Notify("No uploads ready to submit.", { type: "info" });
+  if (!ready.length) {
+return Notify("No uploads ready to submit.", { type: "info" });
+}
 
   // const payload = { caption: caption.value, files: ready.map((u) => u.dropData) };
   const payload = {
@@ -186,14 +195,18 @@ function renderUploads(uploadsDiv, submit) {
   // Remove orphaned DOM nodes
   const currentIds = new Set(UploadStore.uploads.map((u) => u.id));
   uploadsDiv.querySelectorAll(".upload-card").forEach((el) => {
-    if (!currentIds.has(el.dataset.id)) el.remove();
+    if (!currentIds.has(el.dataset.id)) {
+el.remove();
+}
   });
 
   UploadStore.uploads.forEach((u) => {
     const existing = uploadsDiv.querySelector(`[data-id="${u.id}"]`);
     if (existing) {
       const bar = existing.querySelector(".upload-progress > div");
-      if (bar) bar.style.width = `${u.progress || 0}%`;
+      if (bar) {
+bar.style.width = `${u.progress || 0}%`;
+}
       existing.classList.toggle("upload-error", !!u.error);
       existing.classList.toggle("upload-done", !!u.done);
       return;
@@ -220,7 +233,9 @@ function renderUploads(uploadsDiv, submit) {
       "",
       {
         click: () => {
-          if (u.previewURL) URL.revokeObjectURL(u.previewURL);
+          if (u.previewURL) {
+URL.revokeObjectURL(u.previewURL);
+}
           UploadStore.remove(u.id);
           renderUploads(uploadsDiv, submit);
         },
@@ -249,13 +264,21 @@ function renderUploads(uploadsDiv, submit) {
 
 function detectCaptionLang(text) {
   const s = text.trim();
-  if (!s) return "unknown";
+  if (!s) {
+return "unknown";
+}
 
   for (const ch of s) {
     const code = ch.charCodeAt(0);
-    if (code >= 0x4E00 && code <= 0x9FFF) return "zh"; // Chinese
-    if ((code >= 0x3040 && code <= 0x309F) || (code >= 0x30A0 && code <= 0x30FF)) return "ja"; // Japanese
-    if (code >= 0xAC00 && code <= 0xD7AF) return "ko"; // Korean
+    if (code >= 0x4E00 && code <= 0x9FFF) {
+return "zh";
+} // Chinese
+    if ((code >= 0x3040 && code <= 0x309F) || (code >= 0x30A0 && code <= 0x30FF)) {
+return "ja";
+} // Japanese
+    if (code >= 0xAC00 && code <= 0xD7AF) {
+return "ko";
+} // Korean
   }
   return "en";
 }

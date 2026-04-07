@@ -64,7 +64,9 @@ export function setupGestures(video) {
   };
 
   const onMouseDown = (e) => {
-    if (zoomLevel === 1) return; // nothing to drag at scale 1
+    if (zoomLevel === 1) {
+return;
+} // nothing to drag at scale 1
     e.preventDefault();
     isDragging = true;
     startX = e.clientX - panX;  // use global panX
@@ -73,7 +75,9 @@ export function setupGestures(video) {
   };
 
   const onMouseMove = (e) => {
-    if (!isDragging) return;
+    if (!isDragging) {
+return;
+}
     panX = e.clientX - startX;  // update global panX
     panY = e.clientY - startY;  // update global panY
     constrainPan(video);
@@ -101,7 +105,9 @@ function setupTouch(video) {
   }, { passive: false });
 
   video.addEventListener("touchmove", (event) => {
-    if (!isDragging || event.touches.length !== 1) return;
+    if (!isDragging || event.touches.length !== 1) {
+return;
+}
     panX = event.touches[0].clientX - startX;
     panY = event.touches[0].clientY - startY;
     constrainPan(video);

@@ -82,7 +82,9 @@ async function apiGenerateSlotsFromTier(tierId, startDate, endDate) {
         return res.slots || [];
     } catch (err) {
         const tier = storage.localGetTiers().find(t => t.id === tierId);
-        if (!tier) return [];
+        if (!tier) {
+return [];
+}
         return storage.localGenerateSlotsFromTier(tier, { startDate, endDate }); // ✅ same keys for local
     }
 }
@@ -119,8 +121,12 @@ async function apiGenerateSlotsFromTier(tierId, startDate, endDate) {
         } catch {
             // ---- Local fallback enforcement ----
             const all = JSON.parse(localStorage.getItem(storage.BOOKING_KEY) || "{}");
-            if (!all[entityType]) all[entityType] = {};
-            if (!all[entityType][entityId]) all[entityType][entityId] = [];
+            if (!all[entityType]) {
+all[entityType] = {};
+}
+            if (!all[entityType][entityId]) {
+all[entityType][entityId] = [];
+}
 
             const seatsToBook = Math.max(1, parseInt(payload.seats || 1, 10));
 
@@ -128,18 +134,24 @@ async function apiGenerateSlotsFromTier(tierId, startDate, endDate) {
             if (payload.slotId) {
                 const slots = storage.localGetSlots();
                 const slot = slots.find(s => s.id === payload.slotId);
-                if (!slot) return { ok: false, reason: "slot-missing" };
+                if (!slot) {
+return { ok: false, reason: "slot-missing" };
+}
 
                 const bookedSeats = all[entityType][entityId]
                     .filter(b => b.slotId === slot.id)
                     .reduce((sum, b) => sum + (b.seats || 1), 0);
 
-                if (bookedSeats + seatsToBook > (slot.capacity || 0)) return { ok: false, reason: "slot-full" };
+                if (bookedSeats + seatsToBook > (slot.capacity || 0)) {
+return { ok: false, reason: "slot-full" };
+}
 
                 const userAlready = all[entityType][entityId].some(
                     b => b.userId === payload.userId && b.slotId === slot.id
                 );
-                if (userAlready) return { ok: false, reason: "already-slot" };
+                if (userAlready) {
+return { ok: false, reason: "already-slot" };
+}
             } else {
                 // Date capacity fallback
                 const dateCap = storage.localGetDateCap(payload.date);
@@ -148,7 +160,9 @@ async function apiGenerateSlotsFromTier(tierId, startDate, endDate) {
                         .filter(b => b.date === payload.date)
                         .reduce((sum, b) => sum + (b.seats || 1), 0);
 
-                    if (totalForDate + seatsToBook > dateCap) return { ok: false, reason: "date-full" };
+                    if (totalForDate + seatsToBook > dateCap) {
+return { ok: false, reason: "date-full" };
+}
                 }
             }
 
@@ -217,14 +231,24 @@ export function bookingStorage(entityType, entityId) {
     const BOOKING_KEY = "entity_bookings";
     const DATE_CAP_KEY = "entity_date_caps";
 
-    const readJson = key => { try { return JSON.parse(localStorage.getItem(key) || "{}"); } catch { return {}; } };
+    const readJson = key => {
+ try {
+ return JSON.parse(localStorage.getItem(key) || "{}"); 
+} catch {
+ return {}; 
+} 
+};
     const writeJson = (key, value) => localStorage.setItem(key, JSON.stringify(value));
 
     // ----- Slots -----
     function localSaveSlot(slot) {
         const all = readJson(SLOT_KEY);
-        if (!all[entityType]) all[entityType] = {};
-        if (!all[entityType][entityId]) all[entityType][entityId] = [];
+        if (!all[entityType]) {
+all[entityType] = {};
+}
+        if (!all[entityType][entityId]) {
+all[entityType][entityId] = [];
+}
         all[entityType][entityId].push(slot);
         writeJson(SLOT_KEY, all);
     }
@@ -236,7 +260,9 @@ export function bookingStorage(entityType, entityId) {
 
     function localDeleteSlot(slotId) {
         const all = readJson(SLOT_KEY);
-        if (!all[entityType]?.[entityId]) return false;
+        if (!all[entityType]?.[entityId]) {
+return false;
+}
         all[entityType][entityId] = all[entityType][entityId].filter(s => s.id !== slotId);
         writeJson(SLOT_KEY, all);
 
@@ -252,8 +278,12 @@ export function bookingStorage(entityType, entityId) {
     // ----- Tiers -----
     function localSaveTier(tier) {
         const all = readJson(TIER_KEY);
-        if (!all[entityType]) all[entityType] = {};
-        if (!all[entityType][entityId]) all[entityType][entityId] = [];
+        if (!all[entityType]) {
+all[entityType] = {};
+}
+        if (!all[entityType][entityId]) {
+all[entityType][entityId] = [];
+}
         all[entityType][entityId].push(tier);
         writeJson(TIER_KEY, all);
     }
@@ -265,7 +295,9 @@ export function bookingStorage(entityType, entityId) {
 
     function localDeleteTier(tierId) {
         const all = readJson(TIER_KEY);
-        if (!all[entityType]?.[entityId]) return false;
+        if (!all[entityType]?.[entityId]) {
+return false;
+}
         all[entityType][entityId] = all[entityType][entityId].filter(t => t.id !== tierId);
         writeJson(TIER_KEY, all);
         return true;
@@ -277,7 +309,9 @@ export function bookingStorage(entityType, entityId) {
         const end = new Date(endDate);
     
         for (let d = new Date(start); d <= end; d.setDate(d.getDate() + 1)) {
-            if (tier.daysOfWeek && tier.daysOfWeek.length > 0 && !tier.daysOfWeek.includes(d.getDay())) continue;
+            if (tier.daysOfWeek && tier.daysOfWeek.length > 0 && !tier.daysOfWeek.includes(d.getDay())) {
+continue;
+}
     
             const dateStr = d.toISOString().split("T")[0];
             const [startH, startM] = (tier.timeRange?.[0] || "09:00").split(":").map(Number);
@@ -302,8 +336,12 @@ export function bookingStorage(entityType, entityId) {
     // ----- Bookings -----
     function localSaveBooking(b) {
         const all = readJson(BOOKING_KEY);
-        if (!all[entityType]) all[entityType] = {};
-        if (!all[entityType][entityId]) all[entityType][entityId] = [];
+        if (!all[entityType]) {
+all[entityType] = {};
+}
+        if (!all[entityType][entityId]) {
+all[entityType][entityId] = [];
+}
         all[entityType][entityId].push(b);
         writeJson(BOOKING_KEY, all);
     }
@@ -315,7 +353,9 @@ export function bookingStorage(entityType, entityId) {
 
     function localCancelBooking(bookingId, userIdArg) {
         const all = readJson(BOOKING_KEY);
-        if (!all[entityType]?.[entityId]) return false;
+        if (!all[entityType]?.[entityId]) {
+return false;
+}
 
         const before = all[entityType][entityId].length;
         all[entityType][entityId] = all[entityType][entityId].map(b =>
@@ -333,8 +373,12 @@ export function bookingStorage(entityType, entityId) {
 
     function localSetDateCap(date, cap) {
         const all = readJson(DATE_CAP_KEY);
-        if (!all[entityType]) all[entityType] = {};
-        if (!all[entityType][entityId]) all[entityType][entityId] = {};
+        if (!all[entityType]) {
+all[entityType] = {};
+}
+        if (!all[entityType][entityId]) {
+all[entityType][entityId] = {};
+}
         all[entityType][entityId][date] = cap;
         writeJson(DATE_CAP_KEY, all);
     }

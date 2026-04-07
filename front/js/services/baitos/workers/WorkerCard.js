@@ -25,7 +25,9 @@ export function HireWorkerCard(worker) {
 
   // Render details
   function renderDetail(icon, text) {
-    if (!text) return null;
+    if (!text) {
+return null;
+}
     return createElement("p", {}, [
       icon + " ",
       String(text)

@@ -93,7 +93,9 @@ async function saveBandMembers(artistID, container) {
 
 // ADD / EDIT MEMBER ROW
 function addBandMember(existing, container) {
-    if (!container) return;
+    if (!container) {
+return;
+}
 
     const data = existing || {};
     const memberID = data.memberid || `new-${crypto.randomUUID()}`;

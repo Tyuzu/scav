@@ -23,7 +23,9 @@ function MiniAudio({ poster, audioUrl, title = "" }) {
   const timeDisplay = createElement("span", { class: "time" }, ["00:00"]);
 
   function initAudio() {
-    if (isLoaded) return;
+    if (isLoaded) {
+return;
+}
     audio = new Audio(audioUrl);
     audio.preload = "none";
     isLoaded = true;
@@ -33,7 +35,9 @@ function MiniAudio({ poster, audioUrl, title = "" }) {
     });
 
     audio.addEventListener("timeupdate", () => {
-      if (!audio.duration) return;
+      if (!audio.duration) {
+return;
+}
       seekBar.value = (audio.currentTime / audio.duration) * 100;
     });
 
@@ -45,7 +49,9 @@ function MiniAudio({ poster, audioUrl, title = "" }) {
   }
 
   playBtn.addEventListener("click", () => {
-    if (!isLoaded) initAudio();
+    if (!isLoaded) {
+initAudio();
+}
 
     if (audio.paused) {
       audio.play();

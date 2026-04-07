@@ -3,6 +3,7 @@ import { createElement } from "../../../components/createElement";
 import Button from "../../../components/base/Button";
 import { navigate } from "../../../routes";
 import { addToCart } from "../../cart/addToCart.js";
+import { getState } from "../../../state/state.js";
 
 export function renderListingCard(listing, cropName, isLoggedIn) {
   let quantity = 1;
@@ -33,19 +34,16 @@ export function renderListingCard(listing, cropName, isLoggedIn) {
     navigate(`/farm/${listing.farmid}`);
   };
 
-  const handleAddToCart = () => {
-    alert("ok");
-    addToCart({
-      category: "crops",
-      itemName: listing.name,
+  const handleAddToCart = async () => {
+    await addToCart({
       itemId: listing.cropid,
-      itemType: listing.breed,
-      entityName: listing.farmName,
-      entityId: listing.farmid,
-      entityType: "farm",
+      itemType: listing.breed || "crop",
+      itemName: listing.name,
       quantity,
-      unit: "kg",
-      isLoggedIn
+      isLoggedIn: Boolean(getState("token")),
+      entityType: "farm",
+      entityId: listing.farmid,
+      entityName: listing.farmName
     });
   };
 

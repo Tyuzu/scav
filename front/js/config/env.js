@@ -26,15 +26,23 @@ function detectEnvironment() {
   // Vite provides import.meta.env.MODE
   if (import.meta?.env?.MODE) {
     const mode = import.meta.env.MODE;
-    if (mode === "production") return "production";
-    if (mode === "staging") return "staging";
+    if (mode === "production") {
+return "production";
+}
+    if (mode === "staging") {
+return "staging";
+}
     return "dev";
   }
 
   // Fallback: detect from hostname
   const host = typeof window !== "undefined" ? window.location.hostname : "localhost";
-  if (host.includes("staging")) return "staging";
-  if (host.includes("localhost") || host.includes("127.0.0.1")) return "dev";
+  if (host.includes("staging")) {
+return "staging";
+}
+  if (host.includes("localhost") || host.includes("127.0.0.1")) {
+return "dev";
+}
   return "production";
 }
 

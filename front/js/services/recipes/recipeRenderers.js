@@ -9,8 +9,12 @@ import { createCommentsSection } from "../comments/comments.js";
 import { fetchUserMeta } from "../../utils/usersMeta.js";
 
 // --- LocalStorage Helpers ---
-export function getStepKey(recipeid) { return `completedSteps:${recipeid}`; }
-export function getFavorites() { return JSON.parse(localStorage.getItem("favoriteRecipes") || "[]"); }
+export function getStepKey(recipeid) {
+ return `completedSteps:${recipeid}`; 
+}
+export function getFavorites() {
+ return JSON.parse(localStorage.getItem("favoriteRecipes") || "[]"); 
+}
 
 export function saveFavorite(recipeid, value) {
   let fav = getFavorites();
@@ -28,7 +32,9 @@ export function makeInlineEditable(container, currentText, onSave) {
 
   saveBtn.addEventListener("click", () => {
     const newVal = input.value.trim();
-    if (newVal) onSave(newVal);
+    if (newVal) {
+onSave(newVal);
+}
   });
 
   cancelBtn.addEventListener("click", () => {
@@ -76,15 +82,23 @@ export function renderInfoBox(recipe) {
 
   const children = [];
 
-  if (recipe.description)
-    children.push(createElement("p", { class: "recipe-description" }, [recipe.description]));
+  if (recipe.description) {
+children.push(createElement("p", { class: "recipe-description" }, [recipe.description]));
+}
 
   children.push(infoRow("Cook Time", recipe.cookTime));
-  if (recipe.cuisine) children.push(infoRow("Cuisine", recipe.cuisine));
-  if (recipe.portionSize) children.push(infoRow("Portion Size", recipe.portionSize));
-  if (recipe.season) children.push(infoRow("Season / Occasion", recipe.season));
-  if (Array.isArray(recipe.dietary) && recipe.dietary.length)
-    children.push(infoRow("Dietary", recipe.dietary.join(", ")));
+  if (recipe.cuisine) {
+children.push(infoRow("Cuisine", recipe.cuisine));
+}
+  if (recipe.portionSize) {
+children.push(infoRow("Portion Size", recipe.portionSize));
+}
+  if (recipe.season) {
+children.push(infoRow("Season / Occasion", recipe.season));
+}
+  if (Array.isArray(recipe.dietary) && recipe.dietary.length) {
+children.push(infoRow("Dietary", recipe.dietary.join(", ")));
+}
 
   if (recipe.videoUrl) {
     children.push(
@@ -95,7 +109,9 @@ export function renderInfoBox(recipe) {
     );
   }
 
-  if (recipe.notes) children.push(infoRow("Notes", recipe.notes));
+  if (recipe.notes) {
+children.push(infoRow("Notes", recipe.notes));
+}
 
   return createElement("div", { class: "recipe-info-box" }, children);
 }

@@ -8,7 +8,9 @@ import Imagex from "../../components/base/Imagex.js";
 import { createTabs } from "../../components/ui/createTabs.js";
 
 export const clearElement = (el) => {
-  while (el.firstChild) el.removeChild(el.firstChild);
+  while (el.firstChild) {
+el.removeChild(el.firstChild);
+}
 };
 
 // 🔗 Category → EntityType mapping
@@ -44,7 +46,9 @@ function createImageCard({ banner, title, description, href }, entitytype) {
   ]);
 
   const linkBtn = card.querySelector(".card-link");
-  if (linkBtn) linkBtn.addEventListener("click", () => navigate(href));
+  if (linkBtn) {
+linkBtn.addEventListener("click", () => navigate(href));
+}
 
   return card;
 }
@@ -72,7 +76,9 @@ function createCardSection() {
       pagingState[category] = { skip: 0, limit: DEFAULT_LIMIT, done: false, loading: false };
     }
     const state = pagingState[category];
-    if (state.loading || state.done) return;
+    if (state.loading || state.done) {
+return;
+}
 
     state.loading = true;
 
@@ -86,11 +92,15 @@ function createCardSection() {
     try {
       const data = await fetchPage(category, state.skip, state.limit);
 
-      if (initial) clearElement(cardGrid);
+      if (initial) {
+clearElement(cardGrid);
+}
       loadMoreWrapper.removeAttribute("data-loading");
 
       if (!data || !data.length) {
-        if (initial) cardGrid.appendChild(showMessage("No results found."));
+        if (initial) {
+cardGrid.appendChild(showMessage("No results found."));
+}
         state.done = true;
         clearElement(loadMoreWrapper);
         return;

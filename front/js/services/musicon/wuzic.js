@@ -12,7 +12,9 @@ import { renderSongsSection } from "./sections.js";
 let currentRenderToken = 0;
 
 export async function displayMusic(rootContainer, isLoggedIn) {
-    if (!rootContainer) return;
+    if (!rootContainer) {
+return;
+}
 
     rootContainer.replaceChildren();
 
@@ -49,18 +51,23 @@ export async function displayMusic(rootContainer, isLoggedIn) {
             isLoggedIn ? MusicAPI.personalizedRecommendations() : []
         ]);
 
-        if (renderToken !== currentRenderToken) return;
+        if (renderToken !== currentRenderToken) {
+return;
+}
 
         content.replaceChildren();
 
-        if (artistSongs.length)
-            renderSongsSection("Artist Songs", artistSongs, content, player);
+        if (artistSongs.length) {
+renderSongsSection("Artist Songs", artistSongs, content, player);
+}
 
-        if (personalized.length)
-            renderSongsSection("Because You Listened", personalized, content, player);
+        if (personalized.length) {
+renderSongsSection("Because You Listened", personalized, content, player);
+}
 
-        if (recommended.length)
-            renderSongsSection("Recommended for You", recommended, content, player);
+        if (recommended.length) {
+renderSongsSection("Recommended for You", recommended, content, player);
+}
 
         if (playlists.length) {
             const section = createElement("div", { class: "music-section" }, [

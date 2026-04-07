@@ -44,7 +44,9 @@ export function userFeedbackGlobal() {
                         const kind = document.getElementById("uf-type")?.value || "";
                         const text = document.getElementById("uf-message")?.value || "";
 
-                        if (!text.trim()) return;
+                        if (!text.trim()) {
+return;
+}
 
                         await apiFetch(
                             "/feedback/submit",

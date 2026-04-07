@@ -89,7 +89,9 @@ const Vidpop = (mediaSrc, videoid, options = {}) => {
 
 
 function removePopup(popupElement) {
-  if (!popupElement || !popupElement.parentNode) return;
+  if (!popupElement || !popupElement.parentNode) {
+return;
+}
 
   popupElement.classList.add("fade-out"); // CSS should handle opacity transition
 

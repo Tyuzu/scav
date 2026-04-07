@@ -1,10 +1,14 @@
 export function setupQualitySwitch(video, qualities, selector) {
-    if (!selector) return;
+    if (!selector) {
+return;
+}
   
     selector.addEventListener("change", (event) => {
       const selectedLabel = event.target.value;
       const selectedQuality = qualities.find(q => q.label === selectedLabel);
-      if (!selectedQuality || selectedQuality.src === video.src) return;
+      if (!selectedQuality || selectedQuality.src === video.src) {
+return;
+}
   
       const currentTime = video.currentTime;
       const isPaused = video.paused;
@@ -15,7 +19,9 @@ export function setupQualitySwitch(video, qualities, selector) {
   
       video.addEventListener("loadedmetadata", () => {
         video.currentTime = currentTime;
-        if (!isPaused) video.play();
+        if (!isPaused) {
+video.play();
+}
       }, { once: true });
     });
   }

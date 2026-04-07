@@ -24,8 +24,12 @@ const PAYMENT_RULES = {
 
 function validatePaymentConfig(paymentType, entityType) {
   const rules = PAYMENT_RULES[paymentType];
-  if (!rules) return false;
-  if (!rules.allowedEntities.includes(entityType)) return false;
+  if (!rules) {
+return false;
+}
+  if (!rules.allowedEntities.includes(entityType)) {
+return false;
+}
   return true;
 }
 
@@ -36,7 +40,9 @@ function validatePaymentConfig(paymentType, entityType) {
 let stripePromise = null;
 
 function loadStripeJs(key) {
-  if (stripePromise) return stripePromise;
+  if (stripePromise) {
+return stripePromise;
+}
 
   stripePromise = new Promise((resolve, reject) => {
     if (window.Stripe) {
@@ -136,7 +142,9 @@ async function payViaStripe({
               { payment_method: { card } }
             );
 
-          if (error) throw error;
+          if (error) {
+throw error;
+}
 
           await stripeFetch("/payment-success", "POST", {
             paymentType,
@@ -194,7 +202,9 @@ async function showPaymentModal({
         const method =
           document.querySelector("input[name=paymethod]:checked")?.value;
 
-        if (!method) return;
+        if (!method) {
+return;
+}
 
         if (method === "card") {
           const res = await payViaStripe({

@@ -9,6 +9,15 @@ import {
 } from "../state/state.js";
 import { Footer } from "../components/footer.js";
 
+// Proper state object instead of function properties
+const layoutState = {
+  isHydrated: false,
+  headerRendered: false,
+  navRendered: false,
+  footerRendered: false,
+  isNavigating: false
+};
+
 /**
  * Loads layout and route content into static containers
  * @param {string} url
@@ -25,7 +34,7 @@ async function loadContent(url) {
   }
 
   /* -------------------- Hydrate persisted auth state once -------------------- */
-  if (!loadContent._isHydrated) {
+  if (!layoutState.isHydrated) {
     const token = localStorage.getItem("token");
     const userRaw = localStorage.getItem("user");
 
@@ -38,35 +47,39 @@ async function loadContent(url) {
       setState({ token, user }, true);
     }
 
-    loadContent._isHydrated = true;
+    layoutState.isHydrated = true;
   }
 
   main.replaceChildren();
 
-  if (!loadContent._headerRendered) {
+  if (!layoutState.headerRendered) {
     const headerContent = createheader();
-    if (headerContent) header.appendChild(headerContent);
-    loadContent._headerRendered = true;
+    if (headerContent) {
+header.appendChild(headerContent);
+}
+    layoutState.headerRendered = true;
   }
 
   const shouldShowNav = !["/home", "/merechats"].includes(url);
 
-  if (shouldShowNav && !loadContent._navRendered) {
+  if (shouldShowNav && !layoutState.navRendered) {
     const navContent = createNav();
     if (navContent) {
       nav.appendChild(navContent);
-      loadContent._navRendered = true;
+      layoutState.navRendered = true;
     }
   }
 
-  if (loadContent._navRendered) {
+  if (layoutState.navRendered) {
     highlightActiveNav(url);
   }
 
-  if (!loadContent._footerRendered) {
+  if (!layoutState.footerRendered) {
     const footerContent = Footer();
-    if (footerContent) footer.appendChild(footerContent);
-    loadContent._footerRendered = true;
+    if (footerContent) {
+footer.appendChild(footerContent);
+}
+    layoutState.footerRendered = true;
   }
 
   await render(url, main);
@@ -79,7 +92,6 @@ async function loadContent(url) {
 
 /**
  * SPA PushState navigation
- * TDZ-safe: no module-scoped state
  */
 function navigate(path, { storeRedirect = false } = {}) {
   if (!path) {
@@ -87,9 +99,11 @@ function navigate(path, { storeRedirect = false } = {}) {
     return;
   }
 
-  if (navigate._isNavigating || window.location.pathname === path) return;
+  if (layoutState.isNavigating || window.location.pathname === path) {
+return;
+}
 
-  navigate._isNavigating = true;
+  layoutState.isNavigating = true;
 
   saveScroll(
     document.getElementById("content"),
@@ -107,7 +121,7 @@ function navigate(path, { storeRedirect = false } = {}) {
   loadContent(path)
     .catch(err => console.error("Navigation failed:", err))
     .finally(() => {
-      navigate._isNavigating = false;
+      layoutState.isNavigating = false;
     });
 }
 
@@ -126,28 +140,6 @@ async function renderPage() {
 }
 
 export { navigate, renderPage, loadContent };
-
-
-// import { createheader } from "../components/header.js";
-// import { createNav, highlightActiveNav } from "../components/navigation.js";
-// import { render } from "./router.js";
-// import {
-//   setState,
-//   getRouteState,
-//   saveScroll,
-//   restoreScroll,
-// } from "../state/state.js";
-// import { Footer } from "../components/footer.js";
-
-// let isNavigating = false;
-// let isHeaderRendered = false;
-// let isFooterRendered = false;
-// let isNavRendered = false;
-// let isHydrated = false;
-
-// /**
-//  * Loads layout and route content into static containers
-//  * @param {string} url
 //  */
 // async function loadContent(url) {
 //   const header = document.getElementById("pageheader");

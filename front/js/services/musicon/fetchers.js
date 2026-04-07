@@ -14,7 +14,9 @@ async function apiRequest(endpoint, method = "GET", body = null) {
 
 async function safeFetch(endpoint) {
     const res = await apiRequest(endpoint);
-    if (res?.success && Array.isArray(res.data)) return res.data;
+    if (res?.success && Array.isArray(res.data)) {
+return res.data;
+}
     return [];
 }
 
@@ -29,8 +31,9 @@ export const MusicAPI = {
     },
 
     playlists: async (force = false) => {
-        if (!force && Array.isArray(MusicAPI._cache.playlists))
-            return MusicAPI._cache.playlists;
+        if (!force && Array.isArray(MusicAPI._cache.playlists)) {
+return MusicAPI._cache.playlists;
+}
 
         const data = await safeFetch("/musicon/user/playlists");
         MusicAPI._cache.playlists = data;

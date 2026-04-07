@@ -19,7 +19,9 @@ export function createQualitySelector(video, qualities) {
 
   select.addEventListener("change", (e) => {
     const selected = qualities.find(q => q.label === e.target.value);
-    if (!selected) return;
+    if (!selected) {
+return;
+}
 
     // Only reload if actual src differs
     if (video.src !== selected.src) {
@@ -33,7 +35,9 @@ export function createQualitySelector(video, qualities) {
         "loadedmetadata",
         () => {
           video.currentTime = currentTime;
-          if (!paused) video.play();
+          if (!paused) {
+video.play();
+}
         },
         { once: true }
       );

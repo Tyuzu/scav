@@ -65,7 +65,9 @@ function createSettingForm(setting) {
         case "auto_logout":
             inputElement = ToggleSwitch((state) => handleSettingUpdate(setting.type, state));
             const input = inputElement.querySelector("input");
-            if (input) input.checked = !!setting.value;
+            if (input) {
+input.checked = !!setting.value;
+}
             break;
 
         case "language":

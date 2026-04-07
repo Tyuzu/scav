@@ -22,7 +22,9 @@ export async function updateImageWithCrop({
     entityId
 }) {
     const choice = await askUpdateMethod(imageType);
-    if (!choice) return false;
+    if (!choice) {
+return false;
+}
 
     try {
         showLoadingMessage(`Updating ${imageType} picture...`);
@@ -32,7 +34,9 @@ export async function updateImageWithCrop({
                 ? await getCroppedImage(imageType)
                 : await getImageUrl();
 
-        if (!payload) return false;
+        if (!payload) {
+return false;
+}
 
         const response = await uploadImage({
             entityType,
@@ -94,7 +98,9 @@ function askUpdateMethod(imageType) {
 /* ────────── Image Sources ────────── */
 async function getCroppedImage(imageType) {
     const file = await pickFile();
-    if (!file) return null;
+    if (!file) {
+return null;
+}
     return await openCropper({ file, type: imageType });
 }
 
@@ -142,7 +148,9 @@ async function uploadImage({ entityType, entityId, stateKey, payload }) {
 /* ────────── Preview Update ────────── */
 function updatePreview(previewElementId, entityType, pictureType, imageName) {
     const preview = document.getElementById(previewElementId);
-    if (!preview || !imageName) return;
+    if (!preview || !imageName) {
+return;
+}
 
     preview.src =
         resolveImagePath(entityType, pictureType, imageName) +

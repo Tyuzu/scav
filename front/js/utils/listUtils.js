@@ -107,8 +107,12 @@ export function sortItems(items, sortBy) {
     if (sortBy === "title" || sortBy === "name") {
       return (a.title || a.name || "").localeCompare(b.title || b.name || "");
     }
-    if (sortBy === "views") return (b.views || 0) - (a.views || 0);
-    if (sortBy === "capacity") return (a.capacity || 0) - (b.capacity || 0);
+    if (sortBy === "views") {
+return (b.views || 0) - (a.views || 0);
+}
+    if (sortBy === "capacity") {
+return (a.capacity || 0) - (b.capacity || 0);
+}
     return 0;
   });
 }
@@ -150,11 +154,17 @@ function filterRecipes(recipes, { keyword, category }) {
 export function applyFiltersAndSort(items, { keyword = "", category = null, sortBy = null, type = "generic" }) {
   let filtered;
 
-  if (type === "events") filtered = filterEvents(items, { keyword, category });
-  else if (type === "recipes") filtered = filterRecipes(items, { keyword, category });
-  else filtered = filterItems(items, { keyword, category });
+  if (type === "events") {
+filtered = filterEvents(items, { keyword, category });
+} else if (type === "recipes") {
+filtered = filterRecipes(items, { keyword, category });
+} else {
+filtered = filterItems(items, { keyword, category });
+}
 
-  if (type === "events") return sortEvents(filtered, sortBy);
+  if (type === "events") {
+return sortEvents(filtered, sortBy);
+}
   return sortItems(filtered, sortBy);
 }
 
@@ -167,7 +177,9 @@ export function paginate(items, page, pageSize) {
 // --- optional infinite scroll ---
 export function attachInfiniteScroll(target, callback, options = { threshold: 1.0 }) {
   const observer = new IntersectionObserver(([entry]) => {
-    if (entry.isIntersecting) callback();
+    if (entry.isIntersecting) {
+callback();
+}
   }, options);
   observer.observe(target);
   return observer;

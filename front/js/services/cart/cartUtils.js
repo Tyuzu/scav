@@ -14,7 +14,9 @@ export function renderCartCategory({
   displayCheckout
 }) {
   const items = cart[category];
-  if (!Array.isArray(items) || items.length === 0) return;
+  if (!Array.isArray(items) || items.length === 0) {
+return;
+}
 
   const section = createElement("section", { class: "cart-category" });
 
@@ -30,7 +32,9 @@ export function renderCartCategory({
     "checkoutbtn",
     {
       click: () => {
-        if (!items.length) return;
+        if (!items.length) {
+return;
+}
         displayCheckout(contentContainer, items);
       }
     },
@@ -78,15 +82,17 @@ export function renderCartCategory({
       createElement("p", {}, [`Item: ${it.itemName || "Item"}`])
     ];
 
-    if (it.itemType)
-      details.push(createElement("p", {}, [`Type: ${it.itemType}`]));
+    if (it.itemType) {
+details.push(createElement("p", {}, [`Type: ${it.itemType}`]));
+}
 
-    if (it.entityName)
-      details.push(
+    if (it.entityName) {
+details.push(
         createElement("p", {}, [
           `${it.entityType || "Entity"}: ${it.entityName}`
         ])
       );
+}
 
     const quantityLine = createElement("div", { class: "quantity-line" }, [
       createElement("span", {}, ["Qty:"]),
@@ -137,7 +143,9 @@ export function renderCartCategory({
 
   async function updateQty(index, delta) {
     const item = items[index];
-    if (!item) return;
+    if (!item) {
+return;
+}
 
     item.quantity = Math.max(1, (item.quantity || 1) + delta);
     await syncCategory();

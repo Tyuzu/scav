@@ -16,13 +16,17 @@ const state = {
 
 // ------------------------ DOM Helpers ------------------------
 function updatePlayButtonIcon(btn, isPlaying) {
-    if (!btn) return;
+    if (!btn) {
+return;
+}
     btn.replaceChildren(isPlaying ? pauseSVG : playSVG);
 }
 
 // ------------------------ Footer Creation ------------------------
 export function createPlayerFooter(container) {
-    if (state.audio) return; // Already initialized
+    if (state.audio) {
+return;
+} // Already initialized
 
     const footer = createElement("footer", { class: "songs-footer" });
     const audio = createElement("audio", { id: "songs-audio", controls: true });
@@ -46,13 +50,17 @@ export function createPlayerFooter(container) {
     container.append(footer);
 
     audio.addEventListener("ended", () => {
-        if (state.isAutoplay) playNextSong();
+        if (state.isAutoplay) {
+playNextSong();
+}
     });
 }
 
 // ------------------------ Playback Logic ------------------------
 function playSong(song) {
-    if (!state.audio || !song.audioUrl) return;
+    if (!state.audio || !song.audioUrl) {
+return;
+}
 
     // Pause if same song already playing
     if (state.audio.src.endsWith(`${song.audioextn}`) && !state.audio.paused) {
@@ -74,14 +82,18 @@ function playSong(song) {
 
 function playNextSong() {
     const { songQueue } = state;
-    if (!songQueue.length) return;
+    if (!songQueue.length) {
+return;
+}
 
     state.currentIndex = state.isShuffle
         ? Math.floor(Math.random() * songQueue.length)
         : (state.currentIndex + 1) % songQueue.length;
 
     const nextSong = songQueue[state.currentIndex];
-    if (nextSong) playSong(nextSong);
+    if (nextSong) {
+playSong(nextSong);
+}
 }
 
 // ------------------------ State Control ------------------------
@@ -95,7 +107,9 @@ function setCurrentIndex(idx) {
 }
 
 function resetPlayer() {
-    if (state.audio) state.audio.pause();
+    if (state.audio) {
+state.audio.pause();
+}
     state.container = null;
     state.audio = null;
     state.currentPlayBtn = null;
@@ -107,7 +121,9 @@ function resetPlayer() {
 
 // ------------------------ Public Interface ------------------------
 function initPlayer(container) {
-    if (!container) throw new Error("Container is required for player");
+    if (!container) {
+throw new Error("Container is required for player");
+}
     state.container = container;
     createPlayerFooter(container);
 

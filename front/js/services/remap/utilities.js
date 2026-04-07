@@ -11,7 +11,9 @@
  * @returns {number}
  */
 export function clamp(v, min, max) {
-  if (min > max) [min, max] = [max, min];
+  if (min > max) {
+[min, max] = [max, min];
+}
   return v < min ? min : v > max ? max : v;
 }
 
@@ -24,7 +26,9 @@ export function clamp(v, min, max) {
  * @param {HTMLElement} mapWrapper - map wrapper element
  */
 export function updateMapTransform(state, mapOptions, mapWrapper) {
-  if (!mapWrapper || !mapOptions) return;
+  if (!mapWrapper || !mapOptions) {
+return;
+}
 
   const { mapWidth = 0, mapHeight = 0 } = mapOptions;
   const { viewportWidth, viewportHeight, zoom } = state;
@@ -50,7 +54,9 @@ export function updateMapTransform(state, mapOptions, mapWrapper) {
  * @param {HTMLElement} minimapViewport - viewport rectangle element
  */
 export function updateMinimapViewport(state, mapOptions, minimap, minimapViewport) {
-  if (!minimap || !minimapViewport) return;
+  if (!minimap || !minimapViewport) {
+return;
+}
 
   const { mapWidth = 0 } = mapOptions;
   const { viewportWidth, viewportHeight, zoom } = state;
@@ -93,10 +99,14 @@ export function updateTransformAll(state, mapOptions, mapWrapper, minimap, minim
  * @param {object|boolean} [opts={}] - options or capture flag
  */
 export function addListener(state, target, event, fn, opts = {}) {
-  if (!target || typeof fn !== "function") return;
+  if (!target || typeof fn !== "function") {
+return;
+}
 
   target.addEventListener(event, fn, opts);
-  if (!Array.isArray(state.listeners)) state.listeners = [];
+  if (!Array.isArray(state.listeners)) {
+state.listeners = [];
+}
   state.listeners.push({ target, event, fn, opts });
 }
 
@@ -105,7 +115,9 @@ export function addListener(state, target, event, fn, opts = {}) {
  * @param {object} state - shared map state
  */
 export function removeAllListeners(state) {
-  if (!state?.listeners) return;
+  if (!state?.listeners) {
+return;
+}
   for (const { target, event, fn, opts } of state.listeners) {
     try {
       target.removeEventListener(event, fn, opts);
@@ -124,7 +136,9 @@ export function removeAllListeners(state) {
  * @param {Function} fn - listener function
  */
 export function removeListener(state, target, event, fn) {
-  if (!state?.listeners) return;
+  if (!state?.listeners) {
+return;
+}
   state.listeners = state.listeners.filter((rec) => {
     if (rec.target === target && rec.event === event && rec.fn === fn) {
       try {

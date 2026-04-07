@@ -24,7 +24,9 @@ function buildMediaFragment(mediaData, entityType, entityId, isLoggedIn, prefix 
     const wrapper = createElement("div", { class: `${prefix}-group` });
 
     group.forEach((media, i) => {
-      if (!media.url) return;
+      if (!media.url) {
+return;
+}
 
       const figure = createElement("figure", {
         class: `${prefix}-item`,
@@ -43,7 +45,9 @@ function buildMediaFragment(mediaData, entityType, entityId, isLoggedIn, prefix 
         const translation = buildTranslationSection(media.caption, media.captionlang);
 
         figure.append(caption);
-        if (translation) figure.append(...translation);
+        if (translation) {
+figure.append(...translation);
+}
       }
 
       const actions = createMediaActions(media, entityType, entityId, isLoggedIn, confirmDelete, prefix);
@@ -83,7 +87,7 @@ function buildMediaElement(media, thumbSrc, index, prefix) {
       "data-index": index
     });
 
-    let vidEl = createElement("div", {}, []);
+    const vidEl = createElement("div", {}, []);
 
     generateVideoPlayer(videoSrc, thumbSrc, [], [], media.url).then(videoPlayer => {
       vidEl.appendChild(videoPlayer);
@@ -138,7 +142,9 @@ function buildTranslationSection(captionText, captionLang) {
   const userLang = localStorage.getItem("lang") || "en";
 
   // No translation toggle needed if languages match
-  if (!captionLang || captionLang === userLang) return null;
+  if (!captionLang || captionLang === userLang) {
+return null;
+}
 
   const translationBox = createElement("div", {
     class: "translation-container",
@@ -184,7 +190,9 @@ export async function displayFanMedia(content, entityType, entityId, isLoggedIn)
     if (!Array.isArray(mediaData) || mediaData.length === 0) {
       content.append(createElement("p", {}, ["No media available."]));
       const addBtn = createAddMediaButton(isLoggedIn, entityType, entityId, list, showMediaUploadForm);
-      if (addBtn) content.append(addBtn);
+      if (addBtn) {
+content.append(addBtn);
+}
       return;
     }
 
@@ -192,13 +200,17 @@ export async function displayFanMedia(content, entityType, entityId, isLoggedIn)
     list.append(frag);
 
     const addBtn = createAddMediaButton(isLoggedIn, entityType, entityId, list, showMediaUploadForm);
-    if (addBtn) content.append(addBtn);
+    if (addBtn) {
+content.append(addBtn);
+}
 
     content.append(list);
 
     list.addEventListener("click", e => {
       const img = e.target.closest(".fanmade-img");
-      if (img) return;
+      if (img) {
+return;
+}
     });
   } catch (err) {
     console.error("Fan media fetch error:", err);

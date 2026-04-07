@@ -42,7 +42,9 @@ export function renderPreviewList(files, container, type, input, onChange) {
   const fileArr = Array.from(files);
 
   fileArr.forEach((file, index) => {
-    if (!file.type.startsWith(type)) return;
+    if (!file.type.startsWith(type)) {
+return;
+}
     const reader = new FileReader();
     reader.onload = e => {
       const src = e.target.result;
@@ -62,7 +64,9 @@ export function renderPreviewList(files, container, type, input, onChange) {
         fileArr.forEach(f => dt.items.add(f));
         input.files = dt.files;
         renderPreviewList(fileArr, container, type, input, onChange);
-        if (onChange) onChange();
+        if (onChange) {
+onChange();
+}
       });
 
       const wrapper = createEl("div", { class: ["preview-wrapper"] }, [mediaEl, removeBtn]);

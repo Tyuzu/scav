@@ -56,7 +56,9 @@ export function createFarmForm({ isEdit = false, farm = {}, onSubmit }) {
     const formData = new FormData();
     fieldsConfig.forEach(f => {
       const input = document.getElementById(f.id);
-      if (!input) return;
+      if (!input) {
+return;
+}
       // if (f.type === "file" && input.files.length > 0) {
       //   Array.from(input.files).forEach(file => formData.append("gallery", file));
       // } else {
@@ -64,7 +66,9 @@ export function createFarmForm({ isEdit = false, farm = {}, onSubmit }) {
       // }
     });
 
-    if (!isEdit) formData.append("crops", JSON.stringify([]));
+    if (!isEdit) {
+formData.append("crops", JSON.stringify([]));
+}
 
     return await onSubmit(formData);
   }, isEdit ? "Update Farm" : "Create Farm");

@@ -10,7 +10,9 @@ export const highlightActiveNav = (path) => {
 /** Handle navigation */
 const handleNavigation = (event, href) => {
     event.preventDefault();
-    if (!href) return console.error("🚨 handleNavigation received null href!");
+    if (!href) {
+return console.error("🚨 handleNavigation received null href!");
+}
     navigate(href);
 };
 
@@ -46,14 +48,18 @@ const enableDragDrop = (ul, toggle) => {
     placeholder.className = "navigation__placeholder";
 
     const onDragStart = (e) => {
-        if (!toggle.checked) return;
+        if (!toggle.checked) {
+return;
+}
         draggingEl = e.target.closest("li");
         draggingEl.classList.add("dragging");
         e.dataTransfer.effectAllowed = "move";
     };
 
     const onDragEnd = () => {
-        if (draggingEl) draggingEl.classList.remove("dragging");
+        if (draggingEl) {
+draggingEl.classList.remove("dragging");
+}
         draggingEl = null;
         placeholder.remove();
         // save order
@@ -65,9 +71,13 @@ const enableDragDrop = (ul, toggle) => {
 
     const onDragOver = (e) => {
         e.preventDefault();
-        if (!toggle.checked) return;
+        if (!toggle.checked) {
+return;
+}
         const target = e.target.closest("li");
-        if (!target || target === draggingEl || target === placeholder) return;
+        if (!target || target === draggingEl || target === placeholder) {
+return;
+}
 
         const rect = target.getBoundingClientRect();
         const next = (e.clientX - rect.left) / rect.width > 0.5; // horizontal
@@ -76,8 +86,12 @@ const enableDragDrop = (ul, toggle) => {
 
     const onDrop = (e) => {
         e.preventDefault();
-        if (!toggle.checked) return;
-        if (placeholder.parentNode) ul.insertBefore(draggingEl, placeholder);
+        if (!toggle.checked) {
+return;
+}
+        if (placeholder.parentNode) {
+ul.insertBefore(draggingEl, placeholder);
+}
         placeholder.remove();
     };
 
@@ -116,7 +130,9 @@ const createNav = () => {
             .map(href => defaultNavItems.find(item => item.href === href))
             .filter(Boolean);
         defaultNavItems.forEach(item => {
-            if (!navItems.find(i => i.href === item.href)) navItems.push(item);
+            if (!navItems.find(i => i.href === item.href)) {
+navItems.push(item);
+}
         });
     }
 

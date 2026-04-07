@@ -5,9 +5,13 @@ import Datex from "../../components/base/Datex.js";
 
 // --- MAIN RENDER FUNCTION ---
 export async function renderAnalyticsPage({ container, isLoggedIn, entityType = "events", entityId = null }) {
-    if (!container) return;
+    if (!container) {
+return;
+}
 
-    while (container.firstChild) container.removeChild(container.firstChild);
+    while (container.firstChild) {
+container.removeChild(container.firstChild);
+}
 
     if (!isLoggedIn) {
         Notify("Please log in to view analytics.", { type: "warning", duration: 3000, dismissible: true });

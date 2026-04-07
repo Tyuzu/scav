@@ -29,13 +29,17 @@ export function showLoadingOverlay(content, text = "Loading...") {
         );
 
         const parentStyle = window.getComputedStyle(content);
-        if (parentStyle.position === "static") content.style.position = "relative";
+        if (parentStyle.position === "static") {
+content.style.position = "relative";
+}
 
         content.append(overlay);
     } else {
         const textEl = overlay.querySelector(".music-loading-text");
         if (textEl) {
-            while (textEl.firstChild) textEl.removeChild(textEl.firstChild);
+            while (textEl.firstChild) {
+textEl.removeChild(textEl.firstChild);
+}
             textEl.append(document.createTextNode(text));
         }
         overlay.style.display = "";
@@ -45,13 +49,17 @@ export function showLoadingOverlay(content, text = "Loading...") {
 
 export function hideLoadingOverlay(content) {
     const overlay = content.querySelector(".music-loading-overlay");
-    if (overlay) overlay.style.display = "none";
+    if (overlay) {
+overlay.style.display = "none";
+}
 }
 
 
 export function setButtonTextSafely(btn, text) {
     // avoid using textContent or innerHTML as per project rules: replace children with a text node
-    while (btn.firstChild) btn.removeChild(btn.firstChild);
+    while (btn.firstChild) {
+btn.removeChild(btn.firstChild);
+}
     btn.append(document.createTextNode(text));
 }
 
@@ -62,7 +70,9 @@ export function createToolbarButton(text, onClick) {
 }
 
 export function createBackButton(container, onClick) {
-    if (container.querySelector(".back-btn")) return;
+    if (container.querySelector(".back-btn")) {
+return;
+}
     const backBtn = createElement("button", { class: "back-btn" }, ["⬅ Back"]);
     backBtn.addEventListener("click", onClick);
     container.prepend(backBtn);

@@ -39,7 +39,9 @@ export function WalletTransfer({ onBalanceChange }) {
                     Notify("Transfer successful", { type: "success" });
                     recipientInput.value = "";
                     amountInput.value = "";
-                    if (onBalanceChange) onBalanceChange();
+                    if (onBalanceChange) {
+onBalanceChange();
+}
                 } else {
                     Notify(res.message || "Transfer failed", { type: "error" });
                 }

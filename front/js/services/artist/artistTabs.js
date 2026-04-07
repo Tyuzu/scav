@@ -32,7 +32,9 @@ export async function renderAlbumsTab(artistID, isCreator) {
     const listWrapper = createElement("div", { class: "albums-wrapper" }, []);
 
     albums.forEach(a => {
-        if (!a.published && !isCreator) return;
+        if (!a.published && !isCreator) {
+return;
+}
 
         const title = createElement("h3", {}, [a.title || ""]);
         const release = createElement("p", {}, [

@@ -20,7 +20,9 @@ const lazyObserver = ('loading' in HTMLImageElement.prototype || typeof Intersec
   ? null
   : new IntersectionObserver((entries) => {
     entries.forEach(entry => {
-      if (!entry.isIntersecting) return;
+      if (!entry.isIntersecting) {
+return;
+}
       const img = entry.target;
       const real = img.dataset.src;
       if (real) {
@@ -69,9 +71,13 @@ export async function displayPost(isLoggedIn, postId, container) {
   const frag = document.createDocumentFragment();
   frag.append(renderHeader(post));
   frag.append(renderBody(post));
-  if (post.tags?.length) frag.append(renderTags(post.tags));
+  if (post.tags?.length) {
+frag.append(renderTags(post.tags));
+}
   frag.append(await renderProfile(post));
-  if (isLoggedIn && post.createdBy == getState("user")) frag.append(renderPostActions(post.postid, isLoggedIn, page));
+  if (isLoggedIn && post.createdBy == getState("user")) {
+frag.append(renderPostActions(post.postid, isLoggedIn, page));
+}
   frag.append(renderComments(post));
 
   page.appendChild(frag);
@@ -122,7 +128,9 @@ function renderBody(post) {
   });
   flushImages();
 
-  if (!fragment.childElementCount) fragment.append(createElement("p", {}, ["No content"]));
+  if (!fragment.childElementCount) {
+fragment.append(createElement("p", {}, ["No content"]));
+}
   content.append(fragment);
   return content;
 }
@@ -156,7 +164,9 @@ function renderImageGroup(images) {
   // Click → open ZoomBox starting at clicked image
   group.addEventListener("click", e => {
     const img = e.target.closest(".post-image");
-    if (!img) return;
+    if (!img) {
+return;
+}
     const index = parseInt(img.dataset.index, 10);
     ZoomBox(mediaItems, index);
   });
@@ -193,7 +203,9 @@ function renderPostActions(postId, isLoggedIn, page) {
 
   const deleteBtn = Button("🗑️ Delete", "delete-post", {
     click: async () => {
-      if (!confirm("Are you sure you want to delete this post?")) return;
+      if (!confirm("Are you sure you want to delete this post?")) {
+return;
+}
       try {
         await apiFetch(`/posts/post/${encodeURIComponent(postId)}`, "DELETE");
         Notify("✅ Post deleted.", { type: "success", duration: 3000, dismissible: true });

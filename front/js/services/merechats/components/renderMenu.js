@@ -4,7 +4,9 @@ import { mereFetch } from "../../../api/api.js";
 
 export function renderMenu(msg) {
   // hard guards
-  if (!msg || msg.deleted) return null;
+  if (!msg || msg.deleted) {
+return null;
+}
 
   const messageId =
     typeof msg.messageid === "string" && msg.messageid.trim()
@@ -16,7 +18,9 @@ export function renderMenu(msg) {
       click: e => {
         e.stopPropagation();
         const dropdown = e.currentTarget.nextSibling;
-        if (dropdown) dropdown.classList.toggle("open");
+        if (dropdown) {
+dropdown.classList.toggle("open");
+}
       }
     }),
 
@@ -44,10 +48,14 @@ export function renderMenu(msg) {
 }
 
 async function handleEdit(id) {
-  if (!id) return;
+  if (!id) {
+return;
+}
 
   const text = prompt("Edit message:");
-  if (!text || !text.trim()) return;
+  if (!text || !text.trim()) {
+return;
+}
 
   await mereFetch(
     `/merechats/messages/${id}`,
@@ -57,9 +65,13 @@ async function handleEdit(id) {
 }
 
 async function handleDelete(id) {
-  if (!id) return;
+  if (!id) {
+return;
+}
 
-  if (!confirm("Delete this message?")) return;
+  if (!confirm("Delete this message?")) {
+return;
+}
 
   await mereFetch(
     `/merechats/messages/${id}`,

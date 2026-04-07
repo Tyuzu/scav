@@ -45,7 +45,7 @@ console.log(place);
     const actionsWrapper = createElement("div", { class: "hvflex" }, []);
     const editContainer = createElement("div", { id: "editplace" }, []);
 
-    let placeanacon = createElement("div",{},[]);
+    const placeanacon = createElement("div",{},[]);
     
     actionsWrapper.appendChild(
       Button("Edit Place", "edit-place-btn", {

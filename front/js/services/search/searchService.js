@@ -60,12 +60,16 @@ export async function displaySearchForm(container) {
             ...tab,
             render: async (tabContainer) => {
                 // Render results only if query exists
-                if (searchQuery) await fetchSearchResults(tab.id, searchQuery, tabContainer);
+                if (searchQuery) {
+await fetchSearchResults(tab.id, searchQuery, tabContainer);
+}
             }
         })),
         "search-tabs",
         "all",
-        (tabId) => { currentTab = tabId; }
+        (tabId) => {
+ currentTab = tabId; 
+}
     );
 
     searchContainer.append(searchBar, autocompleteList, tabsUI);
@@ -74,7 +78,9 @@ export async function displaySearchForm(container) {
     // --- Listeners
     searchButton.addEventListener("click", () => {
         searchQuery = searchInput.value.trim();
-        if (!searchQuery) return Notify("Please enter a search query.", { type: "info", duration: 3000 });
+        if (!searchQuery) {
+return Notify("Please enter a search query.", { type: "info", duration: 3000 });
+}
         refreshCurrentTab();
     });
 
@@ -83,20 +89,26 @@ export async function displaySearchForm(container) {
     searchInput.addEventListener("keydown", (e) => {
         if (e.key === "Enter") {
             searchQuery = searchInput.value.trim();
-            if (searchQuery) refreshCurrentTab();
+            if (searchQuery) {
+refreshCurrentTab();
+}
             autocompleteList.textContent = "";
         }
     });
 
     document.addEventListener("click", (e) => {
-        if (!searchContainer.contains(e.target)) autocompleteList.textContent = "";
+        if (!searchContainer.contains(e.target)) {
+autocompleteList.textContent = "";
+}
     });
 }
 
 // --- Refresh results in the currently active tab
 function refreshCurrentTab() {
     const activeTabContainer = document.querySelector(".tab-content.active");
-    if (activeTabContainer) fetchSearchResults(currentTab, searchQuery, activeTabContainer);
+    if (activeTabContainer) {
+fetchSearchResults(currentTab, searchQuery, activeTabContainer);
+}
 }
 
 // --- Autocomplete logic
@@ -104,7 +116,9 @@ async function handleAutocomplete(event) {
     const query = event.target.value.trim();
     const autocompleteList = document.getElementById("autocomplete-list");
     autocompleteList.textContent = "";
-    if (!query) return;
+    if (!query) {
+return;
+}
 
     try {
         const response = await fetch(`${SEARCH_URL}/ac?prefix=${encodeURIComponent(query)}`);
@@ -128,27 +142,39 @@ async function handleAutocomplete(event) {
 function handleKeyboardNavigation(event) {
     const autocompleteList = document.getElementById("autocomplete-list");
     const items = autocompleteList.querySelectorAll(".autocomplete-item");
-    if (!items.length) return;
+    if (!items.length) {
+return;
+}
 
     let index = Array.from(items).findIndex(item => item.classList.contains("selected"));
 
-    if (event.key === "ArrowDown") index = (index + 1) % items.length;
-    else if (event.key === "ArrowUp") index = (index - 1 + items.length) % items.length;
-    else if (event.key === "Enter") {
-        if (index >= 0) items[index].click();
+    if (event.key === "ArrowDown") {
+index = (index + 1) % items.length;
+} else if (event.key === "ArrowUp") {
+index = (index - 1 + items.length) % items.length;
+} else if (event.key === "Enter") {
+        if (index >= 0) {
+items[index].click();
+}
         event.preventDefault();
         return;
-    } else return;
+    } else {
+return;
+}
 
     items.forEach(item => item.classList.remove("selected"));
-    if (index >= 0) items[index].classList.add("selected");
+    if (index >= 0) {
+items[index].classList.add("selected");
+}
 }
 
 // --- Fetch wrapper
 async function apiFetch(endpoint) {
     try {
         const response = await fetch(endpoint);
-        if (!response.ok) throw new Error("Failed to fetch");
+        if (!response.ok) {
+throw new Error("Failed to fetch");
+}
         const text = await response.text();
         return text ? JSON.parse(text) : [];
     } catch (err) {
@@ -185,11 +211,18 @@ function displaySearchResults(entityType, data, container) {
             }
         });
 
-        if (!hasResults) container.appendChild(createElement("p", {}, ["No results found."]));
+        if (!hasResults) {
+container.appendChild(createElement("p", {}, ["No results found."]));
+}
     } else if (Array.isArray(data)) {
-        if (!data.length) container.appendChild(createElement("p", {}, ["No results found."]));
-        else data.forEach(item => container.appendChild(createCard(entityType, item)));
-    } else container.appendChild(createElement("p", {}, ["No results found."]));
+        if (!data.length) {
+container.appendChild(createElement("p", {}, ["No results found."]));
+} else {
+data.forEach(item => container.appendChild(createCard(entityType, item)));
+}
+    } else {
+container.appendChild(createElement("p", {}, ["No results found."]));
+}
 }
 
 function createCard(entityType, item) {
@@ -234,7 +267,9 @@ function createCard(entityType, item) {
             target: "_blank"
         }, ["View Details"]));
     }
-    if (footer.children.length) card.appendChild(footer);
+    if (footer.children.length) {
+card.appendChild(footer);
+}
 
     return card;
 }

@@ -57,7 +57,9 @@ function extToMime(ext) {
    Send message (WS first)
 --------------------------*/
 export function sendMessage(chatid, content) {
-  if (!content || !content.trim()) return;
+  if (!content || !content.trim()) {
+return;
+}
 
   const clientId = `c_${Date.now()}_${Math.random().toString(36).slice(2)}`;
 
@@ -100,7 +102,9 @@ async function sendMessageRESTFallback(chatid, content, clientId) {
 }
 
 function reconcilePending(chatid, clientId, serverMsg) {
-  if (!serverMsg?.messageid) return;
+  if (!serverMsg?.messageid) {
+return;
+}
 
   const rendered = ensureRenderedSet(chatid);
   const realId = String(serverMsg.messageid);
@@ -146,7 +150,9 @@ function reconcilePending(chatid, clientId, serverMsg) {
 --------------------------*/
 async function loadHistory(chatid) {
   const container = getMessageContainer();
-  if (!container) return;
+  if (!container) {
+return;
+}
 
   container.replaceChildren();
   const rendered = ensureRenderedSet(chatid);
@@ -176,7 +182,9 @@ async function loadHistory(chatid) {
 --------------------------*/
 async function uploadAttachment(chatid, fileInput) {
   const file = fileInput.files?.[0];
-  if (!file) return;
+  if (!file) {
+return;
+}
 
   // create a stable preview URL for local display
   const previewUrl = URL.createObjectURL(file);
@@ -232,7 +240,9 @@ async function uploadAttachment(chatid, fileInput) {
       }
     );
 
-    if (!res.ok) throw new Error(await res.text());
+    if (!res.ok) {
+throw new Error(await res.text());
+}
 
     const msg = await res.json();
 

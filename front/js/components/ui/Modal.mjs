@@ -21,7 +21,9 @@ function unlockBodyScroll() {
 }
 
 function makeHeader(title, onClose, uid, showCloseButton) {
-  if (!title && !showCloseButton) return null;
+  if (!title && !showCloseButton) {
+return null;
+}
 
   const heading = title
     ? createElement("h3", { id: `modal-title-${uid}` }, [title])
@@ -64,10 +66,16 @@ function makeBody(content, uid) {
 function simpleDurationMs(el) {
   const cs = window.getComputedStyle(el);
   const toMs = v => {
-    if (!v) return 0;
+    if (!v) {
+return 0;
+}
     v = v.split(",")[0].trim();
-    if (v.endsWith("ms")) return parseFloat(v) || 0;
-    if (v.endsWith("s")) return (parseFloat(v) || 0) * 1000;
+    if (v.endsWith("ms")) {
+return parseFloat(v) || 0;
+}
+    if (v.endsWith("s")) {
+return (parseFloat(v) || 0) * 1000;
+}
     return parseFloat(v) || 0;
   };
   return Math.max(
@@ -141,11 +149,16 @@ export default function Modal({
   };
 
   const wrappedClose = (data) => {
-    if (force) return;
+    if (force) {
+return;
+}
     onBeforeClose?.();
     cleanup();
-    if (returnDataOnClose) onClose?.(data);
-    else onClose?.();
+    if (returnDataOnClose) {
+onClose?.(data);
+} else {
+onClose?.();
+}
     onAfterClose?.();
   };
 
@@ -169,7 +182,9 @@ export default function Modal({
   }
 
   const { body, descId } = makeBody(content, uid);
-  if (flushBody) body.classList.add("modal-body--flush");
+  if (flushBody) {
+body.classList.add("modal-body--flush");
+}
 
   dialog.appendChild(body);
 
@@ -182,7 +197,9 @@ export default function Modal({
   }
 
   dialog.setAttribute("aria-modal", "true");
-  if (titleId) dialog.setAttribute("aria-labelledby", titleId);
+  if (titleId) {
+dialog.setAttribute("aria-labelledby", titleId);
+}
   dialog.setAttribute("aria-describedby", descId);
 
   const focusableSel =
@@ -193,7 +210,9 @@ export default function Modal({
       .from(dialog.querySelectorAll(focusableSel))
       .filter(n => !n.disabled);
 
-    if (!focusables.length) return;
+    if (!focusables.length) {
+return;
+}
 
     const first = focusables[0];
     const last = focusables[focusables.length - 1];

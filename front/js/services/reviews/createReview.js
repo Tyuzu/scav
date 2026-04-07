@@ -108,7 +108,9 @@ function handleEditReview(review, entityType, entityId, onDone) {
 }
 
 async function handleDeleteReview(reviewId, entityType, entityId, onDone) {
-    if (!confirm("Delete this review?")) return;
+    if (!confirm("Delete this review?")) {
+return;
+}
 
     await apiFetch(`/reviews/${entityType}/${entityId}/${reviewId}`, "DELETE");
     onDone();

@@ -48,23 +48,37 @@ export function WalletTransactions({ onBalanceChange }) {
 
                 // Sender/recipient info
                 const accounts = [];
-                if (txn.from_account) accounts.push(`From: ${txn.from_account}`);
-                if (txn.to_account) accounts.push(`To: ${txn.to_account}`);
-                if (accounts.length) txnEl.appendChild(createElement("div", { class: "txn-accounts" }, [accounts.join(" | ")]));
+                if (txn.from_account) {
+accounts.push(`From: ${txn.from_account}`);
+}
+                if (txn.to_account) {
+accounts.push(`To: ${txn.to_account}`);
+}
+                if (accounts.length) {
+txnEl.appendChild(createElement("div", { class: "txn-accounts" }, [accounts.join(" | ")]));
+}
                 
                 // Extra meta
                 if (txn.meta) {
                     const metaInfo = [];
-                    if (txn.meta.note) metaInfo.push(txn.meta.note);
-                    if (txn.meta.entity_type && txn.meta.entity_id) metaInfo.push(`${txn.meta.entity_type} (${txn.meta.entity_id})`);
-                    if (metaInfo.length > 0) txnEl.appendChild(createElement("div", { class: "txn-extra" }, [metaInfo.join(" | ")]));
+                    if (txn.meta.note) {
+metaInfo.push(txn.meta.note);
+}
+                    if (txn.meta.entity_type && txn.meta.entity_id) {
+metaInfo.push(`${txn.meta.entity_type} (${txn.meta.entity_id})`);
+}
+                    if (metaInfo.length > 0) {
+txnEl.appendChild(createElement("div", { class: "txn-extra" }, [metaInfo.join(" | ")]));
+}
                 }
 
                 // Refund button
                 if (txn.type === "payment" && txn.state === "success" && txn.from_account === txn.userid) {
                     const refundBtn = Button("Refund", "", {
                         click: async () => {
-                            if (!confirm("Refund this transaction?")) return;
+                            if (!confirm("Refund this transaction?")) {
+return;
+}
                             refundBtn.disabled = true;
                             try {
                                 const idempotencyKey = uuidv4();
@@ -73,7 +87,9 @@ export function WalletTransactions({ onBalanceChange }) {
                                 });
                                 if (refundRes.success) {
                                     Notify("Refund successful", { type: "success" });
-                                    if (onBalanceChange) onBalanceChange();
+                                    if (onBalanceChange) {
+onBalanceChange();
+}
                                     skip = 0;
                                     await loadTransactions();
                                 } else {

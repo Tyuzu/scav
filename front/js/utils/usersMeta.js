@@ -6,7 +6,9 @@ const TTL_MS = 60 * 60 * 1000; // 1 hour
 
 function getFromLocalStorage(id) {
     const raw = localStorage.getItem(`userMeta:${id}`);
-    if (!raw) return null;
+    if (!raw) {
+return null;
+}
     try {
         const record = JSON.parse(raw);
         if (Date.now() > record.expires) {

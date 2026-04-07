@@ -21,8 +21,12 @@ export async function apiFetch(endpoint, method = "GET") {
     ]
   };
 
-  if (method !== "GET") throw new Error("Mock only GET");
-  if (endpoint in dummy) return dummy[endpoint];
+  if (method !== "GET") {
+throw new Error("Mock only GET");
+}
+  if (endpoint in dummy) {
+return dummy[endpoint];
+}
   throw new Error(`Unknown endpoint: ${endpoint}`);
 }
 

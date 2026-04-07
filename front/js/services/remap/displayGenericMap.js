@@ -39,7 +39,9 @@ const DEFAULTS = {
 
 /* ---------- Utilities ---------- */
 function clearChildren(el) {
-  while (el.firstChild) el.removeChild(el.firstChild);
+  while (el.firstChild) {
+el.removeChild(el.firstChild);
+}
 }
 
 /* ---------- Shared Style (once per page) ---------- */
@@ -70,7 +72,9 @@ function createZoomControls(state, mapOptions, mapContainer, mapWrapper, minimap
 
   function applyZoomChange(delta) {
     const newZoom = clamp(state.zoom + delta * mapOptions.zoomStep, mapOptions.minZoom, mapOptions.maxZoom);
-    if (newZoom === state.zoom) return;
+    if (newZoom === state.zoom) {
+return;
+}
     const rect = mapContainer.getBoundingClientRect();
     const centerX = rect.width / 2;
     const centerY = rect.height / 2;
@@ -106,9 +110,15 @@ function createInfoPanel(state, mapOptions) {
 
   function showInfo(markerData) {
     clearChildren(content);
-    if (markerData.image) content.appendChild(Imagex({ src: markerData.image, width: "100%" }));
-    if (markerData.title) content.appendChild(createElement("h4", {}, markerData.title));
-    if (markerData.description) content.appendChild(createElement("p", {}, markerData.description));
+    if (markerData.image) {
+content.appendChild(Imagex({ src: markerData.image, width: "100%" }));
+}
+    if (markerData.title) {
+content.appendChild(createElement("h4", {}, markerData.title));
+}
+    if (markerData.description) {
+content.appendChild(createElement("p", {}, markerData.description));
+}
     panel.style.display = "block";
     panel.setAttribute("aria-hidden", "false");
   }
@@ -116,7 +126,9 @@ function createInfoPanel(state, mapOptions) {
   function hideInfo() {
     panel.style.display = "none";
     panel.setAttribute("aria-hidden", "true");
-    if (typeof mapOptions.onInfoClose === "function") mapOptions.onInfoClose();
+    if (typeof mapOptions.onInfoClose === "function") {
+mapOptions.onInfoClose();
+}
   }
 
   addListener(state, closeBtn, "click", hideInfo);
@@ -143,7 +155,9 @@ function createLegend() {
 
 /* ---------- Main Export ---------- */
 export function displayGenericMap(container, options = {}) {
-  if (!container) throw new Error("Container element required");
+  if (!container) {
+throw new Error("Container element required");
+}
   const mapOptions = { ...DEFAULTS, ...options };
 
   // Theme setup
@@ -205,11 +219,15 @@ export function displayGenericMap(container, options = {}) {
   const legend = mapOptions.showLegend ? createLegend() : null;
 
   container.append(mapContainer, minimap, zoomControls, infoPanel);
-  if (legend) container.appendChild(legend);
+  if (legend) {
+container.appendChild(legend);
+}
 
   /* ---------- Initialize ---------- */
   function initializeMap() {
-    if (state._initialized) return;
+    if (state._initialized) {
+return;
+}
     state._initialized = true;
     state.minimapScale = minimap.clientWidth / (mapOptions.mapWidth || 1);
     initPosition(state, mapOptions, mapOptions.latToY, mapOptions.lonToX);
@@ -220,10 +238,15 @@ export function displayGenericMap(container, options = {}) {
   const mainImg = mapWrapper.querySelector("img");
   const miniReady = miniImg.complete;
   const mainReady = !mainImg || mainImg.complete;
-  if (mainReady && miniReady) initializeMap();
-  else {
-    if (mainImg) addListener(state, mainImg, "load", initializeMap);
-    if (miniImg) addListener(state, miniImg, "load", initializeMap);
+  if (mainReady && miniReady) {
+initializeMap();
+} else {
+    if (mainImg) {
+addListener(state, mainImg, "load", initializeMap);
+}
+    if (miniImg) {
+addListener(state, miniImg, "load", initializeMap);
+}
   }
 
   /* ---------- Keyboard Navigation ---------- */
@@ -237,7 +260,9 @@ export function displayGenericMap(container, options = {}) {
       case "ArrowLeft": state.mapX += 50; moved = true; break;
       case "ArrowRight": state.mapX -= 50; moved = true; break;
     }
-    if (moved) updateTransformAll(state, mapOptions, mapWrapper, minimap, minimapViewport);
+    if (moved) {
+updateTransformAll(state, mapOptions, mapWrapper, minimap, minimapViewport);
+}
   });
 
   /* ---------- Interactions ---------- */
@@ -245,7 +270,9 @@ export function displayGenericMap(container, options = {}) {
 
   /* ---------- Resize Handling ---------- */
   addListener(state, window, "resize", () => {
-    if (state.resizeTimer) clearTimeout(state.resizeTimer);
+    if (state.resizeTimer) {
+clearTimeout(state.resizeTimer);
+}
     state.resizeTimer = setTimeout(() => {
       state.viewportWidth = container.clientWidth;
       state.viewportHeight = container.clientHeight;
@@ -255,7 +282,9 @@ export function displayGenericMap(container, options = {}) {
 
   /* ---------- Destroy ---------- */
   function destroy() {
-    if (state.destroyed) return;
+    if (state.destroyed) {
+return;
+}
     state.destroyed = true;
     removeAllListeners(state);
     stopInertia(state);

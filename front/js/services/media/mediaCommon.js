@@ -12,13 +12,17 @@ import { deleteMedia } from "./api/mediaApi.js";
 export const lazyMediaObserver = new IntersectionObserver(
   entries => {
     for (const { target, isIntersecting } of entries) {
-      if (!target.dataset.src) continue;
+      if (!target.dataset.src) {
+continue;
+}
 
       if (isIntersecting) {
         target.src = target.dataset.src;
         delete target.dataset.src;
 
-        if (target.tagName === "VIDEO") target.load();
+        if (target.tagName === "VIDEO") {
+target.load();
+}
         lazyMediaObserver.unobserve(target);
       } else if (target.tagName === "VIDEO") {
         target.pause();
@@ -32,7 +36,9 @@ export const lazyMediaObserver = new IntersectionObserver(
    Helpers
 ------------------------------------------------------ */
 export const clear = el => {
-  while (el.firstChild) el.removeChild(el.firstChild);
+  while (el.firstChild) {
+el.removeChild(el.firstChild);
+}
 };
 
 export const groupMedia = media =>
@@ -48,13 +54,23 @@ export const groupMedia = media =>
    Helper: Determine media type (same logic used everywhere)
 ------------------------------------------------------ */
 export function getFileType(media) {
-  if (!media) return "unknown";
-  if (media.type?.startsWith("image")) return "image";
-  if (media.type?.startsWith("video")) return "video";
+  if (!media) {
+return "unknown";
+}
+  if (media.type?.startsWith("image")) {
+return "image";
+}
+  if (media.type?.startsWith("video")) {
+return "video";
+}
 
   const url = media.url || "";
-  if (/\.(jpg|jpeg|png|gif|webp|avif)$/i.test(url)) return "image";
-  if (/\.(mp4|webm|ogg)$/i.test(url)) return "video";
+  if (/\.(jpg|jpeg|png|gif|webp|avif)$/i.test(url)) {
+return "image";
+}
+  if (/\.(mp4|webm|ogg)$/i.test(url)) {
+return "video";
+}
   return "unknown";
 }
 
@@ -115,7 +131,9 @@ export function createMediaActions(media, entityType, entityId, isLoggedIn, dele
    Confirm Delete
 ------------------------------------------------------ */
 export async function confirmDelete(mediaId, entityType, entityId, itemSelector = ".media-item") {
-  if (!confirm("Delete this media?")) return;
+  if (!confirm("Delete this media?")) {
+return;
+}
 
   try {
     const res = await deleteMedia(mediaId, entityType, entityId);
@@ -125,7 +143,9 @@ export async function confirmDelete(mediaId, entityType, entityId, itemSelector 
       const parent = item?.parentElement;
 
       item?.remove();
-      if (parent && !parent.querySelector(itemSelector)) parent.remove();
+      if (parent && !parent.querySelector(itemSelector)) {
+parent.remove();
+}
 
       Notify("Media deleted.", { type: "success" });
     } else {

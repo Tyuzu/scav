@@ -72,7 +72,7 @@ function createInlineForm(fields, onSubmit, onCancel) {
 async function displayPlaceMenu(container, placeId, isCreator, isLoggedIn) {
   container.replaceChildren();
   try {
-    let containerx = createElement('div', {}, []);
+    const containerx = createElement('div', {}, []);
     container.appendChild(containerx);
     // RenderMenu(containerx, isCreator, placeId, isLoggedIn);
     displayMenu(containerx, placeId, isCreator, isLoggedIn);
@@ -181,7 +181,9 @@ async function displayPlaceRooms(container, placeId, isCreator) {
         });
         const deleteBtn = Button("Delete", `delete-room-${room._id}`, {
           click: async () => {
-            if (!confirm(`Delete room "${room.name}"?`)) return;
+            if (!confirm(`Delete room "${room.name}"?`)) {
+return;
+}
             try {
               await apiFetch(`/place/${placeId}/rooms/${room._id}`, {
                 method: "DELETE"
@@ -260,7 +262,9 @@ async function displayPlaceFacilities(container, placeId, isCreator) {
       if (isCreator) {
         const deleteBtn = Button("Delete", `delete-facility-${id}`, {
           click: async () => {
-            if (!confirm(`Delete facility "${name}"?`)) return;
+            if (!confirm(`Delete facility "${name}"?`)) {
+return;
+}
             try {
               await apiFetch(`/place/${placeId}/facilities/${id}`, {
                 method: "DELETE"
@@ -356,7 +360,9 @@ async function displayPlaceServices(container, placeId, isCreator) {
         });
         const deleteBtn = Button("Delete", `delete-service-${id}`, {
           click: async () => {
-            if (!confirm(`Delete service "${name}"?`)) return;
+            if (!confirm(`Delete service "${name}"?`)) {
+return;
+}
             try {
               await apiFetch(`/place/${placeId}/services/${id}`, {
                 method: "DELETE"
@@ -453,7 +459,9 @@ async function displayPlaceExhibits(container, placeId, isCreator) {
         });
         const deleteBtn = Button("Delete", `delete-exhibit-${ex._id}`, {
           click: async () => {
-            if (!confirm(`Delete exhibit "${ex.title}"?`)) return;
+            if (!confirm(`Delete exhibit "${ex.title}"?`)) {
+return;
+}
             try {
               await apiFetch(`/place/${placeId}/exhibits/${ex._id}`, {
                 method: "DELETE"
@@ -567,7 +575,9 @@ async function displayPlaceMembership(container, placeId, isCreator, isLoggedIn)
         });
         const deleteBtn = Button("Delete", `delete-plan-${plan._id}`, {
           click: async () => {
-            if (!confirm(`Delete plan "${plan.name}"?`)) return;
+            if (!confirm(`Delete plan "${plan.name}"?`)) {
+return;
+}
             try {
               await apiFetch(`/place/${placeId}/membership/${plan._id}`, {
                 method: "DELETE"
@@ -683,7 +693,9 @@ async function displayPlaceShows(container, placeId, isCreator, isLoggedIn) {
         });
         const deleteBtn = Button("Delete", `delete-show-${show._id}`, {
           click: async () => {
-            if (!confirm(`Delete show "${show.title}"?`)) return;
+            if (!confirm(`Delete show "${show.title}"?`)) {
+return;
+}
             try {
               await apiFetch(`/place/${placeId}/shows/${show._id}`, {
                 method: "DELETE"

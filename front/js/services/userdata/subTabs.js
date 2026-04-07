@@ -99,7 +99,9 @@ function activateChildTab(tabButton, contentContainer, username, entityType) {
 function createElement(tag, attributes = {}, textContent = "") {
   const element = document.createElement(tag);
   Object.entries(attributes).forEach(([key, value]) => element.setAttribute(key, value));
-  if (textContent) element.textContent = textContent;
+  if (textContent) {
+element.textContent = textContent;
+}
   return element;
 }
 

@@ -103,7 +103,9 @@ async function renderTicksPage(isLoggedIn, eventId, containerx) {
         );
 
         container.append(header);
-        if (organizer) container.append(organizer);
+        if (organizer) {
+container.append(organizer);
+}
         container.append(main);
 
         await displayTickets(

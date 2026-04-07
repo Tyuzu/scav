@@ -94,7 +94,7 @@ function isSeatObstructed(cx, cy, cranes) {
 
 // --- Optional deterministic randomness (stable seat distribution) ---
 function seededRandom(seed = 1) {
-  let x = Math.sin(seed++) * 10000;
+  const x = Math.sin(seed++) * 10000;
   return x - Math.floor(x);
 }
 
@@ -116,8 +116,9 @@ export function generateStadiumLayout(opts = {}) {
     seed = Date.now()
   } = opts;
 
-  if (sections <= 0 || rowsPerSection <= 0 || seatsPerRow <= 0)
-    throw new Error("Invalid stadium configuration.");
+  if (sections <= 0 || rowsPerSection <= 0 || seatsPerRow <= 0) {
+throw new Error("Invalid stadium configuration.");
+}
 
   const width = centerX * 2;
   const height = centerY * 2;

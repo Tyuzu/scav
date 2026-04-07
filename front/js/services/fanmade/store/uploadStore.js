@@ -7,7 +7,9 @@ export const UploadStore = {
     },
   
     remove(id) {
-      if (this.controllers[id]) this.controllers[id].abort();
+      if (this.controllers[id]) {
+this.controllers[id].abort();
+}
       delete this.controllers[id];
       this.uploads = this.uploads.filter(u => u.id !== id);
     },

@@ -32,7 +32,9 @@ export async function displayLiveStream(isLoggedIn, liveId, container) {
         el.replaceChildren(String(text ?? ""));
 
     const formatDuration = startedAt => {
-        if (!startedAt) return "00:00";
+        if (!startedAt) {
+return "00:00";
+}
         const now = Date.now() + serverOffsetMs;
         const sec = Math.max(0, Math.floor((now - new Date(startedAt)) / 1000));
         const m = String(Math.floor(sec / 60)).padStart(2, "0");
@@ -42,9 +44,13 @@ export async function displayLiveStream(isLoggedIn, liveId, container) {
 
     const cleanup = () => {
         destroyed = true;
-        if (pollTimer) clearInterval(pollTimer);
+        if (pollTimer) {
+clearInterval(pollTimer);
+}
         pollTimer = null;
-        try { ws?.close(); } catch {}
+        try {
+ ws?.close(); 
+} catch {}
         document.removeEventListener("visibilitychange", visibilityHandler);
     };
 
@@ -208,7 +214,9 @@ export async function displayLiveStream(isLoggedIn, liveId, container) {
     };
 
     function connectChat() {
-        if (!isLoggedIn || destroyed) return;
+        if (!isLoggedIn || destroyed) {
+return;
+}
 
         const protocol = location.protocol === "https:" ? "wss" : "ws";
         ws = new WebSocket(
@@ -223,7 +231,9 @@ export async function displayLiveStream(isLoggedIn, liveId, container) {
         });
 
         ws.addEventListener("close", () => {
-            if (destroyed) return;
+            if (destroyed) {
+return;
+}
             updateText(chatStatus, "Chat: Reconnecting…");
             setTimeout(connectChat, reconnectDelay);
             reconnectDelay = Math.min(reconnectDelay * 2, 30000);
@@ -271,10 +281,14 @@ export async function displayLiveStream(isLoggedIn, liveId, container) {
     ================================ */
 
     async function poll() {
-        if (destroyed) return;
+        if (destroyed) {
+return;
+}
 
         const s = await fetchStream();
-        if (!s) return;
+        if (!s) {
+return;
+}
 
         viewerOverlay.firstChild.data = `👀 ${s.viewerCount || 0}`;
         updateText(
@@ -314,7 +328,9 @@ export async function displayLiveStream(isLoggedIn, liveId, container) {
 
     function visibilityHandler() {
         if (document.hidden) {
-            if (pollTimer) clearInterval(pollTimer);
+            if (pollTimer) {
+clearInterval(pollTimer);
+}
         } else if (!pollTimer) {
             pollTimer = setInterval(poll, 3000);
         }

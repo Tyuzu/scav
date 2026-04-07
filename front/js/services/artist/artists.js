@@ -79,7 +79,9 @@ export async function displayArtists(container, isLoggedIn) {
 
     paged.forEach((artist, idx) => {
       list.append(createArtistCard(artist));
-      if ((idx + 1) % 6 === 0) list.append(adspace("inlist"));
+      if ((idx + 1) % 6 === 0) {
+list.append(adspace("inlist"));
+}
     });
 
     // ---------- PAGINATION ----------
@@ -88,11 +90,15 @@ export async function displayArtists(container, isLoggedIn) {
       const pager = createElement("div", { class: "artists-pager" });
 
       if (currentPage > 1) {
-        pager.append(Button("Prev", "", { click: () => { currentPage--; renderArtists(filtered); } }, "buttonx secondary"));
+        pager.append(Button("Prev", "", { click: () => {
+ currentPage--; renderArtists(filtered); 
+} }, "buttonx secondary"));
       }
 
       if (currentPage < totalPages) {
-        pager.append(Button("Next", "", { click: () => { currentPage++; renderArtists(filtered); } }, "buttonx secondary"));
+        pager.append(Button("Next", "", { click: () => {
+ currentPage++; renderArtists(filtered); 
+} }, "buttonx secondary"));
       }
 
       list.append(pager);

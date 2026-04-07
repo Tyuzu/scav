@@ -11,8 +11,10 @@ import { createSongRow } from "./songUI.js";
  * - keeps internal allSongs array and updates player queue when load more appends
  */
 export function renderSongsSection(title, songs, container, player = null, batchSelection = null, loadMore = null) {
-    let isL = Boolean(getState("user"));
-    if (!songs?.length) return;
+    const isL = Boolean(getState("user"));
+    if (!songs?.length) {
+return;
+}
     const section = createElement("div", { class: "music-section" }, [createElement("h3", {}, [title])]);
     const list = createElement("div", { class: "songs-table" });
 
@@ -28,7 +30,9 @@ export function renderSongsSection(title, songs, container, player = null, batch
         const loadMoreBtn = createElement("button", {}, ["Load More"]);
         let loading = false;
         loadMoreBtn.addEventListener("click", async () => {
-            if (loading) return;
+            if (loading) {
+return;
+}
             loading = true;
             loadMoreBtn.disabled = true;
             const moreSongs = await loadMore();
@@ -46,7 +50,9 @@ export function renderSongsSection(title, songs, container, player = null, batch
             });
             list.append(frag2);
             // Update player queue to full combined list if player supports it
-            if (player?.setQueue) player.setQueue(allSongs);
+            if (player?.setQueue) {
+player.setQueue(allSongs);
+}
         });
         section.append(loadMoreBtn);
     }
@@ -54,5 +60,7 @@ export function renderSongsSection(title, songs, container, player = null, batch
     container.append(section);
 
     // Set queue initially using provided songs array
-    if (player?.setQueue) player.setQueue(songs.slice());
+    if (player?.setQueue) {
+player.setQueue(songs.slice());
+}
 }

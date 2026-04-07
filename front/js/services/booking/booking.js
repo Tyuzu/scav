@@ -10,7 +10,9 @@ function makeButton(label, { class: cls, onclick, disabled = false }) {
 }
 
 function confirmAction(message, action) {
-    if (confirm(message)) return action();
+    if (confirm(message)) {
+return action();
+}
 }
 
 function notifyError(reason, map = {}) {
@@ -26,7 +28,9 @@ function withRefresh(action, refreshers = []) {
     return async (...args) => {
         const ok = await action(...args);
         if (ok) {
-            for (const fn of refreshers) await fn();
+            for (const fn of refreshers) {
+await fn();
+}
         }
     };
 }
@@ -54,13 +58,17 @@ function createBookingsList(api, userId, isAdmin) {
         ]);
         const toggle = makeButton(showCancelled ? "Hide Cancelled" : "View Cancelled Bookings", {
             class: "btn btn-small",
-            onclick: () => { showCancelled = !showCancelled; renderBookings(); }
+            onclick: () => {
+ showCancelled = !showCancelled; renderBookings(); 
+}
         });
         header.appendChild(toggle);
         bookingsList.appendChild(header);
 
         bookings.forEach((b, idx) => {
-            if (!showCancelled && b.status === "cancelled") return;
+            if (!showCancelled && b.status === "cancelled") {
+return;
+}
 
             const isCurrentUser = b.userId === userId;
             const username = b.userId === "guest" ? "Guest" : (userMeta[b.userId]?.username || b.userId);
@@ -82,7 +90,9 @@ function createBookingsList(api, userId, isAdmin) {
                         withRefresh(
                             async () => {
                                 const res = await api.apiCancelBooking(b.id);
-                                if (res) { notifySuccess("Booking cancelled"); return true; }
+                                if (res) {
+ notifySuccess("Booking cancelled"); return true; 
+}
                                 notifyError(); return false;
                             },
                             [renderBookings]
@@ -203,7 +213,9 @@ function renderAdminUi(api, storage, modalContent, refreshBookings, entityType, 
                     withRefresh(
                         async () => {
                             const ok = await api.apiDeleteSlot(slot.id);
-                            if (ok) { notifySuccess("Slot deleted", 1600); return true; }
+                            if (ok) {
+ notifySuccess("Slot deleted", 1600); return true; 
+}
                             notifyError(); return false;
                         },
                         [renderAdminSlots, refreshBookings]
@@ -299,7 +311,9 @@ function renderUserUi(api, storage, modalContent, userId, refreshBookings, entit
                 class: `btn btn-small ${rem <= 0 ? "btn-secondary" : "btn-primary"}`,
                 disabled: rem <= 0,
                 onclick: withRefresh(async () => {
-                    if (rem <= 0) return false;
+                    if (rem <= 0) {
+return false;
+}
                     const seatsToBook = Math.max(
                         1,
                         Math.min(parseInt(seatsInput.querySelector("input").value || "1", 10), rem)
@@ -335,7 +349,9 @@ function renderUserUi(api, storage, modalContent, userId, refreshBookings, entit
 
 // ---------- Modal ----------
 function openBookingModal(api, storage, entityType, entityId, entityCategory, userId, isAdmin, refreshBookings) {
-    if (document.getElementById("booking-modal")) return;
+    if (document.getElementById("booking-modal")) {
+return;
+}
     const modalOverlay = createElement("div", { id: "booking-modal", class: "booking-overlay" }, []);
     const modal = createElement("div", { class: "booking-modal" }, []);
     const header = createElement("div", { class: "booking-modal-header" }, [
@@ -357,7 +373,11 @@ function openBookingModal(api, storage, entityType, entityId, entityCategory, us
 
     const closeBtn = makeButton("Close", {
         class: "btn btn-secondary",
-        onclick: () => { if (modalOverlay.parentNode) modalOverlay.parentNode.removeChild(modalOverlay); }
+        onclick: () => {
+ if (modalOverlay.parentNode) {
+modalOverlay.parentNode.removeChild(modalOverlay);
+} 
+}
     });
     footer.appendChild(closeBtn);
 

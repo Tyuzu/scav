@@ -12,7 +12,9 @@ import Datex from "../../../components/base/Datex.js";
  * Expects `metadataMap` keyed by postid.
  */
 export async function renderPost(posts, postsContainer, metadataMap = {}) {
-    if (!Array.isArray(posts)) posts = [posts];
+    if (!Array.isArray(posts)) {
+posts = [posts];
+}
 
     const isLoggedIn = Boolean(getState("token"));
     const user = getState("user");
@@ -44,7 +46,9 @@ export async function renderPost(posts, postsContainer, metadataMap = {}) {
                 RenderVideoPost(videoWrapper, videos, mediaUrls, post.resolutions || [], [], posterPath);
 
                 const videoEl = videoWrapper.querySelector("video");
-                if (!videoEl) return;
+                if (!videoEl) {
+return;
+}
 
                 videoWrapper.dataset.wrapperId = videoWrapper.dataset.wrapperId || `vw-${Math.random().toString(36).slice(2, 9)}`;
                 videoWrapper.dataset.originalContainerId = mediaContainerId;
@@ -59,7 +63,9 @@ export async function renderPost(posts, postsContainer, metadataMap = {}) {
 
         // --- 2. Meta Section ---
         const metaContainer = createElement("div", { class: "post-media-meta" });
-        if (post.title) metaContainer.appendChild(createElement("h3", { class: "post-title" }, [post.title]));
+        if (post.title) {
+metaContainer.appendChild(createElement("h3", { class: "post-title" }, [post.title]));
+}
 
         if (post.tags?.length) {
             const tagsContainer = createElement("div", { class: "tags" },

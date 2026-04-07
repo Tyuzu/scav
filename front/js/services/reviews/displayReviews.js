@@ -6,7 +6,9 @@ import { fetchUserMeta } from "../../utils/usersMeta.js";
 import Datex from "../../components/base/Datex.js";
 
 function clearElement(el) {
-    while (el.firstChild) el.removeChild(el.firstChild);
+    while (el.firstChild) {
+el.removeChild(el.firstChild);
+}
 }
 
 function ReviewItem(isCreator, review, reviewerName, onEdit, onDelete) {

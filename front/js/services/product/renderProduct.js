@@ -9,6 +9,7 @@ import { renderItemForm } from "../crops/products/createOrEdit.js";
 import { displayProduct } from "./productPage.js";
 import { ImageGallery } from "../../components/ui/IMageGallery.mjs";
 import { addToCart } from "../cart/addToCart.js";
+import { getState } from "../../state/state.js";
 
 /* ---------------------------
    Main Renderer
@@ -29,7 +30,9 @@ export function renderProduct(productOriginal, isLoggedIn, productType, productI
 
   const decrementBtn = Button("−", "", {
     click: () => {
-      if (quantity > 1) setQuantity(quantity - 1);
+      if (quantity > 1) {
+setQuantity(quantity - 1);
+}
     },
   }, "quantity-btn");
 
@@ -47,11 +50,16 @@ export function renderProduct(productOriginal, isLoggedIn, productType, productI
   ]);
   
 
-  const handleAdd = () => {
-    addToCart({
+  const handleAdd = async () => {
+    await addToCart({
       itemId: product.productid,
       quantity,
-      isLoggedIn,
+      isLoggedIn: Boolean(getState("token")),
+      itemType: productType || "product",
+      itemName: product.name,
+      entityType: "product",
+      entityId: product.productid,
+      entityName: product.name
     });
   };
 
@@ -237,7 +245,9 @@ function renderSection(title, data) {
       createElement("p", { class: "product-field" }, [`${label}: ${value}`])
     );
 
-  if (!rows.length) return null;
+  if (!rows.length) {
+return null;
+}
 
   return createElement("section", { class: "details-section" }, [
     createElement("h3", { class: "section-title" }, [title]),
@@ -246,7 +256,9 @@ function renderSection(title, data) {
 }
 
 function objectToText(obj) {
-  if (!obj) return null;
+  if (!obj) {
+return null;
+}
   return Object.entries(obj)
     .map(([k, v]) => `${k}: ${v}`)
     .join(", ");

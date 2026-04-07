@@ -32,8 +32,12 @@ function createIconButton(svg, href, onClick) {
   icon.innerHTML = svg;
 
   const anchor = createElement("div", { class: "iconic-button" }, [icon]);
-  if (href) anchor.href = href;
-  if (onClick) anchor.addEventListener("click", onClick);
+  if (href) {
+anchor.href = href;
+}
+  if (onClick) {
+anchor.addEventListener("click", onClick);
+}
 
   return anchor;
 }
@@ -88,7 +92,9 @@ export function createProfileSection(userId) {
   links.forEach(({ href, text, icon }) => {
     const label = createElement("span", {}, [text]);
     const iconSpan = createElement("span", {}, []);
-    if (icon) iconSpan.innerHTML = icon;
+    if (icon) {
+iconSpan.innerHTML = icon;
+}
 
     const link = createElement("a", { class: "menu-item", href }, [iconSpan, label]);
     link.addEventListener("click", (e) => {
@@ -250,7 +256,9 @@ function enableNavAutoUpdate(navRef) {
 
 function createHeader() {
   const header = document.getElementById("pageheader");
-  if (!header || header.hasChildNodes()) return;
+  if (!header || header.hasChildNodes()) {
+return;
+}
 
   header.className = "main-header";
 
@@ -269,7 +277,7 @@ function createHeader() {
     })
   );
 
-  let nav = buildNav();
+  const nav = buildNav();
   header.append(logo, sky, nav);
 
   enableNavAutoUpdate(nav);

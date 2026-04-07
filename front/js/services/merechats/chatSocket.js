@@ -16,13 +16,21 @@ const ChatState = (() => {
   let currentChatId = null;
 
   return {
-    setSocket: ws => { socket = ws; },
+    setSocket: ws => {
+ socket = ws; 
+},
     getSocket: () => socket,
 
-    setReconnectAttempts: n => { reconnectAttempts = n; },
+    setReconnectAttempts: n => {
+ reconnectAttempts = n; 
+},
     getReconnectAttempts: () => reconnectAttempts,
-    incrementReconnectAttempts: () => { reconnectAttempts += 1; },
-    resetReconnectAttempts: () => { reconnectAttempts = 0; },
+    incrementReconnectAttempts: () => {
+ reconnectAttempts += 1; 
+},
+    resetReconnectAttempts: () => {
+ reconnectAttempts = 0; 
+},
 
     setChatId: id => {
       currentChatId = id;
@@ -69,12 +77,16 @@ function normalizeId(msg) {
 export function mountMessage(msg, { pending = false } = {}) {
   const container =
     getMessageContainer() || document.querySelector(".chat-messages");
-  if (!container) return null;
+  if (!container) {
+return null;
+}
 
   const id = normalizeId(msg);
   const domId = `msg-${id}`;
 
-  if (document.getElementById(domId)) return null;
+  if (document.getElementById(domId)) {
+return null;
+}
 
   const node = renderMessage({ ...msg, pending });
   node.id = domId;
@@ -103,18 +115,24 @@ export { ChatState, pendingMap, renderedIdsMap, renderMessage };
 function wsUrl() {
   const token = getState("token");
   let url = MERE_WS.replace(/^http/, "ws") + "/ws/merechat";
-  if (token) url += `?token=${encodeURIComponent(token)}`;
+  if (token) {
+url += `?token=${encodeURIComponent(token)}`;
+}
   return url;
 }
 
 export function closeExistingSocket(reason = "") {
   const ws = ChatState.getSocket();
   if (ws) {
-    try { ws.close(); } catch {}
+    try {
+ ws.close(); 
+} catch {}
     ChatState.setSocket(null);
   }
   ChatState.resetReconnectAttempts();
-  if (reason) console.log("WS closed:", reason);
+  if (reason) {
+console.log("WS closed:", reason);
+}
 }
 
 /* -------------------------
@@ -128,7 +146,9 @@ export function connectWebSocket() {
     existing &&
     (existing.readyState === WebSocket.OPEN ||
       existing.readyState === WebSocket.CONNECTING)
-  ) return;
+  ) {
+return;
+}
 
   clearTimeout(reconnectTimer);
 
@@ -188,15 +208,21 @@ function scheduleReconnect() {
    Handle WS messages
 --------------------------*/
 function handleWSMessage(data) {
-  if (!data?.type) return;
+  if (!data?.type) {
+return;
+}
 
   switch (data.type) {
     case "message": {
       const chatid = data.chatid;
-      if (!chatid) return;
+      if (!chatid) {
+return;
+}
 
       // ignore messages for inactive chat
-      if (chatid !== ChatState.getChatId()) return;
+      if (chatid !== ChatState.getChatId()) {
+return;
+}
 
       const serverId = String(data.messageid);
       const rendered = ensureRenderedSet(chatid);
@@ -214,7 +240,9 @@ function handleWSMessage(data) {
         return;
       }
 
-      if (rendered.has(serverId)) return;
+      if (rendered.has(serverId)) {
+return;
+}
 
       mountMessage(data);
       rendered.add(serverId);

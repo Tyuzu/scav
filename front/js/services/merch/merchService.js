@@ -9,6 +9,8 @@ import { EntityType, PictureType, resolveImagePath } from "../../utils/imagePath
 import { reportPost } from "../reporting/reporting.js";
 import { createFormGroup } from "../../components/createFormGroup.js";
 import Imagex from "../../components/base/Imagex.js";
+import { addToCart } from "../cart/addToCart.js";
+import { getState } from "../../state/state.js";
 
 import { uploadFile } from "../media/api/mediaApi.js";
 import { uid } from "../media/ui/mediaUploadForm.js";
@@ -43,7 +45,9 @@ async function addMerchandise(entityType, eventId, merchList) {
             };
             Notify("Uploading image...", { type: "info", duration: 2000 });
             uploadedImage = await uploadFile(uploadObj);
-            if (!uploadedImage?.filename && !uploadedImage?.file) throw new Error("Image upload failed.");
+            if (!uploadedImage?.filename && !uploadedImage?.file) {
+throw new Error("Image upload failed.");
+}
         }
 
         const payload = {
@@ -54,7 +58,9 @@ async function addMerchandise(entityType, eventId, merchList) {
         };
 
         const resp = await apiFetch(`/merch/${entityType}/${eventId}`, "POST", payload);
-        if (!resp?.data?.merchid) throw new Error(resp?.message || "Invalid server response.");
+        if (!resp?.data?.merchid) {
+throw new Error(resp?.message || "Invalid server response.");
+}
 
         Notify(resp.message || "Merchandise added successfully.", { type: "success", duration: 3000 });
         displayNewMerchandise(resp.data, merchList);
@@ -68,18 +74,24 @@ async function addMerchandise(entityType, eventId, merchList) {
 // --- Clear Form ---
 function clearMerchForm() {
     const formContainer = document.getElementById('edittabs');
-    if (formContainer) formContainer.replaceChildren();
+    if (formContainer) {
+formContainer.replaceChildren();
+}
 }
 
 // --- Delete Merchandise ---
 async function deleteMerch(entityType, merchId, eventId) {
-    if (!confirm('Are you sure you want to delete this merchandise?')) return;
+    if (!confirm('Are you sure you want to delete this merchandise?')) {
+return;
+}
     try {
         const resp = await apiFetch(`/merch/${entityType}/${eventId}/${merchId}`, 'DELETE');
         if (resp.success) {
             Notify('Merchandise deleted successfully!', { type: "success" });
             const merchItem = document.getElementById(`merch-${merchId}`);
-            if (merchItem) merchItem.remove();
+            if (merchItem) {
+merchItem.remove();
+}
         } else {
             Notify(`Failed to delete merchandise: ${resp.message}`, { type: "error" });
         }
@@ -94,7 +106,9 @@ async function editMerchForm(entityType, merchId, eventId) {
     try {
         const resp = await apiFetch(`/merch/${entityType}/${eventId}/${merchId}`, 'GET');
         const data = resp?.data;
-        if (!data) throw new Error("Merchandise not found.");
+        if (!data) {
+throw new Error("Merchandise not found.");
+}
 
         const form = createElement("form", { id: "edit-merch-form" });
         const fields = [
@@ -125,7 +139,9 @@ async function editMerchForm(entityType, merchId, eventId) {
                 if (updateResp.success) {
                     Notify('Merchandise updated successfully!', { type: "success" });
                     closeModal();
-                } else Notify(`Failed to update merchandise: ${updateResp.message}`, { type: "error" });
+                } else {
+Notify(`Failed to update merchandise: ${updateResp.message}`, { type: "error" });
+}
             } catch (err) {
                 console.error("Error updating merchandise:", err);
                 Notify("An error occurred while updating the merchandise.", { type: "error" });
@@ -216,37 +232,36 @@ async function displayMerchandise(container, merchData, entityType, eventId, isC
         stock: merch.stock,
         isCreator,
         isLoggedIn,
-  
-        onBuy: async () => {
+        
+        onAddToCart: async () => {
+          if (!isLoggedIn) {
+            Notify("Please log in to add items to cart", { type: "warning" });
+            return;
+          }
+
           const quantityInput = createElement("input", {
             type: "number",
             min: 1,
+            max: merch.stock,
             value: 1
           });
-  
-          const noteInput = createElement("textarea", {
-            placeholder: "Special request (optional)",
-            rows: 3
-          });
-  
+
           const wrapper = createElement("div", { class: "modal-form-group" }, [
-            createElement("label", {}, ["Quantity: ", quantityInput]),
-            createElement("label", {}, ["Note: ", noteInput])
+            createElement("label", {}, ["Quantity: ", quantityInput])
           ]);
-  
+
           const modal = Modal({
-            title: `Purchase ${merch.name}`,
+            title: `Add ${merch.name} to Cart`,
             content: wrapper,
             actions: () =>
               createElement("div", { class: "modal-actions" }, [
                 Button(
-                  "Next",
+                  "Add to Cart",
                   "",
                   {
                     click: async () => {
                       const quantity = parseInt(quantityInput.value, 10);
-                      const note = noteInput.value.trim();
-  
+
                       if (
                         !Number.isInteger(quantity) ||
                         quantity < 1 ||
@@ -257,9 +272,79 @@ async function displayMerchandise(container, merchData, entityType, eventId, isC
                           { type: "warning" }
                         );
                       }
-  
+
+                      const success = await addToCart({
+                        itemId: merch.merchid,
+                        quantity,
+                        isLoggedIn: Boolean(getState("token")),
+                        itemType: "merch",
+                        itemName: merch.name,
+                        entityType: entityType,
+                        entityId: eventId,
+                        entityName: merch.name
+                      });
+
+                      if (success) {
+                        modal.close();
+                      }
+                    }
+                  },
+                  "buttonx primary"
+                ),
+                Button(
+                  "Cancel",
+                  "",
+                  { click: () => modal.close() },
+                  "buttonx"
+                )
+              ])
+          });
+        },
+
+        onBuy: async () => {
+          const quantityInput = createElement("input", {
+            type: "number",
+            min: 1,
+            value: 1,
+            max: merch.stock
+          });
+
+          const noteInput = createElement("textarea", {
+            placeholder: "Special request (optional)",
+            rows: 3
+          });
+
+          const wrapper = createElement("div", { class: "modal-form-group" }, [
+            createElement("label", {}, ["Quantity: ", quantityInput]),
+            createElement("label", {}, ["Note: ", noteInput])
+          ]);
+
+          const modal = Modal({
+            title: `Purchase ${merch.name}`,
+            content: wrapper,
+            actions: () =>
+              createElement("div", { class: "modal-actions" }, [
+                Button(
+                  "Proceed to Payment",
+                  "",
+                  {
+                    click: async () => {
+                      const quantity = parseInt(quantityInput.value, 10);
+                      const note = noteInput.value.trim();
+
+                      if (
+                        !Number.isInteger(quantity) ||
+                        quantity < 1 ||
+                        quantity > merch.stock
+                      ) {
+                        return Notify(
+                          `⚠️ Enter a valid quantity (1-${merch.stock}).`,
+                          { type: "warning" }
+                        );
+                      }
+
                       modal.close();
-  
+
                       try {
                         const paymentResult = await showPaymentModal({
                           paymentType: "purchase",
@@ -267,13 +352,13 @@ async function displayMerchandise(container, merchData, entityType, eventId, isC
                           entityId: merch.merchid,
                           entityName: merch.name
                         });
-  
+
                         if (!paymentResult || paymentResult.success !== true) {
                           return Notify("Payment cancelled or failed.", {
                             type: "warning"
                           });
                         }
-  
+
                         const resp = await apiFetch(
                           `/merch/${entityType}/${eventId}/${merch.merchid}/confirm-purchase`,
                           "POST",
@@ -282,7 +367,7 @@ async function displayMerchandise(container, merchData, entityType, eventId, isC
                             note
                           }
                         );
-  
+
                         if (resp.success) {
                           Notify("Merchandise purchased successfully!", {
                             type: "success"
@@ -300,7 +385,7 @@ async function displayMerchandise(container, merchData, entityType, eventId, isC
                       }
                     }
                   },
-                  "buttonx"
+                  "buttonx primary"
                 ),
                 Button(
                   "Cancel",
@@ -311,12 +396,12 @@ async function displayMerchandise(container, merchData, entityType, eventId, isC
               ])
           });
         },
-  
+
         onEdit: () => editMerchForm(entityType, merch.merchid, eventId),
         onDelete: () => deleteMerch(entityType, merch.merchid, eventId),
         onReport: () => reportPost(merch.merchid, "merch", entityType, eventId)
       });
-  
+
       merchList.appendChild(card);
     });
   }

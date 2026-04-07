@@ -36,7 +36,9 @@ const AUTH_CHANNEL = new BroadcastChannel("auth_channel");
 function parseJwt(token) {
     try {
         const payload = token?.split(".")[1];
-        if (!payload) return null;
+        if (!payload) {
+return null;
+}
         // handle URL-safe base64
         const b64 = payload.replace(/-/g, "+").replace(/_/g, "/");
         // pad
@@ -49,7 +51,9 @@ function parseJwt(token) {
 
 function isTokenNearExpiry(token, bufferMs = REFRESH_BUFFER_MS) {
     const payload = parseJwt(token);
-    if (!payload?.exp) return false;
+    if (!payload?.exp) {
+return false;
+}
     return Date.now() > payload.exp * 1000 - bufferMs;
 }
 
@@ -83,7 +87,9 @@ function acquireRefreshLock() {
 function releaseRefreshLock() {
     try {
         const raw = localStorage.getItem(REFRESH_LOCK_KEY);
-        if (!raw) return;
+        if (!raw) {
+return;
+}
         const { owner } = JSON.parse(raw);
         if (owner === TAB_ID) {
             localStorage.removeItem(REFRESH_LOCK_KEY);
@@ -98,14 +104,18 @@ function releaseRefreshLock() {
 let refreshPromise = null;
 
 async function refreshToken() {
-    if (refreshPromise) return refreshPromise;
+    if (refreshPromise) {
+return refreshPromise;
+}
 
     refreshPromise = (async () => {
         // If another tab holds the lock, wait for its broadcast (single-flight)
         if (!acquireRefreshLock()) {
             return new Promise((resolve) => {
                 const handler = (e) => {
-                    if (!e?.data) return;
+                    if (!e?.data) {
+return;
+}
                     if (e.data.type === "TOKEN_REFRESHED") {
                         AUTH_CHANNEL.removeEventListener("message", handler);
                         const token = getState("token");
@@ -128,11 +138,17 @@ async function refreshToken() {
         }
 
         try {
+            const controller = new AbortController();
+            const timeoutId = setTimeout(() => controller.abort(), 10_000); // 10s timeout
+
             const res = await fetch(`${API_URL}/auth/refresh`, {
                 method: "POST",
                 credentials: "include",
-                headers: { "Content-Type": "application/json" }
+                headers: { "Content-Type": "application/json" },
+                signal: controller.signal
             });
+
+            clearTimeout(timeoutId);
 
             // If unauthorized, treat as failure
             if (!res.ok) {
@@ -143,10 +159,14 @@ async function refreshToken() {
             // read JSON safely
             const data = await res.json().catch(() => null);
             const token = data?.data?.token;
-            if (!token) return false;
+            if (!token) {
+return false;
+}
 
             const parsed = parseJwt(token);
-            if (!parsed) return false;
+            if (!parsed) {
+return false;
+}
 
             // Keep compatibility with code that expects "user" or "userId"
             const userId = parsed.userId || parsed.userID || parsed.sub || "";
@@ -166,7 +186,14 @@ async function refreshToken() {
 
             AUTH_CHANNEL.postMessage({ type: "TOKEN_REFRESHED", owner: TAB_ID });
             return true;
-        } catch {
+        } catch (err) {
+            // Handle abort/timeout errors
+            if (err.name === "AbortError") {
+                console.warn("Token refresh timeout - logging out for security");
+                silentLogout();
+                return false;
+            }
+            console.error("Token refresh failed:", err);
             return false;
         } finally {
             releaseRefreshLock();
@@ -184,11 +211,15 @@ async function refreshToken() {
 let refreshTimer = null;
 
 function scheduleBackgroundRefresh() {
-    if (refreshTimer) clearTimeout(refreshTimer);
+    if (refreshTimer) {
+clearTimeout(refreshTimer);
+}
 
     const token = getState("token");
     const payload = parseJwt(token);
-    if (!payload?.exp) return;
+    if (!payload?.exp) {
+return;
+}
 
     const refreshAt = payload.exp * 1000 - REFRESH_BUFFER_MS - Date.now();
 

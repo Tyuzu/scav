@@ -71,10 +71,14 @@ export function openEditModal(post) {
 
   // --- assemble content ---
   const editorChildren = [];
-  if (post.type === "text" || post.type === "image") editorChildren.push(textField);
+  if (post.type === "text" || post.type === "image") {
+editorChildren.push(textField);
+}
   if (post.type === "video" || post.type === "audio") {
     editorChildren.push(titleField, descField, tagsField);
-    if (post.type === "video") editorChildren.push(subtitleInput, langSelect);
+    if (post.type === "video") {
+editorChildren.push(subtitleInput, langSelect);
+}
   }
   editorChildren.push(
     createElement("div", { class: "edit-actions" }, [saveBtn, cancelBtn])

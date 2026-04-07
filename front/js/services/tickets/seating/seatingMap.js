@@ -33,8 +33,14 @@ const PRICE_COLOR_RANGES = [
  * Helper: find color by ranges (global configurable fallback)
  */
 function getPriceColor(price, ranges = PRICE_COLOR_RANGES) {
-  if (!ranges || !ranges.length) return "#888";
-  for (const r of ranges) if (price >= r.min && price <= r.max) return r.color;
+  if (!ranges || !ranges.length) {
+return "#888";
+}
+  for (const r of ranges) {
+if (price >= r.min && price <= r.max) {
+return r.color;
+}
+}
   return ranges[ranges.length - 1]?.color || "#888";
 }
 
@@ -42,8 +48,12 @@ function getPriceColor(price, ranges = PRICE_COLOR_RANGES) {
  * Simplified seat color decision
  */
 function seatColor(seat, priceRanges = PRICE_COLOR_RANGES) {
-  if (seat.status === "sold") return "#bbb";
-  if (seat.obstructed) return "#999";
+  if (seat.status === "sold") {
+return "#bbb";
+}
+  if (seat.obstructed) {
+return "#999";
+}
   return getPriceColor(seat.price ?? 0, priceRanges);
 }
 
@@ -95,9 +105,11 @@ function toggleSeatSelection({ selectedMap, seatId, sg, seat, row, section, maxS
     selectedMap.delete(seatId);
     sg.classList.remove("seat-selected");
     // if it was sold or obstructed, keep that class
-    if (seat.status === "sold") sg.classList.add("seat-sold");
-    else if (seat.obstructed) sg.classList.add("seat-obstructed");
-    else {
+    if (seat.status === "sold") {
+sg.classList.add("seat-sold");
+} else if (seat.obstructed) {
+sg.classList.add("seat-obstructed");
+} else {
       // reset fill to price color (circle is inside group)
       const circle = sg.querySelector("circle");
       if (circle) {
@@ -127,7 +139,9 @@ function createZoomPan(svg, dims) {
   let viewBox = { x: 0, y: 0, w: width, h: height };
   const MIN_W = width / 3;   // max zoom in (smaller w == zoomed in)
   const MAX_W = width * 2;   // max zoom out
-  function applyViewBox() { svg.setAttribute("viewBox", `${viewBox.x} ${viewBox.y} ${viewBox.w} ${viewBox.h}`); }
+  function applyViewBox() {
+ svg.setAttribute("viewBox", `${viewBox.x} ${viewBox.y} ${viewBox.w} ${viewBox.h}`); 
+}
 
   function clampViewBox(vb) {
     const w = Math.max(MIN_W, Math.min(MAX_W, vb.w));
@@ -156,20 +170,30 @@ function createZoomPan(svg, dims) {
   }
 
   // wheel zoom
-  svg.addEventListener("wheel", ev => { ev.preventDefault(); zoom(ev.deltaY > 0 ? 1 / 1.12 : 1.12); });
+  svg.addEventListener("wheel", ev => {
+ ev.preventDefault(); zoom(ev.deltaY > 0 ? 1 / 1.12 : 1.12); 
+});
 
   // pan
   let isPanning = false, panStart = null;
-  svg.addEventListener("mousedown", ev => { if (ev.button !== 0) return; isPanning = true; panStart = { x: ev.clientX, y: ev.clientY, vb: { ...viewBox } }; svg.style.cursor = "grabbing"; });
+  svg.addEventListener("mousedown", ev => {
+ if (ev.button !== 0) {
+return;
+} isPanning = true; panStart = { x: ev.clientX, y: ev.clientY, vb: { ...viewBox } }; svg.style.cursor = "grabbing"; 
+});
   window.addEventListener("mousemove", ev => {
-    if (!isPanning || !panStart) return;
+    if (!isPanning || !panStart) {
+return;
+}
     const dx = (ev.clientX - panStart.x) * (panStart.vb.w / svg.clientWidth);
     const dy = (ev.clientY - panStart.y) * (panStart.vb.h / svg.clientHeight);
     viewBox.x = panStart.vb.x - dx;
     viewBox.y = panStart.vb.y - dy;
     applyViewBox();
   });
-  window.addEventListener("mouseup", () => { isPanning = false; svg.style.cursor = "default"; });
+  window.addEventListener("mouseup", () => {
+ isPanning = false; svg.style.cursor = "default"; 
+});
 
   reset();
   return { zoomIn: () => zoom(1.2), zoomOut: () => zoom(1 / 1.2), reset, zoom };
@@ -248,7 +272,9 @@ export function renderSeatingMap(container, seatingData = {}, opts = {}) {
 
   // draw helpers
   function drawStage() {
-    if (!stage) return;
+    if (!stage) {
+return;
+}
     const st = document.createElementNS(svgNS, "rect");
     st.setAttribute("x", stage.x - stage.width / 2);
     st.setAttribute("y", stage.y);
@@ -270,7 +296,9 @@ export function renderSeatingMap(container, seatingData = {}, opts = {}) {
   }
 
   function drawScreen() {
-    if (!screen) return;
+    if (!screen) {
+return;
+}
     const scr = document.createElementNS(svgNS, "rect");
     scr.setAttribute("x", screen.x - screen.width / 2);
     scr.setAttribute("y", screen.y);
@@ -340,8 +368,11 @@ export function renderSeatingMap(container, seatingData = {}, opts = {}) {
           sg.setAttribute("transform", `translate(${cx}, ${cy})`);
 
           // apply state classes early
-          if (seat.status === "sold") sg.classList.add("seat-sold");
-          else if (seat.obstructed) sg.classList.add("seat-obstructed");
+          if (seat.status === "sold") {
+sg.classList.add("seat-sold");
+} else if (seat.obstructed) {
+sg.classList.add("seat-obstructed");
+}
 
           const circle = document.createElementNS(svgNS, "circle");
           circle.setAttribute("r", seatRadius);
@@ -375,7 +406,9 @@ export function renderSeatingMap(container, seatingData = {}, opts = {}) {
           });
 
           sg.addEventListener("click", () => {
-            if (!selectable || seat.status === "sold") return;
+            if (!selectable || seat.status === "sold") {
+return;
+}
             toggleSeatSelection({
               selectedMap: selected,
               seatId: seat.id,
@@ -413,7 +446,9 @@ export function renderSeatingMap(container, seatingData = {}, opts = {}) {
   const selectedList = createElement("div", { class: "selected-list" }, [`Selected: 0`]);
   const buyBtn = Button("Reserve / Buy", "buy-seats", {
     click: async () => {
-      if (!selected.size) return Notify("No seats selected.", { type: "error" });
+      if (!selected.size) {
+return Notify("No seats selected.", { type: "error" });
+}
       const payload = Array.from(selected.values()).map(v => ({
         seatId: v.seat.id,
         sectionId: v.section.id,

@@ -25,7 +25,7 @@ export async function displayCreatorLive(
     }
 
     let pollTimer = null;
-    let destroyed = false;
+    const destroyed = false;
     let stream = null;
     let lastState = "";
 
@@ -40,7 +40,9 @@ export async function displayCreatorLive(
         el.replaceChildren(String(text ?? ""));
 
     const formatDuration = startedAt => {
-        if (!startedAt) return "00:00";
+        if (!startedAt) {
+return "00:00";
+}
         const sec = Math.floor((Date.now() - new Date(startedAt)) / 1000);
         const m = String(Math.floor(sec / 60)).padStart(2, "0");
         const s = String(sec % 60).padStart(2, "0");
@@ -48,7 +50,9 @@ export async function displayCreatorLive(
     };
 
     const stopPolling = () => {
-        if (pollTimer) clearInterval(pollTimer);
+        if (pollTimer) {
+clearInterval(pollTimer);
+}
         pollTimer = null;
     };
 
@@ -152,7 +156,9 @@ export async function displayCreatorLive(
                             title: t.confirm.title,
                             message: t.confirm.message
                         });
-                        if (!ok) return;
+                        if (!ok) {
+return;
+}
                     }
 
                     try {
@@ -174,7 +180,9 @@ export async function displayCreatorLive(
     function rebuildSummary() {
         summary.replaceChildren();
 
-        if (!stream || stream.state !== "ENDED") return;
+        if (!stream || stream.state !== "ENDED") {
+return;
+}
 
         const duration =
             stream.startedAt && stream.endedAt
@@ -195,7 +203,9 @@ export async function displayCreatorLive(
                     title: "Publish VOD",
                     message: "Make this replay public?"
                 });
-                if (!ok) return;
+                if (!ok) {
+return;
+}
                 try {
                     await liveFetch(
                         `/vlive/id/${encodeURIComponent(
@@ -210,7 +220,9 @@ export async function displayCreatorLive(
                     title: "Delete VOD",
                     message: "This cannot be undone. Continue?"
                 });
-                if (!ok) return;
+                if (!ok) {
+return;
+}
                 try {
                     await liveFetch(
                         `/vlive/id/${encodeURIComponent(liveId)}/vod`,
@@ -226,10 +238,14 @@ export async function displayCreatorLive(
     ================================ */
 
     async function poll() {
-        if (destroyed) return;
+        if (destroyed) {
+return;
+}
 
         const s = await fetchStream();
-        if (!s) return;
+        if (!s) {
+return;
+}
 
         stream = s;
 
@@ -284,8 +300,11 @@ export async function displayCreatorLive(
     ================================ */
 
     document.addEventListener("visibilitychange", () => {
-        if (document.hidden) stopPolling();
-        else if (!pollTimer) pollTimer = setInterval(poll, 3000);
+        if (document.hidden) {
+stopPolling();
+} else if (!pollTimer) {
+pollTimer = setInterval(poll, 3000);
+}
     });
 
     /* ================================

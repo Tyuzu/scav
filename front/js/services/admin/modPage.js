@@ -226,11 +226,15 @@ export function createGroupedCard(reports, entityPreview, state, undoBtn, refres
         e && e.preventDefault && e.preventDefault();
         e && e.stopPropagation && e.stopPropagation();
 
-        if (!confirm("Soft-delete this content? It will be hidden from users but kept for appeals/audit.")) return;
+        if (!confirm("Soft-delete this content? It will be hidden from users but kept for appeals/audit.")) {
+return;
+}
 
         try {
             await apiFetch(`/moderator/delete/${first.targetType}/${first.targetId}`, "PUT", {});
-            if (typeof refreshFn === "function") refreshFn();
+            if (typeof refreshFn === "function") {
+refreshFn();
+}
             showTemporaryInfo("Content hidden (soft-delete).");
         } catch (err) {
             console.error("Soft-delete failed:", err);
@@ -276,7 +280,9 @@ function createReportItem(report, state, undoBtn, refreshFn) {
     const statusSelect = createElement("select");
     ["pending", "reviewed", "resolved", "rejected"].forEach((s) => {
         const opt = createElement("option", { value: s }, [s]);
-        if (report.status === s) opt.setAttribute("selected", "selected");
+        if (report.status === s) {
+opt.setAttribute("selected", "selected");
+}
         statusSelect.appendChild(opt);
     });
 
@@ -287,8 +293,12 @@ function createReportItem(report, state, undoBtn, refreshFn) {
         const newStatus = statusSelect.value;
         const newNotes = reviewTextarea.value.trim();
 
-        if (newStatus === report.status && newNotes === (report.reviewNotes || "")) return;
-        if (!confirm(`Update this report to status "${newStatus}"?`)) return;
+        if (newStatus === report.status && newNotes === (report.reviewNotes || "")) {
+return;
+}
+        if (!confirm(`Update this report to status "${newStatus}"?`)) {
+return;
+}
 
         state.lastAction = {
             reportId: report.id,
@@ -306,7 +316,9 @@ function createReportItem(report, state, undoBtn, refreshFn) {
                 reviewedBy: "moderator",
                 reviewNotes: newNotes,
             });
-            if (typeof refreshFn === "function") refreshFn();
+            if (typeof refreshFn === "function") {
+refreshFn();
+}
             showTemporaryInfo("Report updated.");
         } catch (err) {
             console.error("Failed to update report:", err);
@@ -365,7 +377,9 @@ function getEntityEndpoint(type, id) {
    Fetch & render reports (helpers)
    -------------------------- */
 export async function fetchAndRenderReports(listContainer, entityPreview, summaryContainer, filters, state, undoBtn, prevBtn, pageIndicator, nextBtn) {
-    if (state.isLoading) return;
+    if (state.isLoading) {
+return;
+}
     state.isLoading = true;
 
     resetUI(listContainer, entityPreview, summaryContainer, pageIndicator, state);
@@ -438,7 +452,9 @@ function handleReportsResponse(reports, listContainer, entityPreview, summaryCon
 function groupReports(reports) {
     return reports.reduce((acc, r) => {
         const key = `${r.targetType}:${r.targetId}`;
-        if (!acc[key]) acc[key] = [];
+        if (!acc[key]) {
+acc[key] = [];
+}
         acc[key].push(r);
         return acc;
     }, {});
@@ -457,7 +473,9 @@ export function createUndoButton(state, refreshFn) {
             await apiFetch(`/report/${state.lastAction.reportId}`, "PUT", state.lastAction.prevPayload);
             state.lastAction = null;
             btn.disabled = true;
-            if (typeof refreshFn === "function") refreshFn();
+            if (typeof refreshFn === "function") {
+refreshFn();
+}
             showTemporaryInfo("Undo successful.");
         } catch (e) {
             console.error("Undo failed:", e);
@@ -499,9 +517,13 @@ function updateSummary(grouped, summaryContainer) {
 
     keys.forEach((k) => {
         const group = grouped[k];
-        if (!group || group.length === 0) return;
+        if (!group || group.length === 0) {
+return;
+}
         const firstStatus = group[0].status;
-        if (statusCounts[firstStatus] !== undefined) statusCounts[firstStatus]++;
+        if (statusCounts[firstStatus] !== undefined) {
+statusCounts[firstStatus]++;
+}
     });
 
     summaryContainer.replaceChildren();
@@ -538,7 +560,11 @@ export function createActionButton(label, handler) {
     const btn = createElement("button", { class: "moderator-btn", style: "margin:0 0.5rem;" }, [label]);
     btn.addEventListener("click", (e) => {
         // allow handler to optionally use event
-        try { handler(e); } catch (err) { console.error("Action handler error:", err); }
+        try {
+ handler(e); 
+} catch (err) {
+ console.error("Action handler error:", err); 
+}
     });
     return btn;
 }

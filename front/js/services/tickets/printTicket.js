@@ -63,7 +63,9 @@ const printTicket = async (eventId) => {
         e.preventDefault();
 
         const uniqueCode = codeInput.value.trim();
-        if (!uniqueCode) return;
+        if (!uniqueCode) {
+return;
+}
 
         const loading = createElement(
             "p",

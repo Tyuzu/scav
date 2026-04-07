@@ -191,7 +191,9 @@ function openEventModal(event) {
 }
 
 function createModalIfNotExists() {
-    if (document.getElementById('event-modal')) return;
+    if (document.getElementById('event-modal')) {
+return;
+}
 
     const modal = createElement("div", {
         id: "event-modal", class: "event-modal",

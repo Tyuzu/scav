@@ -17,7 +17,7 @@ async function displayEventReviews(reviewsContainer, eventId, isCreator, isLogge
 async function displayEventVenue(venueList, isLoggedIn, eventID, seatingplan) {
     // displaySeatingMap(venueList, place, eventid, isLoggedIn);
     // loadMap(venueList, isLoggedIn, { type: "event", id: eventID });
-    let imgx = resolveImagePath(EntityType.EVENT, PictureType.SEATING, seatingplan);
+    const imgx = resolveImagePath(EntityType.EVENT, PictureType.SEATING, seatingplan);
     venueList.appendChild(Imagex({ src: imgx }));
 }
 
@@ -48,7 +48,9 @@ async function displayLostAndFound(lnfContainer, isCreator, eventId) {
             click: async () => {
                 const name = nameInput.value.trim();
                 const description = descInput.value.trim();
-                if (!name) return alert("Name is required");
+                if (!name) {
+return alert("Name is required");
+}
 
                 const newItem = { type, name, description };
                 try {

@@ -32,7 +32,9 @@ function createElement(tag, attributes = {}, children = []) {
     }
 
     for (const child of [].concat(children)) {
-        if (child === null || child === undefined || child === false) continue;
+        if (child === null || child === undefined || child === false) {
+continue;
+}
 
         if (typeof child === "string" || typeof child === "number") {
             element.appendChild(document.createTextNode(String(child)));

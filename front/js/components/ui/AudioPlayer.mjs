@@ -163,7 +163,9 @@ function AudioPlayer(audioSrc) {
       el.classList.toggle("active", t >= tm);
     });
     const active = lyricsContainer.querySelector("p.active");
-    if (active) active.scrollIntoView({ behavior: "smooth", block: "center" });
+    if (active) {
+active.scrollIntoView({ behavior: "smooth", block: "center" });
+}
   }
 
   audio.addEventListener("timeupdate", updateLyrics);

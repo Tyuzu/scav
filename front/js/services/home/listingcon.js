@@ -7,7 +7,11 @@ import Imagex from "../../components/base/Imagex.js";
 import { createTabs } from "../../components/ui/createTabs.js";
 import { subscribeDeep } from "../../state/state.js";
 
-export const clearElement = (el) => { while (el.firstChild) el.removeChild(el.firstChild); };
+export const clearElement = (el) => {
+ while (el.firstChild) {
+el.removeChild(el.firstChild);
+} 
+};
 
 const categoryMap = {
   Places: EntityType.PLACE,
@@ -30,14 +34,18 @@ function createImageCard({ banner, title, description, href }, entitytype) {
       createElement("div", { class: "card-info" }, [
         createElement("h4", {}, [safeTitle]),
         createElement("p", {}, [description || ""]),
-        Button("Explore", "button", { click: (e) => { e.stopPropagation(); navigate(href); } }, "card-link")
+        Button("Explore", "button", { click: (e) => {
+ e.stopPropagation(); navigate(href); 
+} }, "card-link")
       ])
     ]
   );
 
   card.addEventListener("click", () => navigate(href));
   card.addEventListener("keypress", (e) => {
-    if (e.key === "Enter" || e.key === " ") navigate(href);
+    if (e.key === "Enter" || e.key === " ") {
+navigate(href);
+}
   });
 
   return card;
@@ -64,7 +72,9 @@ function createCardSection() {
     }
 
     const state = pagingState[category];
-    if (state.loading || state.done) return;
+    if (state.loading || state.done) {
+return;
+}
 
     state.loading = true;
 
@@ -78,11 +88,15 @@ function createCardSection() {
     try {
       const data = await fetchPage(category, state.skip, state.limit);
 
-      if (initial) clearElement(cardGrid);
+      if (initial) {
+clearElement(cardGrid);
+}
       loadMoreWrapper.removeAttribute("data-loading");
 
       if (!data?.length) {
-        if (initial) cardGrid.append(showMessage("No results found."));
+        if (initial) {
+cardGrid.append(showMessage("No results found."));
+}
         state.done = true;
         clearElement(loadMoreWrapper);
         return;
@@ -97,8 +111,11 @@ function createCardSection() {
       state.skip += data.length;
 
       clearElement(loadMoreWrapper);
-      if (data.length === state.limit) loadMoreWrapper.append(makeLoadMoreButton(category));
-      else state.done = true;
+      if (data.length === state.limit) {
+loadMoreWrapper.append(makeLoadMoreButton(category));
+} else {
+state.done = true;
+}
     } catch {
       if (initial) {
         clearElement(cardGrid);

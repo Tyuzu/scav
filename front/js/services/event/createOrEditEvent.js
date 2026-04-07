@@ -45,12 +45,16 @@ function addAutoConListeners(eventPlaceInput) {
     eventPlaceInput.addEventListener("keydown", (e) => {
         const autocompleteList = document.getElementById("ac-list");
         const items = Array.from(autocompleteList.querySelectorAll(".ac-item"));
-        if (!items.length) return;
+        if (!items.length) {
+return;
+}
 
         let index = items.findIndex(i => i.classList.contains("selected"));
-        if (e.key === "ArrowDown") { e.preventDefault(); index = index < items.length - 1 ? index + 1 : 0; }
-        else if (e.key === "ArrowUp") { e.preventDefault(); index = index > 0 ? index - 1 : items.length - 1; }
-        else if (e.key === "Enter") { 
+        if (e.key === "ArrowDown") {
+ e.preventDefault(); index = index < items.length - 1 ? index + 1 : 0; 
+} else if (e.key === "ArrowUp") {
+ e.preventDefault(); index = index > 0 ? index - 1 : items.length - 1; 
+} else if (e.key === "Enter") { 
             e.preventDefault(); 
             if (index >= 0) { 
                 eventPlaceInput.value = items[index].textContent; 
@@ -71,7 +75,9 @@ async function submitEvent(form, isLoggedIn, eventId = null) {
         return; 
     }
 
-    if (!form.checkValidity()) { form.reportValidity(); return; }
+    if (!form.checkValidity()) {
+ form.reportValidity(); return; 
+}
 
     const placeInput = form.querySelector("#event-place");
     const payload = {
@@ -85,7 +91,9 @@ async function submitEvent(form, isLoggedIn, eventId = null) {
 
     const date = form.querySelector("#event-date")?.value;
     let time = form.querySelector("#event-time")?.value || "00:00:00";
-    if (time.length === 5) time += ":00"; // ensure HH:MM:SS
+    if (time.length === 5) {
+time += ":00";
+} // ensure HH:MM:SS
     payload.date = new Date(`${date}T${time}`).toISOString();
 
     const formData = new FormData();
@@ -93,8 +101,12 @@ async function submitEvent(form, isLoggedIn, eventId = null) {
 
     const bannerFile = form.querySelector("#event-banner")?.files[0];
     const seatingFile = form.querySelector("#event-seating")?.files[0];
-    if (bannerFile) formData.append("event-banner", bannerFile);
-    if (seatingFile) formData.append("event-seating", seatingFile);
+    if (bannerFile) {
+formData.append("event-banner", bannerFile);
+}
+    if (seatingFile) {
+formData.append("event-seating", seatingFile);
+}
 
     try {
         const url = eventId ? `/events/event/${eventId}` : `/events/event`;
@@ -102,7 +114,9 @@ async function submitEvent(form, isLoggedIn, eventId = null) {
         const result = await apiFetch(url, method, formData);
 
         Notify(`Event ${eventId ? "updated" : "created"} successfully: ${result.title}`, { type: "success", duration: 3000, dismissible: true });
-        if (!eventId) navigate(`/event/${result.eventid}`);
+        if (!eventId) {
+navigate(`/event/${result.eventid}`);
+}
     } catch (err) {
         console.error(err);
         Notify(`Error submitting event: ${err.message}`, { type: "error", duration: 3000, dismissible: true });
@@ -149,14 +163,18 @@ function generateEventForm(isLoggedIn, container, eventData = {}) {
     });
 
     form.appendChild(Button(eventData.eventid ? "Update Event" : "Create Event", "", {
-        click: e => { e.preventDefault(); submitEvent(form, isLoggedIn, eventData.eventid); }
+        click: e => {
+ e.preventDefault(); submitEvent(form, isLoggedIn, eventData.eventid); 
+}
     }, "buttonx"));
 
     section.appendChild(form);
     container.appendChild(section);
 
     const placeInput = form.querySelector("#event-place");
-    if (placeInput) addAutoConListeners(placeInput);
+    if (placeInput) {
+addAutoConListeners(placeInput);
+}
 }
 
 export { generateEventForm, submitEvent };

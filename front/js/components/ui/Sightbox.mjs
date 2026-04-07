@@ -5,7 +5,9 @@ import { xSVG } from "../svgs";
 
 const Sightbox = (mediaSrc, mediaType = "image") => {
   // prevent duplicate instance
-  if (document.getElementById("sightbox")) return;
+  if (document.getElementById("sightbox")) {
+return;
+}
 
   const sightbox = document.createElement("div");
   sightbox.id = "sightbox";
@@ -93,11 +95,15 @@ const Sightbox = (mediaSrc, mediaType = "image") => {
 
   // clean close
   function closeSightbox(fromPop = false) {
-    if (!document.body.contains(sightbox)) return;
+    if (!document.body.contains(sightbox)) {
+return;
+}
     sightbox.remove();
     window.removeEventListener("keydown", onKeyDown);
     window.removeEventListener("popstate", onPopState);
-    if (!fromPop) history.back();
+    if (!fromPop) {
+history.back();
+}
   }
 
   window.addEventListener("keydown", onKeyDown);

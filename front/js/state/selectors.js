@@ -72,7 +72,9 @@ export function clearSelectorCache() {
  * Preload selectors (call with state object at app start)
  */
 export function preloadSelectors(state) {
-  if (!state) return;
+  if (!state) {
+return;
+}
   getUserId(state);
   getUsername(state);
   isAuthenticated(state);

@@ -83,7 +83,9 @@ export async function displayBaitos(container, isLoggedIn) {
 
     paged.forEach((job, idx) => {
       list.append(buildCard(job));
-      if ((idx + 1) % 6 === 0) list.append(adspace("inlist"));
+      if ((idx + 1) % 6 === 0) {
+list.append(adspace("inlist"));
+}
     });
 
     // ---------- PAGINATION ----------
@@ -92,11 +94,15 @@ export async function displayBaitos(container, isLoggedIn) {
       const pager = createElement("div", { class: "baitos-pager" });
 
       if (currentPage > 1) {
-        pager.append(Button("Prev", "", { click: () => { currentPage--; renderJobs(filtered); } }, "buttonx secondary"));
+        pager.append(Button("Prev", "", { click: () => {
+ currentPage--; renderJobs(filtered); 
+} }, "buttonx secondary"));
       }
 
       if (currentPage < totalPages) {
-        pager.append(Button("Next", "", { click: () => { currentPage++; renderJobs(filtered); } }, "buttonx secondary"));
+        pager.append(Button("Next", "", { click: () => {
+ currentPage++; renderJobs(filtered); 
+} }, "buttonx secondary"));
       }
 
       list.append(pager);

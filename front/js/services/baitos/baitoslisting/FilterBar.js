@@ -29,25 +29,33 @@ export function buildFilterBar(onFilterChange, onClear = null) {
   );
 
   categorySelect.addEventListener("change", () => {
-    while (subcategorySelect.firstChild) subcategorySelect.removeChild(subcategorySelect.firstChild);
+    while (subcategorySelect.firstChild) {
+subcategorySelect.removeChild(subcategorySelect.firstChild);
+}
     subcategorySelect.append(
       createElement("option", { value: "" }, ["All Roles"]),
       ...(categoryMap[categorySelect.value] || []).map(sub => createElement("option", { value: sub }, [sub]))
     );
-    if (typeof onFilterChange === "function") onFilterChange();
+    if (typeof onFilterChange === "function") {
+onFilterChange();
+}
   });
 
   // listen to inputs
   [keywordInput, subcategorySelect, locationInput, wageInput, sortSelect].forEach(el =>
     el.addEventListener("input", () => {
-      if (typeof onFilterChange === "function") onFilterChange();
+      if (typeof onFilterChange === "function") {
+onFilterChange();
+}
     })
   );
 
   const clearBtn = Button("Clear Filters", "clear-filters", {
     click: () => {
       categorySelect.value = "";
-      while (subcategorySelect.firstChild) subcategorySelect.removeChild(subcategorySelect.firstChild);
+      while (subcategorySelect.firstChild) {
+subcategorySelect.removeChild(subcategorySelect.firstChild);
+}
       subcategorySelect.append(createElement("option", { value: "" }, ["All Roles"]));
       locationInput.value = "";
       keywordInput.value = "";
@@ -55,10 +63,14 @@ export function buildFilterBar(onFilterChange, onClear = null) {
       sortSelect.value = "date";
 
       // call page-level clear handler if provided (this is where currentPage reset should happen)
-      if (typeof onClear === "function") onClear();
+      if (typeof onClear === "function") {
+onClear();
+}
 
       // also trigger standard filter change so UI updates
-      if (typeof onFilterChange === "function") onFilterChange();
+      if (typeof onFilterChange === "function") {
+onFilterChange();
+}
     }
   }, "btn btn-secondary");
 
@@ -78,7 +90,9 @@ export function buildFilterBar(onFilterChange, onClear = null) {
     }),
     resetPage: () => {
       // convenience: reuse onFilterChange to re-evaluate lists
-      if (typeof onFilterChange === "function") onFilterChange();
+      if (typeof onFilterChange === "function") {
+onFilterChange();
+}
     },
     clearFilters: () => {
       // allow caller (page) to clear filters programmatically

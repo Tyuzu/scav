@@ -8,7 +8,9 @@ function createMenuItem({ label, callback, href }, onSelect) {
     li.addEventListener("click", (e) => {
         e.preventDefault();
 
-        if (onSelect) onSelect(li); // handle active class
+        if (onSelect) {
+onSelect(li);
+} // handle active class
 
         if (callback && typeof callback === "function") {
             callback(label);
@@ -22,7 +24,9 @@ function createMenuItem({ label, callback, href }, onSelect) {
 }
 
 function createSecondaryNav(items) {
-    if (!Array.isArray(items) || items.length === 0) return null;
+    if (!Array.isArray(items) || items.length === 0) {
+return null;
+}
 
     const secnavcon = createElement("section");
     secnavcon.className = "secnav";
@@ -35,7 +39,9 @@ function createSecondaryNav(items) {
 
     let activeItem = null;
     const handleActive = (selectedLi) => {
-        if (activeItem) activeItem.classList.remove("active");
+        if (activeItem) {
+activeItem.classList.remove("active");
+}
         selectedLi.classList.add("active");
         activeItem = selectedLi;
     };

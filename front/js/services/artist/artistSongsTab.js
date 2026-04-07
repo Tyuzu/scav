@@ -30,12 +30,16 @@ function createSongInfo(song) {
     const metaText = [song.genre, song.duration].filter(Boolean).join(" • ");
     const meta = createElement("div", { class: "song-meta" }, [metaText]);
     info.append(title, meta);
-    if (song.description) info.append(createElement("div", { class: "song-desc" }, [song.description]));
+    if (song.description) {
+info.append(createElement("div", { class: "song-desc" }, [song.description]));
+}
     return info;
 }
 
 function createSongActions(song, artistID, container, isCreator) {
-    if (!isCreator) return null;
+    if (!isCreator) {
+return null;
+}
 
     const actions = createElement("div", { class: "song-actions" });
 
@@ -45,7 +49,9 @@ function createSongActions(song, artistID, container, isCreator) {
 
     const delBtn = Button("Delete", "button", {
         click: async () => {
-            if (!confirm(`Delete "${song.title}"?`)) return;
+            if (!confirm(`Delete "${song.title}"?`)) {
+return;
+}
             await apiFetch(`/artists/${artistID}/songs/${encodeURIComponent(song.songid)}`, "DELETE");
             delBtn.closest(".song-row")?.remove();
             Notify("Song deleted");
@@ -83,7 +89,9 @@ function createSongRow(song, idx, artistID, player, isCreator) {
     ];
 
     const actions = createSongActions(song, artistID, player.container, isCreator);
-    if (actions) rowChildren.push(actions);
+    if (actions) {
+rowChildren.push(actions);
+}
 
     return createElement("div", { class: "song-row" }, rowChildren);
 }
@@ -94,7 +102,9 @@ function createSongsList(songs, artistID, player, isCreator) {
     const queue = [];
 
     songs.forEach((song, idx) => {
-        if (!song.published && !isCreator) return;
+        if (!song.published && !isCreator) {
+return;
+}
         const row = createSongRow(song, idx, artistID, player, isCreator);
         list.append(row);
         queue.push(song);
@@ -113,7 +123,9 @@ async function renderSongsTab(container, artistID, isCreator) {
 
     container.replaceChildren();
 
-    if (isCreator) container.append(createUploadButton(artistID, container));
+    if (isCreator) {
+container.append(createUploadButton(artistID, container));
+}
 
     if (!songs.length) {
         container.append(createElement("p", {}, ["No songs available."]));

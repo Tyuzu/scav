@@ -4,6 +4,7 @@ import { editCrop } from "../crop/editCrop.js";
 import Button from "../../../components/base/Button.js";
 import { navigate } from "../../../routes/index.js";
 import { addToCart } from "../../cart/addToCart.js";
+import { getState } from "../../../state/state.js";
 import { EntityType } from "../../../utils/imagePaths.js";
 import { editFarm } from "./editFarm.js";
 import Bannerx from "../../../components/base/Bannerx.js";
@@ -28,10 +29,14 @@ export function renderFarmDetails(farm, isCreator) {
       Button("🗑️ Delete", `delete-${farm.farmid}`, {
         click: async () => {
           const ok = window.confirm?.(`Delete farm "${farm.name}"?`);
-          if (!ok) return;
+          if (!ok) {
+return;
+}
 
           const res = await apiFetch(`/farms/${farm.farmid}`, "DELETE");
-          if (res?.success) navigate("/farms");
+          if (res?.success) {
+navigate("/farms");
+}
         }
       }, "buttonx")
     );
@@ -222,7 +227,9 @@ function createCreatorControls(crop, farmId, editcon) {
     Button("🗑️ Delete", "", {
       click: async () => {
         const ok = window.confirm?.(`Delete crop "${crop.name}"?`);
-        if (!ok) return;
+        if (!ok) {
+return;
+}
 
         const res = await apiFetch(
           `/farms/${farmId}/crops/${crop.cropid}`,
@@ -266,11 +273,16 @@ export function createUserControls(crop, farmName, farmId, isLoggedIn) {
     createElement("label", {}, ["Quantity:"]),
     createElement("div", { class: "quantity-control" }, [dec, display, inc]),
     Button("Add-To-Cart", "a2c-crop-crd", {
-      click: () =>
+      click: async () =>
         addToCart({
           itemId: crop.cropid,
           quantity,
-          isLoggedIn
+          isLoggedIn: Boolean(getState("token")),
+          itemType: "crop",
+          itemName: crop.name,
+          entityType: "farm",
+          entityId: farmId,
+          entityName: farmName
         })
     }, "buttonx")
   ];
@@ -298,6 +310,8 @@ function understanding(v) {
 // ─────────── Date utility ───────────
 function getAgeInDays(dateStr) {
   const d = new Date(dateStr);
-  if (isNaN(d.getTime())) return 0;
+  if (isNaN(d.getTime())) {
+return 0;
+}
   return Math.floor((Date.now() - d.getTime()) / (1000 * 60 * 60 * 24));
 }

@@ -61,7 +61,9 @@ function groupItems(items = []) {
 }
 
 async function validateCoupon(code, subtotal, entityId, entityType) {
-  if (!code) return { valid: false, discount: 0 };
+  if (!code) {
+return { valid: false, discount: 0 };
+}
 
   try {
     const res = await apiFetch("/coupon/validate", "POST", {

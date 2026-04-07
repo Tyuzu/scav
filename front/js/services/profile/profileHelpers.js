@@ -15,7 +15,9 @@ function showLoadingMessage(message) {
 
 function removeLoadingMessage() {
     const loadingMsg = document.getElementById("loading-msg");
-    if (loadingMsg) loadingMsg.remove();
+    if (loadingMsg) {
+loadingMsg.remove();
+}
 }
 
 function capitalize(string) {

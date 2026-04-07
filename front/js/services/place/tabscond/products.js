@@ -86,7 +86,9 @@ function renderProduct(item, placeId, isCreator, isLoggedIn, container) {
         });
 
         const deleteBtn = createButton("Delete", async () => {
-            if (!confirm(`Delete product "${item.name}"?`)) return;
+            if (!confirm(`Delete product "${item.name}"?`)) {
+return;
+}
             try {
                 await apiFetch(`/place/${placeId}/products/${item.productid}`, "DELETE");
                 displayPlaceProducts(container, placeId, isCreator, isLoggedIn);

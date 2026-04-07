@@ -11,8 +11,12 @@ export {
 
 // Optional unified function if you still want type-based dispatch:
 export async function updateUserPicture(type) {
-  if (type === "avatar") return updateAvatar();
-  if (type === "banner") return updateBanner();
+  if (type === "avatar") {
+return updateAvatar();
+}
+  if (type === "banner") {
+return updateBanner();
+}
   console.error(`Unknown picture type: ${type}`);
   return false;
 }

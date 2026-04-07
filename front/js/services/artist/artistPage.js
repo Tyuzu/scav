@@ -111,7 +111,9 @@ export async function displayArtist(content, artistID, isLoggedIn) {
     // --- PHOTO & BANNER ROW ---
     const photoBannerRow = createElement("div", { class: "hflex-sb photocon" });
     const photoSection = createArtistPhotoSection(artist, isCreator);
-    if (photoSection) photoBannerRow.appendChild(photoSection);
+    if (photoSection) {
+photoBannerRow.appendChild(photoSection);
+}
     photoBannerRow.appendChild(createArtistBannerSection(artist, isCreator));
     contentContainer.appendChild(photoBannerRow);
 
@@ -181,7 +183,9 @@ export async function displayArtist(content, artistID, isLoggedIn) {
       { title: "Events", id: "artist-events", render: (c) => renderEventsTab(c, artistID, isCreator) },
       { title: "Posts", id: "artist-posts", render: (c) => renderPostsTab(c, artistID, isLoggedIn) },
       { title: "Live", id: "artist-live", render: (c) => renderLiveTab(c, artistID, isLoggedIn, isCreator) },
-      { title: "Notices", id: "notices-tab", render: (tabContainer) => { displayNotices("artist", artistID, tabContainer, isCreator); } },
+      { title: "Notices", id: "notices-tab", render: (tabContainer) => {
+ displayNotices("artist", artistID, tabContainer, isCreator); 
+} },
     ];
 
     // --- CATEGORY-BASED TABS ---
@@ -244,7 +248,9 @@ function getSocialIcon(platform) {
     link: "🔗"
   };
   for (const key in icons) {
-    if (lc.includes(key)) return icons[key];
+    if (lc.includes(key)) {
+return icons[key];
+}
   }
   return icons.link;
 }
@@ -265,12 +271,20 @@ function SubscribeToArtist(followBtn, artistId) {
 function renderOverviewTab(container, artist, isCreator, isLoggedIn) {
   const artistDiv = createElement("div", { class: "artist-container" });
 
-  if (isCreator) artistDiv.appendChild(renderCreatorActions(artist, container, isLoggedIn));
+  if (isCreator) {
+artistDiv.appendChild(renderCreatorActions(artist, container, isLoggedIn));
+}
   artistDiv.appendChild(createElement("h2", { class: "artist-name" }, [artist.name || "Unknown Artist"]));
   artistDiv.appendChild(renderArtistDetails(artist));
-  if (artist.socials) artistDiv.appendChild(renderSocialLinks(artist.socials));
-  if (isCreator && artist.category?.toLowerCase() === "band") artistDiv.appendChild(renderManageMembersButton(artist.artistid, container));
-  if (artist.members?.length > 0) artistDiv.appendChild(renderBandMembers(artist, isCreator));
+  if (artist.socials) {
+artistDiv.appendChild(renderSocialLinks(artist.socials));
+}
+  if (isCreator && artist.category?.toLowerCase() === "band") {
+artistDiv.appendChild(renderManageMembersButton(artist.artistid, container));
+}
+  if (artist.members?.length > 0) {
+artistDiv.appendChild(renderBandMembers(artist, isCreator));
+}
   renderAlbumsTab(artist.artistid, isCreator)
     .then(c => {
       artistDiv.appendChild(c);

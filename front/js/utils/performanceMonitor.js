@@ -16,7 +16,9 @@ class PerformanceMonitor {
    * Mark a point in time
    */
   mark(name) {
-    if (!this.enabled) return;
+    if (!this.enabled) {
+return;
+}
     performance.mark(name);
   }
 
@@ -24,7 +26,9 @@ class PerformanceMonitor {
    * Measure time between two marks
    */
   measure(name, startMark, endMark) {
-    if (!this.enabled) return;
+    if (!this.enabled) {
+return;
+}
 
     try {
       performance.measure(name, startMark, endMark);
@@ -44,7 +48,9 @@ class PerformanceMonitor {
    * Record custom metric
    */
   recordMetric(name, value) {
-    if (!this.enabled) return;
+    if (!this.enabled) {
+return;
+}
     this.metrics.set(name, value);
     if (this.verbose) {
       console.log(`[PerfMonitor] ${name}: ${value}`);
@@ -69,7 +75,9 @@ class PerformanceMonitor {
    * Report metrics (optionally send to server)
    */
   async reportMetrics() {
-    if (!this.enabled) return;
+    if (!this.enabled) {
+return;
+}
 
     const metrics = this.getMetrics();
 
@@ -97,7 +105,9 @@ class PerformanceMonitor {
    * Observe Core Web Vitals
    */
   observeWebVitals() {
-    if (!this.enabled || typeof PerformanceObserver === "undefined") return;
+    if (!this.enabled || typeof PerformanceObserver === "undefined") {
+return;
+}
 
     try {
       // Largest Contentful Paint
@@ -146,7 +156,9 @@ class PerformanceMonitor {
    * Get navigation timing
    */
   getNavigationTiming() {
-    if (!performance.timing) return null;
+    if (!performance.timing) {
+return null;
+}
 
     const timing = performance.timing;
     return {
@@ -163,7 +175,9 @@ class PerformanceMonitor {
    * Get memory info (Chrome only)
    */
   getMemoryInfo() {
-    if (!performance.memory) return null;
+    if (!performance.memory) {
+return null;
+}
 
     const m = performance.memory;
     return {
@@ -191,7 +205,9 @@ class PerformanceMonitor {
    * Start auto-reporting
    */
   startAutoReport() {
-    if (!this.enabled) return;
+    if (!this.enabled) {
+return;
+}
 
     this.reportInterval = setInterval(
       () => this.reportMetrics(),

@@ -3,7 +3,7 @@ import { displayGtaMap } from "../../services/GTAmap/gtamap";
 
 async function MapGTA(isLoggedIn, contentContainer) {
     contentContainer.innerHTML = '';
-    let mapcon = createElement("div", { class: "mapcon" }, []);
+    const mapcon = createElement("div", { class: "mapcon" }, []);
     contentContainer.appendChild(mapcon);
     displayGtaMap(mapcon, isLoggedIn);
 }

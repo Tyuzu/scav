@@ -70,7 +70,9 @@ export function createControls(video, mediaSrc, qualities, videoid, videoPlayer)
   const skipBackButton = createIconButton({
     classSuffix: "skipback bonw",
     svgMarkup: skipBackSVG,
-    onClick: () => { video.currentTime = Math.max(video.currentTime - 10, 0); },
+    onClick: () => {
+ video.currentTime = Math.max(video.currentTime - 10, 0); 
+},
     label: "",
     ariaLabel: "Skip Back 10 seconds"
   });
@@ -78,7 +80,9 @@ export function createControls(video, mediaSrc, qualities, videoid, videoPlayer)
   const skipForwardButton = createIconButton({
     classSuffix: "skipforward bonw",
     svgMarkup: skipForwardSVG,
-    onClick: () => { video.currentTime = Math.min(video.currentTime + 10, video.duration); },
+    onClick: () => {
+ video.currentTime = Math.min(video.currentTime + 10, video.duration); 
+},
     label: "",
     ariaLabel: "Skip Forward 10 seconds"
   });
@@ -90,7 +94,9 @@ export function createControls(video, mediaSrc, qualities, videoid, videoPlayer)
   const settingsButton = createIconButton({
     classSuffix: "settings bonw",
     svgMarkup: settingsSVG,
-    onClick: () => { dropupMenu.classList.toggle("hidden"); },
+    onClick: () => {
+ dropupMenu.classList.toggle("hidden"); 
+},
     label: "",
     ariaLabel: "Settings"
   });

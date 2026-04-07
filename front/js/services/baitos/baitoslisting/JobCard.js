@@ -38,7 +38,9 @@ export function buildCard(job) {
 
   const imageWrapper = createElement("div", {
     "events": {
-      click: () => { navigate(`/baito/${job.baitoid}`) }
+      click: () => {
+ navigate(`/baito/${job.baitoid}`) 
+}
     }, class: "baito-card-img"
   }, [img]);
 

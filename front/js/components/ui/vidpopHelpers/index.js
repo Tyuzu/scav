@@ -18,7 +18,9 @@ export function setupClickToPlay(video) {
 }
 
 export async function setupSubtitleTrack(video, subtitles, container) {
-  if (!subtitles || subtitles.length === 0) return null;
+  if (!subtitles || subtitles.length === 0) {
+return null;
+}
   await setupSubtitles(video, subtitles, container);
   return container;
 }

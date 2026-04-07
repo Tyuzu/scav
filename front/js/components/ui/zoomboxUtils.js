@@ -75,7 +75,9 @@ export const smoothZoom = (event, img, state) => {
 
 
 export const handleMouseDown = (e, state) => {
-    if (state.zoomLevel <= 1) return;
+    if (state.zoomLevel <= 1) {
+return;
+}
     state.isDragging = true;
     state.startX = e.clientX - state.panX;
     state.startY = e.clientY - state.panY;
@@ -84,7 +86,9 @@ export const handleMouseDown = (e, state) => {
 };
 
 export const handleMouseMove = (e, state, img) => {
-    if (!state.isDragging) return;
+    if (!state.isDragging) {
+return;
+}
     e.preventDefault();
     const dx = e.clientX - state.startX;
     const dy = e.clientY - state.startY;
@@ -157,8 +161,12 @@ export const handleTouchMove = (e, state, img) => {
 };
 
 export const handleTouchEnd = (e, state, img) => {
-    if (e.touches.length < 2) state.initialPinchDistance = null;
-    if (!e.touches.length) handleMouseUp(state, img);
+    if (e.touches.length < 2) {
+state.initialPinchDistance = null;
+}
+    if (!e.touches.length) {
+handleMouseUp(state, img);
+}
 };
 
 export const createNavigationButtons = (images, img, state, preload, update) => {

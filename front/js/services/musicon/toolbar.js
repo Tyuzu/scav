@@ -10,7 +10,9 @@ import { getContentContainer, showLoadingOverlay, hideLoadingOverlay } from "./u
 
 export function ensureToolbar(container, player, isLoggedIn) {
     let toolbar = container.querySelector(".music-toolbar");
-    if (toolbar) return toolbar;
+    if (toolbar) {
+return toolbar;
+}
 
     toolbar = createElement("div", { class: "music-toolbar" });
     container.prepend(toolbar);
@@ -42,7 +44,9 @@ export function ensureToolbar(container, player, isLoggedIn) {
         }
 
         const name = prompt("Enter playlist name:");
-        if (!name) return;
+        if (!name) {
+return;
+}
 
         createPlaylistBtn.disabled = true;
         try {
@@ -83,7 +87,9 @@ export function ensureToolbar(container, player, isLoggedIn) {
 }
 
 export function ensureBackButton(container, onClick) {
-    if (container.querySelector(".back-btn")) return;
+    if (container.querySelector(".back-btn")) {
+return;
+}
 
     const backBtn = createElement("button", { class: "back-btn" }, ["⬅ Back"]);
     backBtn.addEventListener("click", onClick);

@@ -36,7 +36,9 @@ async function editProfile(content) {
     ];
 
     fields.forEach(field => {
-        if (field) form.appendChild(field);
+        if (field) {
+form.appendChild(field);
+}
     });
 
     const updateBtn = Button("Update Profile", "update-profile-btn", {
@@ -97,7 +99,9 @@ async function updateProfile(formData) {
         Object.entries(updatedFields).forEach(([key, value]) => updateFormData.append(key, value));
 
         const updatedProfile = await apiFetch("/profile/edit", "PUT", updateFormData);
-        if (!updatedProfile) throw new Error("No response received for the profile update.");
+        if (!updatedProfile) {
+throw new Error("No response received for the profile update.");
+}
 
         const mergedProfile = { ...currentProfile, ...updatedProfile };
         setState({ userProfile: mergedProfile }, true);

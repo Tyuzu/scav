@@ -73,7 +73,9 @@ export async function displayHireWorkers(isLoggedIn, container) {
 
     // ---------- ADS ----------
     paged.forEach((_, idx) => {
-      if ((idx + 1) % 6 === 0) list.append(adspace("inlist"));
+      if ((idx + 1) % 6 === 0) {
+list.append(adspace("inlist"));
+}
     });
 
     // ---------- PAGINATION ----------
@@ -82,11 +84,15 @@ export async function displayHireWorkers(isLoggedIn, container) {
       const pager = createElement("div", { class: "workers-pager" });
 
       if (currentPage > 1) {
-        pager.append(Button("Prev", "", { click: () => { currentPage--; renderWorkers(filtered); } }, "buttonx secondary"));
+        pager.append(Button("Prev", "", { click: () => {
+ currentPage--; renderWorkers(filtered); 
+} }, "buttonx secondary"));
       }
 
       if (currentPage < totalPages) {
-        pager.append(Button("Next", "", { click: () => { currentPage++; renderWorkers(filtered); } }, "buttonx secondary"));
+        pager.append(Button("Next", "", { click: () => {
+ currentPage++; renderWorkers(filtered); 
+} }, "buttonx secondary"));
       }
 
       list.append(pager);

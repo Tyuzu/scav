@@ -76,7 +76,9 @@ export async function displayCreateOrEditBaitoProfile(isLoggedIn, contentContain
         const draft = JSON.parse(localStorage.getItem("baitoProfileDraft") || "{}");
         Object.entries(draft).forEach(([key, value]) => {
             const el = form.querySelector(`#${key}`);
-            if (el && el.type !== "file") el.value = value;
+            if (el && el.type !== "file") {
+el.value = value;
+}
         });
     }
 
@@ -88,7 +90,9 @@ export async function displayCreateOrEditBaitoProfile(isLoggedIn, contentContain
             const draftData = {};
             fields.forEach(f => {
                 const el = form.querySelector(`#${f.id}`);
-                if (el && el.type !== "file") draftData[f.id] = el.value;
+                if (el && el.type !== "file") {
+draftData[f.id] = el.value;
+}
             });
             localStorage.setItem("baitoProfileDraft", JSON.stringify(draftData));
         });
@@ -125,14 +129,19 @@ export async function displayCreateOrEditBaitoProfile(isLoggedIn, contentContain
         }
 
         Object.entries(requiredFields).forEach(([k, v]) => {
-            if (Array.isArray(v)) v.forEach(val => payload.append(k, val));
-            else payload.append(k, v);
+            if (Array.isArray(v)) {
+v.forEach(val => payload.append(k, val));
+} else {
+payload.append(k, v);
+}
         });
 
         // Append optional fields
         ["profile-email", "profile-experience", "profile-skills", "profile-availability", "profile-wage", "profile-languages"].forEach(id => {
             const val = formData.get(id);
-            if (val && val.trim()) payload.append(id.replace("profile-", ""), val.trim());
+            if (val && val.trim()) {
+payload.append(id.replace("profile-", ""), val.trim());
+}
         });
 
         // Handle additional documents

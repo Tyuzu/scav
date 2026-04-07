@@ -73,7 +73,9 @@ function SubscribeToFeedPost(followBtn, postId) {
 
 // Batch fetch: POST /likes/:entitytype/batch/users
 export async function fetchUserMetaLikesBatch(entityType, entityIds = []) {
-    if (!Array.isArray(entityIds) || entityIds.length === 0) return {};
+    if (!Array.isArray(entityIds) || entityIds.length === 0) {
+return {};
+}
 
     try {
         const response = await apiFetch(`/likes/${entityType}/batch/users`, "POST", {

@@ -35,10 +35,14 @@ const PERSISTED_KEYS = ["token", "userProfile", "user", "username"];
 // --- Event system ---
 const globalEvents = {};
 function publish(eventName, data) {
-  if (globalEvents[eventName]) globalEvents[eventName].forEach(cb => cb(data));
+  if (globalEvents[eventName]) {
+globalEvents[eventName].forEach(cb => cb(data));
+}
 }
 function globalSubscribe(eventName, callback) {
-  if (!globalEvents[eventName]) globalEvents[eventName] = [];
+  if (!globalEvents[eventName]) {
+globalEvents[eventName] = [];
+}
   globalEvents[eventName].push(callback);
 }
 
@@ -71,7 +75,11 @@ function scheduleNotify(key, value) {
       for (const { key, value } of notifyQueue) {
         // top-level notifications
         const fns = listeners.get(key);
-        if (fns) for (const fn of fns) fn(value);
+        if (fns) {
+for (const fn of fns) {
+fn(value);
+}
+}
         publish(`${key}Changed`, value);
         publish("stateChange", { [key]: value });
 
@@ -79,7 +87,9 @@ function scheduleNotify(key, value) {
         for (const [path, fns] of deepListeners) {
           if (path === key || path.startsWith(key + ".")) {
             const val = getValueByPath(path);
-            for (const fn of fns) fn(val);
+            for (const fn of fns) {
+fn(val);
+}
           }
         }
       }
@@ -115,19 +125,25 @@ function createReactiveObject(obj, path = []) {
     },
     set(target, prop, value) {
       const oldValue = target[prop];
-      if (oldValue === value) return true; // Skip if value unchanged
+      if (oldValue === value) {
+return true;
+} // Skip if value unchanged
       
       target[prop] = value;
       const fullPath = path.concat(prop).join(".");
       scheduleNotify(fullPath, value);
-      if (path.length > 0) scheduleNotify(path[0], target);
+      if (path.length > 0) {
+scheduleNotify(path[0], target);
+}
       return true;
     },
     deleteProperty(target, prop) {
       delete target[prop];
       const fullPath = path.concat(prop).join(".");
       scheduleNotify(fullPath);
-      if (path.length > 0) scheduleNotify(path[0], target);
+      if (path.length > 0) {
+scheduleNotify(path[0], target);
+}
       return true;
     }
   });
@@ -154,7 +170,9 @@ const state = reactive(rawState);
 
 // --- Core state functions ---
 function getState(key) {
-  if (!allowedKeys.has(key)) throw new Error(`Invalid state key: ${key}`);
+  if (!allowedKeys.has(key)) {
+throw new Error(`Invalid state key: ${key}`);
+}
   return state[key];
 }
 
@@ -162,7 +180,9 @@ function getState(key) {
 function setState(keyOrObj, persist = false, value = undefined) {
   if (typeof keyOrObj === "object" && keyOrObj !== null) {
     for (const [key, val] of Object.entries(keyOrObj)) {
-      if (!allowedKeys.has(key)) throw new Error(`Invalid state key: ${key}`);
+      if (!allowedKeys.has(key)) {
+throw new Error(`Invalid state key: ${key}`);
+}
       if (key === "routeCache" || key === "routeState") {
         console.warn(`⚠️ Skipping overwrite of ${key}`);
         continue;
@@ -181,7 +201,9 @@ function setState(keyOrObj, persist = false, value = undefined) {
   }
 
   const key = keyOrObj;
-  if (!allowedKeys.has(key)) throw new Error(`Invalid state key: ${key}`);
+  if (!allowedKeys.has(key)) {
+throw new Error(`Invalid state key: ${key}`);
+}
   if (key === "routeCache" || key === "routeState") {
     console.warn(`⚠️ Skipping overwrite of ${key}`);
     return;
@@ -199,23 +221,63 @@ function setState(keyOrObj, persist = false, value = undefined) {
   return value;
 }
 
-// --- Subscriptions ---
+// --- Subscriptions with automatic cleanup ---
 function subscribe(key, fn) {
-  if (!allowedKeys.has(key)) throw new Error(`Cannot subscribe to invalid key: ${key}`);
-  if (!listeners.has(key)) listeners.set(key, new Set());
-  listeners.get(key).add(fn);
+  if (!allowedKeys.has(key)) {
+throw new Error(`Cannot subscribe to invalid key: ${key}`);
 }
-function unsubscribe(key, fn) {
-  listeners.get(key)?.delete(fn);
+  if (!listeners.has(key)) {
+listeners.set(key, new Set());
+}
+  listeners.get(key).add(fn);
+  
+  // Return unsubscribe function for automatic cleanup
+  return () => {
+    listeners.get(key)?.delete(fn);
+    // Clean up empty listener sets
+    if (listeners.get(key)?.size === 0) {
+listeners.delete(key);
+}
+  };
 }
 
-// --- Deep path subscriptions ---
-function subscribeDeep(path, fn) {
-  if (!deepListeners.has(path)) deepListeners.set(path, new Set());
-  deepListeners.get(path).add(fn);
+function unsubscribe(key, fn) {
+  listeners.get(key)?.delete(fn);
+  // Clean up empty listener sets
+  if (listeners.get(key)?.size === 0) {
+listeners.delete(key);
 }
+}
+
+// --- Deep path subscriptions with automatic cleanup ---
+function subscribeDeep(path, fn) {
+  if (!deepListeners.has(path)) {
+deepListeners.set(path, new Set());
+}
+  deepListeners.get(path).add(fn);
+  
+  // Return unsubscribe function for automatic cleanup
+  return () => {
+    deepListeners.get(path)?.delete(fn);
+    // Clean up empty listener sets
+    if (deepListeners.get(path)?.size === 0) {
+deepListeners.delete(path);
+}
+  };
+}
+
 function unsubscribeDeep(path, fn) {
   deepListeners.get(path)?.delete(fn);
+  // Clean up empty listener sets
+  if (deepListeners.get(path)?.size === 0) {
+deepListeners.delete(path);
+}
+}
+
+// --- Clear all listeners (useful for testing or cleanup) ---
+function clearAllListeners() {
+  listeners.clear();
+  deepListeners.clear();
 }
 
 // --- Store initialization ---
@@ -228,10 +290,18 @@ function initStore() {
 }
 
 // --- Route Cache ---
-function getRouteModule(path) { return state.routeCache.get(path); }
-function setRouteModule(path, module) { state.routeCache.set(path, module); }
-function hasRouteModule(path) { return state.routeCache.has(path); }
-function clearRouteCache() { state.routeCache.clear(); state.routeState.clear(); }
+function getRouteModule(path) {
+ return state.routeCache.get(path); 
+}
+function setRouteModule(path, module) {
+ state.routeCache.set(path, module); 
+}
+function hasRouteModule(path) {
+ return state.routeCache.has(path); 
+}
+function clearRouteCache() {
+ state.routeCache.clear(); state.routeState.clear(); 
+}
 
 // --- Per-Route State ---
 function getRouteState(path) {
@@ -242,7 +312,9 @@ function getRouteState(path) {
   }
   return route;
 }
-function setRouteState(path, value) { state.routeState.set(path, value); }
+function setRouteState(path, value) {
+ state.routeState.set(path, value); 
+}
 
 // --- Clear State ---
 function clearState(preserveKeys = []) {
@@ -257,7 +329,9 @@ function clearState(preserveKeys = []) {
   localStorage.clear();
 
   for (const key of allowedKeys) {
-    if (preserveKeys.includes(key) || key === "role") continue;
+    if (preserveKeys.includes(key) || key === "role") {
+continue;
+}
     if (key === "routeCache" || key === "routeState") {
       state[key].clear?.();
     } else {
@@ -272,25 +346,43 @@ function clearState(preserveKeys = []) {
   }
 
   // ✅ Ensure Maps always reinitialized safely
-  if (!(state.routeCache instanceof Map)) state.routeCache = new Map();
-  if (!(state.routeState instanceof Map)) state.routeState = new Map();
+  if (!(state.routeCache instanceof Map)) {
+state.routeCache = new Map();
+}
+  if (!(state.routeState instanceof Map)) {
+state.routeState = new Map();
+}
 }
 
 // --- Scroll State ---
-function saveScroll(container, scrollState) { scrollState.scrollY = container?.scrollTop || 0; }
-function restoreScroll(container, scrollState) { if (scrollState?.scrollY) container.scrollTop = scrollState.scrollY; }
+function saveScroll(container, scrollState) {
+ scrollState.scrollY = container?.scrollTop || 0; 
+}
+function restoreScroll(container, scrollState) {
+ if (scrollState?.scrollY) {
+container.scrollTop = scrollState.scrollY;
+} 
+}
 
 // --- Role helpers ---
 function hasRole(...roles) {
   const current = state.userProfile?.role;
-  if (!current) return false;
+  if (!current) {
+return false;
+}
   return roles.some(r => (Array.isArray(current) ? current : [current]).includes(r));
 }
-function isAdmin() { return hasRole("admin"); }
+function isAdmin() {
+ return hasRole("admin"); 
+}
 
 // --- Snapshot & Actions ---
-function getGlobalSnapshot() { return Object.freeze({ ...state }); }
-function setLoading(val) { setState("isLoading", val); }
+function getGlobalSnapshot() {
+ return Object.freeze({ ...state }); 
+}
+function setLoading(val) {
+ setState("isLoading", val); 
+}
 
 
 // --- Exports ---
@@ -299,7 +391,7 @@ export {
 
   getState, setState, clearState, getGlobalSnapshot,
 
-  subscribe, subscribeDeep,
+  subscribe, unsubscribe, subscribeDeep, unsubscribeDeep, clearAllListeners,
   publish, globalSubscribe,
 
   saveScroll, restoreScroll,

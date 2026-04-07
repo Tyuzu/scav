@@ -86,7 +86,9 @@ export async function displayWorkerPage(contentContainer, isLoggedIn, workerId) 
   ]);
 
   main.replaceChildren(header, details);
-  if (documentsSection) main.appendChild(documentsSection);
+  if (documentsSection) {
+main.appendChild(documentsSection);
+}
   main.append(actions, bookingContainer);
 
   // Sidebar
@@ -109,7 +111,9 @@ export async function displayWorkerPage(contentContainer, isLoggedIn, workerId) 
 
       Button("🗑️ Delete Profile", "delete-profile-btn", {
         click: async () => {
-          if (!window.confirm("Are you sure you want to delete this profile?")) return;
+          if (!window.confirm("Are you sure you want to delete this profile?")) {
+return;
+}
           try {
             Notify("Deleting profile...", { type: "info", duration: 2000, dismissible: true });
             await apiFetch(`/baitos/worker/${worker.baito_user_id}`, "DELETE");
@@ -148,7 +152,9 @@ export async function displayWorkerPage(contentContainer, isLoggedIn, workerId) 
 /* ---------- HELPERS ---------- */
 
 function renderDetail(icon, label, value) {
-  if (!value) return null;
+  if (!value) {
+return null;
+}
   return createElement("div", { class: "detail-row" }, [
     createElement("span", { class: "detail-icon", "aria-hidden": "true" }, [icon]),
     createElement("span", { class: "detail-label" }, [label + ": "]),
@@ -200,7 +206,7 @@ function renderSidebar(worker, isLoggedIn, isCreator) {
           Notify("Login required to save favorites.", { type: "warning", duration: 3000, dismissible: true });
           return;
         }
-        let favorites = JSON.parse(localStorage.getItem("favoriteWorkers") || "[]");
+        const favorites = JSON.parse(localStorage.getItem("favoriteWorkers") || "[]");
         if (!favorites.includes(worker.baito_user_id)) {
           favorites.push(worker.baito_user_id);
           localStorage.setItem("favoriteWorkers", JSON.stringify(favorites));

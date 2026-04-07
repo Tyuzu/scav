@@ -86,7 +86,9 @@ export async function createOrEditArtist({ isLoggedIn, content, mode = "create",
 
     formFields.forEach(field => {
         let value = existingArtist?.[field.id.replace("artist-", "")] ?? "";
-        if (field.id === "artist-genres" && existingArtist?.genres) value = existingArtist.genres.join(", ");
+        if (field.id === "artist-genres" && existingArtist?.genres) {
+value = existingArtist.genres.join(", ");
+}
         const inputField = createFormGroup({ ...field, value });
         section.appendChild(inputField);
     });
@@ -109,8 +111,11 @@ export async function createOrEditArtist({ isLoggedIn, content, mode = "create",
     const submitBtn = Button(mode === "create" ? "Create Artist" : "Update Artist", "artist-submit-btn", {
         click: async (e) => {
             e.preventDefault();
-            if (mode === "create") await submitArtistForm(section);
-            else await updateArtistForm(artistID, section);
+            if (mode === "create") {
+await submitArtistForm(section);
+} else {
+await updateArtistForm(artistID, section);
+}
         }
     },"buttonx primary");
 
@@ -151,7 +156,9 @@ function collectFormData(section) {
 
     ["artist-category", "artist-name", "artist-bio", "artist-dob", "artist-place", "artist-country", "artist-genres"].forEach(id => {
         const el = section.querySelector(`#${id}`);
-        if (el) formData.append(id.replace("artist-", ""), el.value ?? "");
+        if (el) {
+formData.append(id.replace("artist-", ""), el.value ?? "");
+}
     });
 
     // ---- Collect socials as JSON ----
@@ -159,7 +166,9 @@ function collectFormData(section) {
     section.querySelectorAll(".social-field-row").forEach(row => {
         const platform = row.querySelector("input[type=text]")?.value.trim().toLowerCase();
         const url = row.querySelector("input[type=url]")?.value.trim();
-        if (platform && url) socials[platform] = url;
+        if (platform && url) {
+socials[platform] = url;
+}
     });
     if (Object.keys(socials).length > 0) {
         formData.append("socials", JSON.stringify(socials));
@@ -182,7 +191,9 @@ export async function deleteArtistForm(isLoggedIn, artistID, isCreator) {
     }
 
     const confirmed = confirm("Are you sure you want to delete this artist? This action cannot be undone.");
-    if (!confirmed) return;
+    if (!confirmed) {
+return;
+}
 
     try {
         await apiFetch(`/artists/${artistID}`, "DELETE");

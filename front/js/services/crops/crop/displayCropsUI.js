@@ -74,7 +74,7 @@ export function renderCropCard(crop, mode = "catalogue") {
       }
     }, "buttonx");
 
-    let ccon = createElement("div", { "class": "nimgcon" }, []);
+    const ccon = createElement("div", { "class": "nimgcon" }, []);
     // card.append(img, title, info, season, tags, btn);
     ccon.append(title, info, season, tags, btn);
     card.append(img, ccon);
@@ -124,9 +124,9 @@ export function renderCropInterface(container, cropData) {
   main.append(tabButtons, tabsWrapper);
 
   const tabs = {};
-  let activeTags = new Set();
+  const activeTags = new Set();
   const categories = Object.keys(cropData);
-  let currentTab = categories[0];
+  const currentTab = categories[0];
 
   const state = {
     cropData,
@@ -145,14 +145,18 @@ export function renderCropInterface(container, cropData) {
     ]);
 
     // Disable tabs with no crops
-    if (!cropData[cat].length) btn.disabled = true;
+    if (!cropData[cat].length) {
+btn.disabled = true;
+}
 
     btn.onclick = () => {
       state.currentTab = cat;
       updateAllTabs(state);
     };
 
-    if (i === 0) btn.classList.add("active");
+    if (i === 0) {
+btn.classList.add("active");
+}
     tabButtons.appendChild(btn);
 
     const pane = createElement("div", { class: "tab-content", id: cat });

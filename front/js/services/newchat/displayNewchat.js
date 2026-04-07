@@ -39,7 +39,9 @@ export function displayNewChat(contentContainer, chatid, isLoggedIn, currentUser
 /* ------------------ Helpers ------------------ */
 
 function clearContainer(container) {
-  while (container.firstChild) container.removeChild(container.firstChild);
+  while (container.firstChild) {
+container.removeChild(container.firstChild);
+}
 }
 
 function createInputRow() {
@@ -127,7 +129,9 @@ function setupSocketListeners(socket, messagesContainer, currentUserId) {
 function setupMessageSending(inputField, sendButton, socket) {
   sendButton.addEventListener("click", () => {
     const content = inputField.value.trim();
-    if (!content || socket.readyState !== WebSocket.OPEN) return;
+    if (!content || socket.readyState !== WebSocket.OPEN) {
+return;
+}
 
     socket.send(JSON.stringify({ action: "chat", content }));
     inputField.value = "";
@@ -182,7 +186,9 @@ function setupFileUpload(fileInput, uploadButton, dropZone, chatid, progressBar)
         return;
       }
 
-      if (!Array.isArray(uploaded)) return;
+      if (!Array.isArray(uploaded)) {
+return;
+}
 
       chatFetch(
         "/newchat/upload",

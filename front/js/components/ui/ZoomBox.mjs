@@ -18,14 +18,20 @@ import { dispatchZoomBoxEvent } from "../../utils/eventDispatcher.js";
 // Detect media type by file extension
 function getMediaType(src) {
     const lower = src.toLowerCase();
-    if (/\.(mp4|webm|ogg|mov|avi|mkv)$/.test(lower)) return "video";
+    if (/\.(mp4|webm|ogg|mov|avi|mkv)$/.test(lower)) {
+return "video";
+}
     return "image";
 }
 
 // Main ZoomBox factory
 const ZoomBox = (mediaItems, initialIndex = 0) => {
-    if (!Array.isArray(mediaItems) || mediaItems.length === 0) return;
-    if (document.getElementById("zoombox")) return;
+    if (!Array.isArray(mediaItems) || mediaItems.length === 0) {
+return;
+}
+    if (document.getElementById("zoombox")) {
+return;
+}
 
     const state = {
         zoomLevel: 1,
@@ -61,7 +67,9 @@ const ZoomBox = (mediaItems, initialIndex = 0) => {
         if (state.currentMedia && state.currentMedia._cleanupListeners) {
             state.currentMedia._cleanupListeners();
         }
-        if (state.currentMedia) state.currentMedia.remove();
+        if (state.currentMedia) {
+state.currentMedia.remove();
+}
 
         const src = mediaItems[index];
         const type = getMediaType(src);
@@ -135,7 +143,9 @@ const ZoomBox = (mediaItems, initialIndex = 0) => {
     // --- Close button ---
     const closeZoomBox = () => {
         const box = document.getElementById("zoombox");
-        if (!box) return;
+        if (!box) {
+return;
+}
 
         const transitionDuration =
             parseFloat(getComputedStyle(box).transitionDuration || "0.3") * 1000;

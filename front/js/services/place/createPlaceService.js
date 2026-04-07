@@ -66,7 +66,7 @@ async function createPlaceForm(isLoggedIn, createSection) {
     ]);
     form.appendChild(tagWrapper);
 
-    let tags = [];
+    const tags = [];
     const tagInput = tagWrapper.querySelector("#tag-input");
     const tagList = tagWrapper.querySelector("#tag-list");
 
@@ -75,7 +75,9 @@ async function createPlaceForm(isLoggedIn, createSection) {
         tags.forEach((tag, index) => {
             const chip = createElement("span", { style: "padding:4px 8px; background:var(--color-space); border-radius:var(--radius-sm); display:inline-flex; align-items:center; gap:4px;" }, [
                 tag,
-                createElement("button", { type: "button", style: "border:none; background:none; cursor:pointer; color:red;", onclick: () => { tags.splice(index, 1); renderTags(); } }, ["×"])
+                createElement("button", { type: "button", style: "border:none; background:none; cursor:pointer; color:red;", onclick: () => {
+ tags.splice(index, 1); renderTags(); 
+} }, ["×"])
             ]);
             tagList.appendChild(chip);
         });
@@ -122,9 +124,13 @@ async function createPlaceForm(isLoggedIn, createSection) {
 
         for (const [id, key] of Object.entries(fieldMap)) {
             const input = form.querySelector(`#${id}`);
-            if (!input) continue;
+            if (!input) {
+continue;
+}
             if (input.type === "file") {
-                if (input.files[0]) formData.append(key, input.files[0]);
+                if (input.files[0]) {
+formData.append(key, input.files[0]);
+}
             } else {
                 formData.append(key, input.value.trim());
             }

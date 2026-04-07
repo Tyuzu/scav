@@ -27,7 +27,7 @@ async function editPlaceForm(isLoggedIn, placeId, content) {
         const form = createElement('form', { id: 'edit-place-form' });
 
         // Detect main category
-        let detectedMainCategory = Object.entries(categoryMap).find(([_, subs]) =>
+        const detectedMainCategory = Object.entries(categoryMap).find(([_, subs]) =>
             subs.includes(place.category)
         )?.[0] || "";
 
@@ -72,7 +72,7 @@ async function editPlaceForm(isLoggedIn, placeId, content) {
         ]);
         form.appendChild(tagWrapper);
 
-        let tags = Array.isArray(place.tags) ? [...place.tags] : [];
+        const tags = Array.isArray(place.tags) ? [...place.tags] : [];
         const tagInput = tagWrapper.querySelector("#tag-input");
         const tagList = tagWrapper.querySelector("#tag-list");
 
@@ -86,7 +86,9 @@ async function editPlaceForm(isLoggedIn, placeId, content) {
                     createElement("button", {
                         type: "button",
                         style: "border:none;background:none;cursor:pointer;color:red;",
-                        onclick: () => { tags.splice(index, 1); renderTags(); }
+                        onclick: () => {
+ tags.splice(index, 1); renderTags(); 
+}
                     }, ["×"])
                 ]);
                 tagList.appendChild(chip);

@@ -160,7 +160,9 @@ function capitalize(text = "") {
 }
 
 function formatDate(dateStr) {
-  if (!dateStr) return "N/A";
+  if (!dateStr) {
+return "N/A";
+}
   const d = new Date(dateStr);
   return isNaN(d)
     ? "N/A"

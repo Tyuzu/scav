@@ -18,7 +18,9 @@ export function Auth(isL, contentContainer) {
 
 // --- helper: clear container without innerHTML ---
 function clearContainer(el) {
-  while (el.firstChild) el.firstChild.remove();
+  while (el.firstChild) {
+el.firstChild.remove();
+}
 }
 
 // --- Core UI Renderer
@@ -97,7 +99,9 @@ function createSignupForm() {
 // --- Helper: Input
 function inputField(type, placeholder, id, autocomplete = "") {
   const attrs = { type, id, placeholder, required: true };
-  if (autocomplete) attrs.autocomplete = autocomplete;
+  if (autocomplete) {
+attrs.autocomplete = autocomplete;
+}
   return createElement("input", attrs, []);
 }
 

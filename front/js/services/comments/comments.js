@@ -19,8 +19,12 @@ const commentState = new Map();
 ========================= */
 
 function mapSort(val) {
-    if (val === "newest") return "new";
-    if (val === "oldest") return "old";
+    if (val === "newest") {
+return "new";
+}
+    if (val === "oldest") {
+return "old";
+}
     return "new";
 }
 
@@ -61,7 +65,9 @@ function renderComment(comment) {
     });
 
     avatar.addEventListener("click", () => {
-        if (user.username) navigate(`/user/${user.username}`);
+        if (user.username) {
+navigate(`/user/${user.username}`);
+}
     });
 
     const usernameEl = createElement(
@@ -74,7 +80,9 @@ function renderComment(comment) {
     );
 
     usernameEl.addEventListener("click", () => {
-        if (user.username) navigate(`/user/${user.username}`);
+        if (user.username) {
+navigate(`/user/${user.username}`);
+}
     });
 
     const header = createElement("div", { class: "comment-header" }, [
@@ -106,11 +114,15 @@ function renderComment(comment) {
 
 async function renderComments(key) {
     const state = commentState.get(key);
-    if (!state) return;
+    if (!state) {
+return;
+}
 
     state.list.replaceChildren();
 
-    if (!state.comments.length) return;
+    if (!state.comments.length) {
+return;
+}
 
     const userIds = [...new Set(state.comments.map(c => c.createdBy))];
     const usersMeta = await fetchUserMeta(userIds);
@@ -140,7 +152,9 @@ async function renderComments(key) {
 
 async function fetchMoreComments(key) {
     const state = commentState.get(key);
-    if (!state || !state.hasMore) return;
+    if (!state || !state.hasMore) {
+return;
+}
 
     const nextPage = state.page + 1;
     const newComments = await fetchComments(
@@ -166,7 +180,9 @@ async function fetchMoreComments(key) {
 
 async function loadComments(key, reset = false) {
     const state = commentState.get(key);
-    if (!state) return;
+    if (!state) {
+return;
+}
 
     if (reset) {
         state.comments = [];
@@ -194,10 +210,14 @@ async function loadComments(key, reset = false) {
 async function handleSubmit(e, key) {
     e.preventDefault();
     const state = commentState.get(key);
-    if (!state || !state.currentUser) return;
+    if (!state || !state.currentUser) {
+return;
+}
 
     const content = state.input.value.trim();
-    if (!content) return;
+    if (!content) {
+return;
+}
 
     try {
         const newComment = await apiFetch(
@@ -276,7 +296,9 @@ export function createCommentsSection(entityType, entityId, currentUser) {
         "change",
         debounce(e => {
             const state = commentState.get(key);
-            if (!state) return;
+            if (!state) {
+return;
+}
             state.sort = e.target.value;
             loadComments(key, true);
         }, 300)

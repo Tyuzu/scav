@@ -1,5 +1,7 @@
-const CACHE_NAME = "app-cache-v12";
+const CACHE_VERSION = "v14"; // Increment on each deployment
+const CACHE_NAME = `app-cache-${CACHE_VERSION}`;
 const OFFLINE_URL = "/offline.html";
+const MAX_CACHE_AGE = 7 * 24 * 60 * 60 * 1000; // 7 days
 
 const STATIC_ASSETS = [
   "/",
@@ -27,10 +29,16 @@ self.addEventListener("activate", (event) => {
     caches.keys().then((keys) =>
       Promise.all(
         keys.map((key) => {
-          if (key !== CACHE_NAME) return caches.delete(key);
+          if (key !== CACHE_NAME) {
+            console.log(`[SW] Deleting old cache: ${key}`);
+            return caches.delete(key);
+          }
         })
       )
-    ).then(() => self.clients.claim())
+    ).then(() => {
+      console.log(`[SW] Activated with cache: ${CACHE_NAME}`);
+      return self.clients.claim();
+    })
   );
 });
 

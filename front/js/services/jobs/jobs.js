@@ -123,7 +123,9 @@ export function jobsHire(container, entityType, entityId) {
       wage: form.querySelector("#job-wage")?.value.trim() || ""
     };
 
-    if (!validateHirePayload(jobData)) return;
+    if (!validateHirePayload(jobData)) {
+return;
+}
 
     try {
       const newJob = await apiFetch(
@@ -133,10 +135,14 @@ export function jobsHire(container, entityType, entityId) {
         { "Content-Type": "application/json" }
       );
 
-      if (!newJob || !newJob.baitoid) throw new Error("Failed to create job");
+      if (!newJob || !newJob.baitoid) {
+throw new Error("Failed to create job");
+}
 
       const wrapper = container.querySelector(".places-wrapper");
-      if (wrapper) wrapper.appendChild(buildCard(newJob));
+      if (wrapper) {
+wrapper.appendChild(buildCard(newJob));
+}
 
       Notify("Job created successfully!", { type: "success", duration: 3000 });
       closeModal();
@@ -181,7 +187,9 @@ export async function displayPlaceJobs(container, isCreator, isLoggedIn, entityT
     const fragment = document.createDocumentFragment();
     jobs.forEach(job => {
       const card = buildCard(job);
-      if (card) fragment.appendChild(card);
+      if (card) {
+fragment.appendChild(card);
+}
     });
     jobsContainer.appendChild(fragment);
   } catch {

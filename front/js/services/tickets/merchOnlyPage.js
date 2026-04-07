@@ -46,7 +46,9 @@ async function renderMerchPage(isLoggedIn, eventId, container) {
         const editTabs = createElement("div", { id: "edittabs" }, []);
 
         container.appendChild(header);
-        if (organizer) container.appendChild(organizer);
+        if (organizer) {
+container.appendChild(organizer);
+}
         container.appendChild(editTabs);
         container.appendChild(merchcon);
 

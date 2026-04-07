@@ -111,11 +111,17 @@ function buildPayload(fd, requiredFields, form) {
   Object.entries(requiredFields).forEach(([k, v]) => payload.append(k, v));
 
   const tags = fd.get("baito-tags")?.trim();
-  if (tags) payload.append("tags", tags);
+  if (tags) {
+payload.append("tags", tags);
+}
   const benefits = fd.get("baito-benefits")?.trim();
-  if (benefits) payload.append("benefits", benefits);
+  if (benefits) {
+payload.append("benefits", benefits);
+}
   const email = fd.get("baito-email")?.trim();
-  if (email) payload.append("email", email);
+  if (email) {
+payload.append("email", email);
+}
 
   return payload;
 }
@@ -163,7 +169,9 @@ export async function createOrEditBaito({ mode = "create", baito = {}, isLoggedI
     submitBtn.disabled = true;
 
     const result = validateForm(form);
-    if (!result) { submitBtn.disabled = false; return; }
+    if (!result) {
+ submitBtn.disabled = false; return; 
+}
 
     const { fd, requiredFields } = result;
     const payload = buildPayload(fd, requiredFields, form);

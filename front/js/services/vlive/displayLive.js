@@ -34,7 +34,9 @@ const getRules = s => STATE_RULES[s?.state] || {};
 ====================================== */
 
 function goToLive({ liveId, entityType, entityId }) {
-    if (!liveId) return;
+    if (!liveId) {
+return;
+}
     navigate(
         entityType && entityId
             ? `/live/${entityType}/${entityId}/${liveId}`
@@ -58,7 +60,9 @@ function confirmAction({ title, message, confirmLabel = "Confirm", onConfirm }) 
                 Button("Cancel", "", { click: () => modalApi.close() }),
                 Button(confirmLabel, "", {
                     click: async () => {
-                        try { await onConfirm(); } catch {}
+                        try {
+ await onConfirm(); 
+} catch {}
                         modalApi.close();
                     }
                 })
@@ -156,9 +160,13 @@ function buildCardCache(state, entityType, entityId, container) {
         const rules = getRules(stream);
         const card = renderStreamCard(stream, entityType, entityId, container);
 
-        if (rules.isLive) state.cardCache.live.push(card);
-        else if (rules.isScheduled) state.cardCache.scheduled.push(card);
-        else if (rules.isPast) state.cardCache.past.push(card);
+        if (rules.isLive) {
+state.cardCache.live.push(card);
+} else if (rules.isScheduled) {
+state.cardCache.scheduled.push(card);
+} else if (rules.isPast) {
+state.cardCache.past.push(card);
+}
     });
 }
 
@@ -175,7 +183,9 @@ function renderGroups(state, wrapper) {
         { key: "past", title: "Past Streams" }
     ].forEach(({ key, title }) => {
         const cards = state.cardCache[key];
-        if (!cards.length) return;
+        if (!cards.length) {
+return;
+}
 
         wrapper.append(
             createElement("section", {}, [
@@ -191,7 +201,9 @@ function renderGroups(state, wrapper) {
 ====================================== */
 
 function switchView(view, state, wrapper) {
-    if (state.view === view) return;
+    if (state.view === view) {
+return;
+}
     state.view = view;
     wrapper.setAttribute("data-view", view);
 }
@@ -259,11 +271,15 @@ function renderStreamCard(stream, entityType, entityId, container) {
 
 function getStreamMeta(stream) {
     const rules = getRules(stream);
-    if (rules.isLive) return `LIVE · Viewers: ${stream.viewerCount || 0}`;
-    if (rules.isScheduled && stream.scheduledAt)
-        return `Starts: ${new Date(stream.scheduledAt).toLocaleString()}`;
-    if (rules.isPast && stream.endedAt)
-        return `Ended: ${new Date(stream.endedAt).toLocaleString()}`;
+    if (rules.isLive) {
+return `LIVE · Viewers: ${stream.viewerCount || 0}`;
+}
+    if (rules.isScheduled && stream.scheduledAt) {
+return `Starts: ${new Date(stream.scheduledAt).toLocaleString()}`;
+}
+    if (rules.isPast && stream.endedAt) {
+return `Ended: ${new Date(stream.endedAt).toLocaleString()}`;
+}
     return "";
 }
 

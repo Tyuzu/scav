@@ -92,7 +92,9 @@ function updateView() {
 
 
 function clearElement(el) {
-    while (el.firstChild) el.removeChild(el.firstChild);
+    while (el.firstChild) {
+el.removeChild(el.firstChild);
+}
 }
 
 function getCategories(places) {
@@ -107,11 +109,15 @@ function buildFilterBar(categories) {
         }, [category]);
 
         button.addEventListener("click", () => {
-            if (activeCategory === category) return;
+            if (activeCategory === category) {
+return;
+}
             activeCategory = category;
             updateFilterButtons(filterBar, category);
             const wrapper = document.getElementById("places-wrapper");
-            if (wrapper) showCategory(category, wrapper);
+            if (wrapper) {
+showCategory(category, wrapper);
+}
         });
 
         filterBar.appendChild(button);

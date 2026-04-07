@@ -54,7 +54,9 @@ const handleTicketAction = (action, eventId) => {
         e.preventDefault();
 
         const uniquecode = codeInput.value.trim();
-        if (!uniquecode) return;
+        if (!uniquecode) {
+return;
+}
 
         const recipient =
             action === "transfer" ? recipientInput.value.trim() : "";

@@ -51,7 +51,9 @@ export function makeDraggable(element, storageKey = null) {
   });
 
   document.addEventListener("mousemove", (e) => {
-    if (!isDragging) return;
+    if (!isDragging) {
+return;
+}
     moveElement(e.clientX - offsetX, e.clientY - offsetY);
   });
 
@@ -73,7 +75,9 @@ export function makeDraggable(element, storageKey = null) {
   },{passive:false});
 
   document.addEventListener("touchmove", (e) => {
-    if (!isDragging) return;
+    if (!isDragging) {
+return;
+}
     e.preventDefault(); 
     const touch = e.touches[0];
     moveElement(touch.clientX - offsetX, touch.clientY - offsetY);

@@ -54,7 +54,9 @@ export function setupHotkeys(video) {
   }
 
   window.addEventListener("keydown", async (e) => {
-    if (isInput(e.target)) return;
+    if (isInput(e.target)) {
+return;
+}
 
     const combo = [
       e.ctrlKey && "Ctrl",
@@ -66,7 +68,9 @@ export function setupHotkeys(video) {
     const action = actions[combo] || actions[e.key];
     if (action) {
       await action(); // handle async (e.g., PiP)
-      if (!["m", "v"].includes(e.key)) updateTransform(video);
+      if (!["m", "v"].includes(e.key)) {
+updateTransform(video);
+}
       e.preventDefault();
     }
   });

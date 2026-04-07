@@ -7,7 +7,9 @@ import { getState } from "../../state/state.js";
 import { editItinerary } from "./itineraryEdit.js";
 
 function clear(node) {
-  while (node.firstChild) node.removeChild(node.firstChild);
+  while (node.firstChild) {
+node.removeChild(node.firstChild);
+}
 }
 
 function displayItinerary(isLoggedIn, root) {
@@ -239,7 +241,9 @@ function displayItinerary(isLoggedIn, root) {
   /* ---------- Mutations ---------- */
 
   async function deleteItinerary(id) {
-    if (!confirm("Delete this itinerary?")) return;
+    if (!confirm("Delete this itinerary?")) {
+return;
+}
     await apiFetch(`/itineraries/${id}`, "DELETE");
     loadItineraries();
   }

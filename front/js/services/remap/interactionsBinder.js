@@ -8,9 +8,13 @@ function setDraggingTransition(mapWrapper, enable) {
 /* Pointer handling */
 function onPointerDown(state, mapOptions, mapContainer, e) {
     // only primary button
-    if (e.pointerType === "mouse" && e.button !== 0) return;
+    if (e.pointerType === "mouse" && e.button !== 0) {
+return;
+}
     // ignore when clicking on interactive children
-    if (e.target.closest(`.${CSS_PREFIX}-marker`) || e.target.closest(`.${CSS_PREFIX}-locked-area`)) return;
+    if (e.target.closest(`.${CSS_PREFIX}-marker`) || e.target.closest(`.${CSS_PREFIX}-locked-area`)) {
+return;
+}
     setDraggingTransition(mapContainer.querySelector(`.${CSS_PREFIX}-wrapper`), false);
     stopInertia(state);
     state.isDragging = true;
@@ -20,11 +24,15 @@ function onPointerDown(state, mapOptions, mapContainer, e) {
     state.velocityY = 0;
     mapContainer.setPointerCapture?.(e.pointerId);
     mapContainer.style.cursor = "grabbing";
-    if (e.cancelable) e.preventDefault();
+    if (e.cancelable) {
+e.preventDefault();
+}
   }
   
   function onPointerMove(state, mapOptions, mapWrapper, minimap, minimapViewport, e) {
-    if (!state.isDragging) return;
+    if (!state.isDragging) {
+return;
+}
     const clientX = e.clientX ?? 0;
     const clientY = e.clientY ?? 0;
     const dx = clientX - state.lastPointerX;
@@ -41,10 +49,14 @@ function onPointerDown(state, mapOptions, mapContainer, e) {
   }
   
   function onPointerUp(state, mapContainer, mapOptions, mapWrapper, minimap, minimapViewport, e) {
-    if (!state.isDragging) return;
+    if (!state.isDragging) {
+return;
+}
     state.isDragging = false;
     mapContainer.style.cursor = "grab";
-    try { mapContainer.releasePointerCapture?.(e.pointerId); } catch (er) { /* ignore */ }
+    try {
+ mapContainer.releasePointerCapture?.(e.pointerId); 
+} catch (er) { /* ignore */ }
   
     if (mapOptions.enableInertia && (Math.abs(state.velocityX) > (mapOptions.inertiaStartThreshold || 0.5) || Math.abs(state.velocityY) > (mapOptions.inertiaStartThreshold || 0.5))) {
       startInertia(state, mapOptions, mapWrapper, minimap, minimapViewport);
@@ -53,12 +65,18 @@ function onPointerDown(state, mapOptions, mapContainer, e) {
   }
   
   function onWheel(e, state, mapOptions, mapContainer, mapWrapper, minimap, minimapViewport) {
-    if (e.target.closest(`.${CSS_PREFIX}-marker`) || e.target.closest(`.${CSS_PREFIX}-locked-area`)) return;
-    if (e.cancelable) e.preventDefault();
+    if (e.target.closest(`.${CSS_PREFIX}-marker`) || e.target.closest(`.${CSS_PREFIX}-locked-area`)) {
+return;
+}
+    if (e.cancelable) {
+e.preventDefault();
+}
   
     const delta = e.deltaY < 0 ? 1 : -1;
     const nextZoom = clamp(state.zoom + delta * mapOptions.zoomStep, mapOptions.minZoom, mapOptions.maxZoom);
-    if (nextZoom === state.zoom) return;
+    if (nextZoom === state.zoom) {
+return;
+}
   
     const rect = mapContainer.getBoundingClientRect();
     const pointerX = e.clientX - rect.left;
@@ -74,7 +92,9 @@ function onPointerDown(state, mapOptions, mapContainer, e) {
 
 /* Minimap click */
 function onMinimapClick(ev, state, mapOptions, mapWrapper, minimap, minimapViewport) {
-    if (!state.minimapScale) return;
+    if (!state.minimapScale) {
+return;
+}
     const rect = minimap.getBoundingClientRect();
     const clickedX = ev.clientX - rect.left;
     const clickedY = ev.clientY - rect.top;
@@ -87,7 +107,9 @@ function onMinimapClick(ev, state, mapOptions, mapWrapper, minimap, minimapViewp
   
   /* Resize with debounce */
   function onResize(state, mapOptions, mapWrapper, minimap, minimapViewport) {
-    if (state.resizeTimer) clearTimeout(state.resizeTimer);
+    if (state.resizeTimer) {
+clearTimeout(state.resizeTimer);
+}
     state.resizeTimer = setTimeout(() => {
       state.viewportWidth = mapWrapper.parentElement?.clientWidth || window.innerWidth;
       state.viewportHeight = mapWrapper.parentElement?.clientHeight || window.innerHeight;
@@ -98,12 +120,22 @@ function onMinimapClick(ev, state, mapOptions, mapWrapper, minimap, minimapViewp
   
   /* Keyboard pan/zoom */
   function handleKeyboardPanZoom(e, state, mapOptions, mapWrapper, minimap, minimapViewport) {
-    if (e.cancelable) e.preventDefault();
+    if (e.cancelable) {
+e.preventDefault();
+}
     const panStep = (mapOptions.keyboardPanStep || 50);
-    if (e.key === "ArrowUp") state.mapY += panStep;
-    if (e.key === "ArrowDown") state.mapY -= panStep;
-    if (e.key === "ArrowLeft") state.mapX += panStep;
-    if (e.key === "ArrowRight") state.mapX -= panStep;
+    if (e.key === "ArrowUp") {
+state.mapY += panStep;
+}
+    if (e.key === "ArrowDown") {
+state.mapY -= panStep;
+}
+    if (e.key === "ArrowLeft") {
+state.mapX += panStep;
+}
+    if (e.key === "ArrowRight") {
+state.mapX -= panStep;
+}
     if (e.key === "+" || e.key === "=") {
       const nextZoom = clamp(state.zoom + mapOptions.zoomStep, mapOptions.minZoom, mapOptions.maxZoom);
       state.zoom = nextZoom;
@@ -155,7 +187,9 @@ function rafThrottle(state, fn) {
       requestAnimationFrame(() => {
         state.rafPending = false;
         fn(...args);
-        if (state._lastArgs) fn(...state._lastArgs);
+        if (state._lastArgs) {
+fn(...state._lastArgs);
+}
       });
     };
   }
@@ -173,7 +207,9 @@ export function bindInteractions(state, mapOptions, mapContainer, mapWrapper, mi
     addListener(state, mapContainer, "wheel", (e) => onWheel(e, state, mapOptions, mapContainer, mapWrapper, minimap, minimapViewport), { passive: false });
   
     // minimap click
-    if (minimap) addListener(state, minimap, "click", (e) => onMinimapClick(e, state, mapOptions, mapWrapper, minimap, minimapViewport), { passive: true });
+    if (minimap) {
+addListener(state, minimap, "click", (e) => onMinimapClick(e, state, mapOptions, mapWrapper, minimap, minimapViewport), { passive: true });
+}
   
     // resize
     addListener(state, window, "resize", () => onResize(state, mapOptions, mapWrapper, minimap, minimapViewport), { passive: true });
@@ -201,8 +237,12 @@ export function bindInteractions(state, mapOptions, mapContainer, mapWrapper, mi
     if ((mapImg?.complete ?? true) && (miniImg?.complete ?? true)) {
       onLoadUpdate();
     } else {
-      if (mapImg) addListener(state, mapImg, "load", onLoadUpdate, { passive: true });
-      if (miniImg) addListener(state, miniImg, "load", onLoadUpdate, { passive: true });
+      if (mapImg) {
+addListener(state, mapImg, "load", onLoadUpdate, { passive: true });
+}
+      if (miniImg) {
+addListener(state, miniImg, "load", onLoadUpdate, { passive: true });
+}
     }
   }
   

@@ -38,9 +38,15 @@ function renderHeader(msg, time, isMine) {
   const menu = renderMenu(msg);
 
   const children = [sender, timestamp];
-  if (edited) children.push(edited);
-  if (menu) children.push(menu);
-  if (status) children.push(status);
+  if (edited) {
+children.push(edited);
+}
+  if (menu) {
+children.push(menu);
+}
+  if (status) {
+children.push(status);
+}
 
   return createElement("div", { class: "msg-header" }, children);
 }
@@ -63,7 +69,9 @@ function renderBody(msg) {
   }
 
   const media = renderMedia(msg);
-  if (media) nodes.push(media);
+  if (media) {
+nodes.push(media);
+}
 
   return createElement("div", { class: "msg-content" }, nodes);
 }
@@ -76,8 +84,12 @@ export function renderMessage(msg) {
   const isMine = msg.sender === user || msg.sender?.id === user?.id;
 
   const classes = ["message-item", isMine ? "mine" : "theirs"];
-  if (msg.deleted) classes.push("deleted");
-  if (msg.media) classes.push("attachment");
+  if (msg.deleted) {
+classes.push("deleted");
+}
+  if (msg.media) {
+classes.push("attachment");
+}
 
   const createdAt = msg.createdAt ? new Date(msg.createdAt) : new Date();
   const time = isNaN(createdAt)

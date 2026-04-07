@@ -10,11 +10,13 @@ import { MusicAPI } from "./fetchers.js";
 export function createAddToPlaylistBtn(song, player, container, isLoggedIn) {
     const btn = createElement("button", { class: "add-to-playlist-btn" }, ["➕ Add to Playlist"]);
     btn.addEventListener("click", async () => {
-        if (!isLoggedIn) return Notify("You must be logged in to add songs to playlists", { type: "info" });
+        if (!isLoggedIn) {
+return Notify("You must be logged in to add songs to playlists", { type: "info" });
+}
 
         try {
             // try cached playlists first
-            let playlists = await MusicAPI.playlists();
+            const playlists = await MusicAPI.playlists();
             if (!playlists.length) {
                 Notify("No playlists available", { type: "info" });
                 return;
@@ -23,7 +25,9 @@ export function createAddToPlaylistBtn(song, player, container, isLoggedIn) {
             // prompt user for selection
             const choice = prompt(`Select playlist by number:\n${playlists.map((pl, idx) => `${idx + 1}. ${pl.name}`).join("\n")}`);
             const index = parseInt(choice, 10) - 1;
-            if (isNaN(index) || !playlists[index]) return Notify("Invalid selection", { type: "error" });
+            if (isNaN(index) || !playlists[index]) {
+return Notify("Invalid selection", { type: "error" });
+}
 
             // const playlistID = playlists[index].playlistID;
             const playlistID = playlists[index].playlistID || playlists[index].playlistid;
@@ -49,7 +53,9 @@ export function createAddToPlaylistBtn(song, player, container, isLoggedIn) {
 // ------------------------ Play / Like / Add Buttons ------------------------
 export function createPlayButton(song, idx, player = null) {
     const btn = createElement("button", { class: "song-play-btn" }, ["▶"]);
-    if (!song.audioUrl) { btn.disabled = true; return btn; }
+    if (!song.audioUrl) {
+ btn.disabled = true; return btn; 
+}
     if (player) {
         btn.addEventListener("click", () => player.play(song, idx));
         // store reference for potential UI toggles
@@ -71,7 +77,9 @@ export function createLikeButton(song, isLoggedIn) {
             return;
         }
 
-        if (pending) return;
+        if (pending) {
+return;
+}
         pending = true;
         btn.disabled = true;
 
@@ -137,8 +145,11 @@ export function createSongRow(song, idx, player = null, batchSelection = null, c
     if (batchSelection) {
         const checkbox = createElement("input", { type: "checkbox" });
         checkbox.addEventListener("change", () => {
-            if (checkbox.checked) batchSelection.add(song.songid);
-            else batchSelection.delete(song.songid);
+            if (checkbox.checked) {
+batchSelection.add(song.songid);
+} else {
+batchSelection.delete(song.songid);
+}
         });
         rowChildren.unshift(checkbox);
     }

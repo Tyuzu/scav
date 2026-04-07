@@ -6,7 +6,9 @@ import { RenderVideoPost } from "./renderVideoPost.js";
 
 export function renderMedia(msg) {
   const media = msg?.media;
-  if (!media) return null;
+  if (!media) {
+return null;
+}
 
   const container = createElement("div", { class: "mediacon" }, []);
   const items = Array.isArray(media) ? media : [media];
@@ -15,7 +17,9 @@ export function renderMedia(msg) {
   try {
     for (const m of items) {
       const raw = String(m.url || "").trim();
-      if (!raw) continue;
+      if (!raw) {
+continue;
+}
 
       const type = String(m.mimeType || m.type || "").toLowerCase();
 

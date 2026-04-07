@@ -67,7 +67,9 @@ export function createTabs(tabs, routeKey = null, initialTabId = null, onTabChan
       setRouteState(routeKey, tabState);
     }
 
-    if (onTabChange) onTabChange(tabId); // ✅ ensures search form updates `currentTab`
+    if (onTabChange) {
+onTabChange(tabId);
+} // ✅ ensures search form updates `currentTab`
   }
 
   // --- Determine and activate initial tab ---

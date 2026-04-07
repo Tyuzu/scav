@@ -16,7 +16,9 @@ const emojiMap = {
 export function renderMarkers(state, mapOptions) {
   const { markers = [], currentLocation, lockedAreas = [] } = mapOptions;
   const markerLayer = state.markerLayer;
-  if (!markerLayer) return;
+  if (!markerLayer) {
+return;
+}
 
   const scale = state.zoom || 1;
   const needsZoomScaling = !!mapOptions.enableZoomScaling;
@@ -42,7 +44,9 @@ export function renderMarkers(state, mapOptions) {
     }
 
     const el = prev?.el || createMarkerEl(mk, key, emoji);
-    if (!prev) fragment.appendChild(el);
+    if (!prev) {
+fragment.appendChild(el);
+}
 
     const s = el.style;
     s.left = `${Math.round(x * scale)}px`;
@@ -57,11 +61,15 @@ export function renderMarkers(state, mapOptions) {
     nextMarkerMap.set(key, { el, x, y, marker: mk });
   });
 
-  if (fragment.childNodes.length) markerLayer.appendChild(fragment);
+  if (fragment.childNodes.length) {
+markerLayer.appendChild(fragment);
+}
 
   /* ---------- Cleanup removed markers ---------- */
   for (const [key, val] of state.markerMap.entries()) {
-    if (!nextMarkerMap.has(key)) val.el?.remove();
+    if (!nextMarkerMap.has(key)) {
+val.el?.remove();
+}
   }
   state.markerMap = nextMarkerMap;
 
@@ -87,7 +95,9 @@ export function renderMarkers(state, mapOptions) {
     const key = area.id ?? i;
     const prev = state.lockedMap.get(key);
     const el = prev?.el || createLockedEl(area, key);
-    if (!prev) markerLayer.appendChild(el);
+    if (!prev) {
+markerLayer.appendChild(el);
+}
 
     const s = el.style;
     s.left = `${Math.round(area.x * scale)}px`;
@@ -103,7 +113,9 @@ export function renderMarkers(state, mapOptions) {
   });
 
   for (const [key, val] of state.lockedMap.entries()) {
-    if (!nextLocked.has(key)) val.el?.remove();
+    if (!nextLocked.has(key)) {
+val.el?.remove();
+}
   }
   state.lockedMap = nextLocked;
 }
@@ -147,7 +159,9 @@ function ensureUserEl(state, markerLayer) {
 export function attachMarkerEvents(markerLayer, mapOptions) {
   markerLayer.addEventListener("click", (ev) => {
     const target = ev.target.closest(`.${CSS_PREFIX}-marker, .${CSS_PREFIX}-locked-area`);
-    if (!target) return;
+    if (!target) {
+return;
+}
 
     if (target.dataset.markerIdx && mapOptions.onMarkerClick) {
       mapOptions.onMarkerClick(target.dataset.markerIdx);

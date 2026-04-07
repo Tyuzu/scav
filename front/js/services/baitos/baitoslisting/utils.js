@@ -7,7 +7,9 @@ export const categoryMap = {
 };
 
 export function clearElement(el) {
-  while (el.firstChild) el.removeChild(el.firstChild);
+  while (el.firstChild) {
+el.removeChild(el.firstChild);
+}
 }
 
 export function saveJob(id) {

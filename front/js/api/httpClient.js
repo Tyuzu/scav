@@ -45,7 +45,9 @@ class HTTPClient {
       if (this.cache && method === "GET") {
         const cached = requestCache.get(url, method);
         if (cached) {
-          if (options.debug) console.log(`[HTTPClient] Cache HIT: ${method} ${url}`);
+          if (options.debug) {
+console.log(`[HTTPClient] Cache HIT: ${method} ${url}`);
+}
           return cached;
         }
       }
@@ -53,7 +55,9 @@ class HTTPClient {
       // Check for in-flight request (deduplication)
       const inFlight = requestDedup.getInFlight(url, method);
       if (inFlight && method === "GET") {
-        if (options.debug) console.log(`[HTTPClient] Dedup HIT: ${method} ${url}`);
+        if (options.debug) {
+console.log(`[HTTPClient] Dedup HIT: ${method} ${url}`);
+}
         return inFlight;
       }
 
@@ -204,11 +208,15 @@ class HTTPClient {
         headers: { "Content-Type": "application/json" }
       });
 
-      if (!res.ok) return false;
+      if (!res.ok) {
+return false;
+}
 
       const data = await res.json();
       const token = data?.data?.token;
-      if (!token) return false;
+      if (!token) {
+return false;
+}
 
       setState({ token }, true);
       return true;

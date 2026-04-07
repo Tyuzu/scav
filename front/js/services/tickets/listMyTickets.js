@@ -30,8 +30,12 @@ export async function listMyTickets(eventid) {
 
             tickets.forEach(ticket => {
                 let statusColor = "green";
-                if (ticket.status === "Cancelled") statusColor = "red";
-                if (ticket.status === "Transferred") statusColor = "orange";
+                if (ticket.status === "Cancelled") {
+statusColor = "red";
+}
+                if (ticket.status === "Transferred") {
+statusColor = "orange";
+}
 
                 const actionButtons = [];
 
@@ -54,7 +58,9 @@ export async function listMyTickets(eventid) {
                             "",
                             {
                                 click: async () => {
-                                    if (!confirm("Cancel this ticket?")) return;
+                                    if (!confirm("Cancel this ticket?")) {
+return;
+}
 
                                     try {
                                         await apiFetch(

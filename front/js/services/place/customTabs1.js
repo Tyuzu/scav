@@ -74,7 +74,7 @@ function createInlineForm(fields, onSubmit, onCancel) {
 async function displayPlaceMenu(container, placeId, isCreator, isLoggedIn) {
   container.replaceChildren();
   try {
-    let containerx = createElement('div', {}, []);
+    const containerx = createElement('div', {}, []);
     container.appendChild(containerx);
     // RenderMenu(containerx, isCreator, placeId, isLoggedIn);
     displayMenu(containerx, placeId, isCreator, isLoggedIn);
@@ -184,7 +184,9 @@ async function displayPlaceRooms(container, placeId, isCreator) {
         });
         const deleteBtn = Button("Delete", `delete-room-${room._id}`, {
           click: async () => {
-            if (!confirm(`Delete room "${room.name}"?`)) return;
+            if (!confirm(`Delete room "${room.name}"?`)) {
+return;
+}
             try {
               await apiFetch(`/place/${placeId}/rooms/${room._id}`, {
                 method: "DELETE"
@@ -263,7 +265,9 @@ async function displayPlaceFacilities(container, placeId, isCreator) {
       if (isCreator) {
         const deleteBtn = Button("Delete", `delete-facility-${id}`, {
           click: async () => {
-            if (!confirm(`Delete facility "${name}"?`)) return;
+            if (!confirm(`Delete facility "${name}"?`)) {
+return;
+}
             try {
               await apiFetch(`/place/${placeId}/facilities/${id}`, {
                 method: "DELETE"
@@ -359,7 +363,9 @@ async function displayPlaceServices(container, placeId, isCreator) {
         });
         const deleteBtn = Button("Delete", `delete-service-${id}`, {
           click: async () => {
-            if (!confirm(`Delete service "${name}"?`)) return;
+            if (!confirm(`Delete service "${name}"?`)) {
+return;
+}
             try {
               await apiFetch(`/place/${placeId}/services/${id}`, {
                 method: "DELETE"

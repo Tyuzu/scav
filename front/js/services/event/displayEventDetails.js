@@ -38,22 +38,30 @@ const createDetailItems = (config, data) => {
     const details = createElement("div", { class: "eventpage-details" });
     config.forEach(({ key, label, tag, classes, formatter }) => {
         let value = data[key];
-        if (!value) return;
-        if (formatter) value = formatter(value);
+        if (!value) {
+return;
+}
+        if (formatter) {
+value = formatter(value);
+}
         details.appendChild(createElement(tag, { class: classes.join(" ") }, [label ? `${label}: ${value}` : value]));
     });
     return details;
 };
 
 const createTags = tags => {
-    if (!tags?.length) return null;
+    if (!tags?.length) {
+return null;
+}
     const container = createElement("div", { class: "event-tags" });
     tags.forEach(tag => container.appendChild(createElement("span", { class: 'event-tag' }, [`#${tag}`])));
     return container;
 };
 
 const createSocialLinks = links => {
-    if (!links) return null;
+    if (!links) {
+return null;
+}
     const container = createElement("div", { class: "event-social-links" });
     Object.entries(links).forEach(([platform, url]) => {
         container.appendChild(createElement("a", { href: url, class: "social-link" }, [platform]));
@@ -62,7 +70,9 @@ const createSocialLinks = links => {
 };
 
 const createCustomFields = fields => {
-    if (!fields) return null;
+    if (!fields) {
+return null;
+}
     const container = createElement("div", { class: "event-custom-fields" });
     Object.entries(fields).forEach(([field, value]) => {
         container.appendChild(createElement('p', { class: 'custom-field' }, [`${field}: ${value}`]));
@@ -72,22 +82,28 @@ const createCustomFields = fields => {
 
 // Save/unsave
 const getSavedEvents = () => {
-    try { return JSON.parse(localStorage.getItem("saved_events") || "[]"); }
-    catch { return []; }
+    try {
+ return JSON.parse(localStorage.getItem("saved_events") || "[]"); 
+} catch {
+ return []; 
+}
 };
 const toggleSaveEvent = id => {
     let saved = getSavedEvents();
-    if (saved.includes(id)) saved = saved.filter(eid => eid !== id);
-    else saved.push(id);
+    if (saved.includes(id)) {
+saved = saved.filter(eid => eid !== id);
+} else {
+saved.push(id);
+}
     localStorage.setItem("saved_events", JSON.stringify(saved));
 };
 
 const createSaveButton = eventid => {
-    let fillStar = createIconButton({
+    const fillStar = createIconButton({
         svgMarkup: starFilledSVG,
         classSuffix: ""
     });
-    let emptyStar = createIconButton({
+    const emptyStar = createIconButton({
         svgMarkup: starEmptySVG,
         classSuffix: ""
     });
@@ -128,7 +144,9 @@ const createStatusBadge = eventDate => {
 // Countdown
 const createCountdown = eventDate => {
     const msLeft = new Date(eventDate).getTime() - Date.now();
-    if (msLeft <= 0) return null;
+    if (msLeft <= 0) {
+return null;
+}
     const days = Math.floor(msLeft / (1000 * 60 * 60 * 24));
     const hours = Math.floor(msLeft / (1000 * 60 * 60)) % 24;
     return createElement("p", { class: "event-countdown" }, [`Starts in ${days > 0 ? days + " day(s)" : hours + " hour(s)"}`]);
@@ -167,7 +185,7 @@ function createInfoSection(eventData, isCreator, isLoggedIn) {
 
     const actions = [];
 
-    let evanacon = createElement("div", {}, []);
+    const evanacon = createElement("div", {}, []);
     
     if (isLoggedIn && isCreator) {
         actions.push({ text: '✏ Edit Event', onClick: () => editEvent(isLoggedIn, eventData.eventid, document.getElementById("editevent")), classes: ['edit-btn', "buttonx"] });

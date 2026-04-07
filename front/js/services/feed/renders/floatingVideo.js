@@ -10,10 +10,14 @@ export function initFloatingVideos() {
             entries.forEach(entry => {
                 const wrapper = entry.target;
                 // only operate on original wrappers (exclude already-floating clones)
-                if (wrapper.dataset.isFloating) return;
+                if (wrapper.dataset.isFloating) {
+return;
+}
 
                 const videoEl = wrapper.querySelector("video");
-                if (!videoEl || wrapper.dataset.closed) return;
+                if (!videoEl || wrapper.dataset.closed) {
+return;
+}
 
                 if (!entry.isIntersecting) {
                     // went out of view (above threshold)
@@ -38,7 +42,9 @@ export function initFloatingVideos() {
     // Observe all original wrappers present now (ignore clones)
     const videoWrappers = document.querySelectorAll(".video-wrapper:not(.floating):not([data-is-floating])");
     videoWrappers.forEach(w => {
-        try { window.__videoFloatObserver.observe(w); } catch (e) { /* ignore */ }
+        try {
+ window.__videoFloatObserver.observe(w); 
+} catch (e) { /* ignore */ }
     });
 }
 
@@ -62,10 +68,14 @@ function createFloatingClone(wrapper, originalVideo) {
 
         // Sync time and playing state
         const wasPlaying = !originalVideo.paused && !originalVideo.ended;
-        try { cloneVideo.currentTime = originalVideo.currentTime; } catch (e) { /* ignore */ }
+        try {
+ cloneVideo.currentTime = originalVideo.currentTime; 
+} catch (e) { /* ignore */ }
 
         // Pause original to avoid double audio
-        try { originalVideo.pause(); } catch (e) { /* ignore */ }
+        try {
+ originalVideo.pause(); 
+} catch (e) { /* ignore */ }
 
         // Append clone and a close button
         floatingWrapper.appendChild(cloneVideo);
@@ -107,7 +117,9 @@ function createFloatingClone(wrapper, originalVideo) {
 
     } catch (err) {
         console.error("createFloatingClone error", err);
-        if (wrapper && wrapper.dataset.floatingId) delete wrapper.dataset.floatingId;
+        if (wrapper && wrapper.dataset.floatingId) {
+delete wrapper.dataset.floatingId;
+}
     }
 }
 
@@ -122,7 +134,9 @@ function removeFloatingClone(wrapper, floatingEl) {
         const originalVideo = floatingEl._originalVideo;
 
         if (cloneVideo && originalVideo) {
-            try { originalVideo.currentTime = cloneVideo.currentTime; } catch (e) { /* ignore */ }
+            try {
+ originalVideo.currentTime = cloneVideo.currentTime; 
+} catch (e) { /* ignore */ }
 
             if (floatingEl._wasPlaying) {
                 originalVideo.play().catch(() => {});
@@ -147,11 +161,15 @@ function removeFloatingClone(wrapper, floatingEl) {
 
 function wrapperMarkClosed(wrapper, videoEl) {
     wrapper.dataset.closed = "1";
-    try { videoEl.pause(); } catch (_) {}
+    try {
+ videoEl.pause(); 
+} catch (_) {}
     const floatId = wrapper.dataset.floatingId;
     if (floatId) {
         const floatingEl = document.getElementById(floatId);
-        if (floatingEl) removeFloatingClone(wrapper, floatingEl);
+        if (floatingEl) {
+removeFloatingClone(wrapper, floatingEl);
+}
     }
 }
 
@@ -173,7 +191,9 @@ function makeDraggableFloating(el) {
     };
 
     const onMove = (e) => {
-        if (!isDragging) return;
+        if (!isDragging) {
+return;
+}
         const clientX = e.touches ? e.touches[0].clientX : e.clientX;
         const clientY = e.touches ? e.touches[0].clientY : e.clientY;
         el.style.left = `${clientX - offsetX}px`;

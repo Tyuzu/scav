@@ -124,7 +124,9 @@ export function createNavWrapper() {
 
     icon.addEventListener("click", activate);
     icon.addEventListener("keydown", e => {
-      if (e.key === "Enter" || e.key === " ") activate();
+      if (e.key === "Enter" || e.key === " ") {
+activate();
+}
     });
 
     return icon;

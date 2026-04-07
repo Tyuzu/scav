@@ -5,7 +5,9 @@ import { apiFetch } from "../../../api/api.js";
  * Returns an object keyed by postId for fast lookup.
  */
 export async function fetchBulkPostMetadata(postIds) {
-    if (!Array.isArray(postIds) || postIds.length === 0) return {};
+    if (!Array.isArray(postIds) || postIds.length === 0) {
+return {};
+}
 
     try {
         const response = await apiFetch("/feed/feed/metadata", "POST", { ids: postIds });

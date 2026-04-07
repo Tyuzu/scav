@@ -155,11 +155,17 @@ export const smoothZoom = (event, img, state, container) => {
     const maxPanX = Math.max(0, (imgWidth - viewWidth) / 2);
     const maxPanY = Math.max(0, (imgHeight - viewHeight) / 2);
 
-    if (imgWidth <= viewWidth) state.panX = 0;
-    else state.panX = Math.min(maxPanX, Math.max(-maxPanX, state.panX));
+    if (imgWidth <= viewWidth) {
+state.panX = 0;
+} else {
+state.panX = Math.min(maxPanX, Math.max(-maxPanX, state.panX));
+}
 
-    if (imgHeight <= viewHeight) state.panY = 0;
-    else state.panY = Math.min(maxPanY, Math.max(-maxPanY, state.panY));
+    if (imgHeight <= viewHeight) {
+state.panY = 0;
+} else {
+state.panY = Math.min(maxPanY, Math.max(-maxPanY, state.panY));
+}
 
     img.style.transformOrigin = "50% 50%";
     updateTransform(img, state);
@@ -172,7 +178,9 @@ export const smoothZoom = (event, img, state, container) => {
    ========================= */
 
 export const handleMouseDown = (e, state, img) => {
-    if (state.zoomLevel <= 1) return;
+    if (state.zoomLevel <= 1) {
+return;
+}
     e.preventDefault();
 
     state.isDragging = true;
@@ -183,7 +191,9 @@ export const handleMouseDown = (e, state, img) => {
     img.style.cursor = "grabbing";
 
     const onMove = (moveEvent) => {
-        if (!state.isDragging) return;
+        if (!state.isDragging) {
+return;
+}
         moveEvent.preventDefault();
         const dx = moveEvent.clientX - state.startX;
         const dy = moveEvent.clientY - state.startY;
@@ -211,8 +221,12 @@ export const handleMouseDown = (e, state, img) => {
             state.panX += state.velocityX * 0.95;
             state.panY += state.velocityY * 0.95;
 
-            if (Math.abs(state.panX) > maxPanX) state.velocityX *= 0.8;
-            if (Math.abs(state.panY) > maxPanY) state.velocityY *= 0.8;
+            if (Math.abs(state.panX) > maxPanX) {
+state.velocityX *= 0.8;
+}
+            if (Math.abs(state.panY) > maxPanY) {
+state.velocityY *= 0.8;
+}
 
             state.velocityX *= 0.9;
             state.velocityY *= 0.9;
@@ -251,8 +265,9 @@ export const handleTouchStart = (e, state, img, container) => {
         const tapLength = now - state.lastTap;
         if (tapLength < 300 && tapLength > 0) {
             state.zoomLevel = state.zoomLevel === 1 ? 2 : 1;
-            if (state.zoomLevel === 1) autoCenterImage(img, state);
-            else {
+            if (state.zoomLevel === 1) {
+autoCenterImage(img, state);
+} else {
                 state.panX = 0;
                 state.panY = 0;
                 updateTransform(img, state);
@@ -294,8 +309,12 @@ export const handleTouchMove = (e, state, img, container) => {
 };
 
 export const handleTouchEnd = (e, state, img) => {
-    if (e.touches.length < 2) state.initialPinchDistance = null;
-    if (!e.touches.length) state.isDragging = false;
+    if (e.touches.length < 2) {
+state.initialPinchDistance = null;
+}
+    if (!e.touches.length) {
+state.isDragging = false;
+}
 };
 
 /* =========================

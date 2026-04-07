@@ -10,7 +10,9 @@ import Modal from "../../components/ui/Modal.mjs";
 export function Onboarding() {
   // skip if already completed
   const saved = localStorage.getItem("baitoOnboarding");
-  if (saved) return;
+  if (saved) {
+return;
+}
 
   // Stepper (segmented)
   function Stepper({ total, current }) {
@@ -57,11 +59,15 @@ export function Onboarding() {
   // HISTORY HELPERS
   function pushHistory(fn) {
     // store the function (not called) so goBack can re-render it
-    if (typeof fn === "function") state.history.push(fn);
+    if (typeof fn === "function") {
+state.history.push(fn);
+}
   }
   function goBack() {
     const prevFn = state.history.pop();
-    if (!prevFn) return;
+    if (!prevFn) {
+return;
+}
     // call previous function - it should set state.step appropriately
     state.currentFn = prevFn;
     prevFn();
@@ -82,7 +88,9 @@ export function Onboarding() {
       const btn = Button(label, `btn-${label.replace(/\s+/g, "-").toLowerCase()}`, {
         click: () => {
           // push the current function so Back returns here
-          if (state.currentFn) pushHistory(state.currentFn);
+          if (state.currentFn) {
+pushHistory(state.currentFn);
+}
           onChoose(value);
         }
       }, "buttonx");
@@ -116,7 +124,9 @@ export function Onboarding() {
   // Push summaryStep so Back goes back to summary after editing.
   function editTo(stepKey) {
     const fn = stepNameMap[stepKey];
-    if (!fn) return;
+    if (!fn) {
+return;
+}
     // keep current summary reachable via Back
     pushHistory(summaryStep);
     state.currentFn = fn;

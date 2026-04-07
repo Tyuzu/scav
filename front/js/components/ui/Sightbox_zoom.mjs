@@ -5,7 +5,9 @@ import { createIconButton } from "../../utils/svgIconButton";
 import { xSVG } from "../svgs";
 
 const Sightbox = (mediaSrc, mediaType = "image") => {
-  if (document.getElementById("sightbox")) return;
+  if (document.getElementById("sightbox")) {
+return;
+}
 
   const overlay = createElement("div", { 
     class: "sightboxz-overlay", 
@@ -62,7 +64,9 @@ const Sightbox = (mediaSrc, mediaType = "image") => {
   }
 
   function closeSightbox() {
-    if (!document.body.contains(sightbox)) return;
+    if (!document.body.contains(sightbox)) {
+return;
+}
     sightbox.remove();
     window.removeEventListener("keydown", onKeyDown);
   }

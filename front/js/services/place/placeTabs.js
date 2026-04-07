@@ -94,7 +94,9 @@ function displayPlaceInfo(container, placeData, isCreator) {
       chipsClass: "multiselect-chips",
       chipClass: "chip",
       removeBtnClass: "chip-remove-btn button",
-      onChange: sel => { info.accessibility = sel; }
+      onChange: sel => {
+ info.accessibility = sel; 
+}
     });
 
     // Services selector
@@ -110,7 +112,9 @@ function displayPlaceInfo(container, placeData, isCreator) {
       chipsClass: "multiselect-chips",
       chipClass: "chip",
       removeBtnClass: "chip-remove-btn button",
-      onChange: sel => { info.services = sel; }
+      onChange: sel => {
+ info.services = sel; 
+}
     });
 
     // Buttons

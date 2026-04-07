@@ -43,11 +43,15 @@ export function setupVideoContextMenu(video, videoId = "") {
       },
       {
         label: video.muted ? "Unmute" : "Mute",
-        action: () => { video.muted = !video.muted; }
+        action: () => {
+ video.muted = !video.muted; 
+}
       },
       {
         label: video.loop ? "Disable Loop" : "Enable Loop",
-        action: () => { video.loop = !video.loop; }
+        action: () => {
+ video.loop = !video.loop; 
+}
       },
       {
         label: "Copy Video URL",

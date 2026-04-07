@@ -52,7 +52,9 @@ function getTopRated(farms, limit = 3) {
 async function fetchFarms(page) {
   try {
     const res = await apiFetch(`/farms?page=${page}&limit=${PAGE_SIZE}`);
-    if (!res || !Array.isArray(res.farms)) return [];
+    if (!res || !Array.isArray(res.farms)) {
+return [];
+}
     return res.farms;
   } catch {
     return [];
@@ -96,7 +98,9 @@ function Sidebar(isLoggedIn, stateRef) {
   container.append(staticSections, dynamicSections);
 
   function renderFavorites(container) {
-    if (!isLoggedIn) return;
+    if (!isLoggedIn) {
+return;
+}
 
     const farmIndex = indexFarmsById(stateRef.farms);
     const section = createElement("section", { class: "farm__favorites" }, [
@@ -227,7 +231,9 @@ export async function displayFarms(content, loggedIn) {
   commit();
 
   async function loadNextPage() {
-    if (state.isLoading || !state.hasMore) return;
+    if (state.isLoading || !state.hasMore) {
+return;
+}
 
     state.isLoading = true;
     const batch = await fetchFarms(state.page);
@@ -244,7 +250,9 @@ export async function displayFarms(content, loggedIn) {
   }
 
   async function onIntersect(entries) {
-    if (!entries.some(e => e.isIntersecting)) return;
+    if (!entries.some(e => e.isIntersecting)) {
+return;
+}
 
     const prevCount = state.farms.length;
     await loadNextPage();

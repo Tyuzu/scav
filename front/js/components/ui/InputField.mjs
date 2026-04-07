@@ -14,7 +14,9 @@ const InputField = ({ label, type = 'text', placeholder, onInput }) => {
     input.placeholder = placeholder;
   
     input.addEventListener('input', (e) => {
-      if (onInput) onInput(e.target.value);
+      if (onInput) {
+onInput(e.target.value);
+}
     });
   
     container.appendChild(input);

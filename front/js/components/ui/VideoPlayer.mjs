@@ -18,7 +18,9 @@ const determineInitialSource = (baseSrc, availableResolutions = []) => {
     r => typeof r === "number" && !isNaN(r)
   );
 
-  if (validQualities.length === 0) return `${baseSrc}-360.mp4`;
+  if (validQualities.length === 0) {
+return `${baseSrc}-360.mp4`;
+}
 
   const lowestAvailable = Math.min(...validQualities);
   const fallback = `${baseSrc}-${lowestAvailable}.mp4`;
@@ -50,7 +52,9 @@ const createVideoElement = (src, resolutions, poster) => {
 // ---- Apply Attributes ----
 const applyVideoAttributes = (video, attrs = {}) => {
   Object.entries(attrs).forEach(([key, value]) => {
-    if (key in video) video[key] = value;
+    if (key in video) {
+video[key] = value;
+}
   });
 };
 
@@ -72,7 +76,9 @@ export const createQualitySelector = (video, baseSrc, availableResolutions) => {
   const fragment = document.createDocumentFragment();
   available.forEach((quality) => {
     const option = createElement("option", { value: `${baseSrc}-${quality}.mp4` }, [`${quality}p`]);
-    if (stored === quality) option.setAttribute("selected", "true");
+    if (stored === quality) {
+option.setAttribute("selected", "true");
+}
     fragment.appendChild(option);
   });
   selector.appendChild(fragment);
@@ -88,7 +94,9 @@ export const createQualitySelector = (video, baseSrc, availableResolutions) => {
 
     video.addEventListener("loadedmetadata", () => {
       video.currentTime = currentTime;
-      if (!wasPaused) video.play();
+      if (!wasPaused) {
+video.play();
+}
     }, { once: true });
   };
 
@@ -231,8 +239,12 @@ const VideoPlayer = (
   // ---- Cleanup ----
   container.cleanup = () => {
     removeTogglePlay();
-    if (qualityCleanup) qualityCleanup();
-    if (observer) observer.disconnect();
+    if (qualityCleanup) {
+qualityCleanup();
+}
+    if (observer) {
+observer.disconnect();
+}
   };
 
   return container;

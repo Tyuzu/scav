@@ -136,8 +136,11 @@ function createEventCard(ev) {
 }
 
 function getSavedEvents() {
-  try { return JSON.parse(localStorage.getItem("saved_events") || "[]"); }
-  catch { return []; }
+  try {
+ return JSON.parse(localStorage.getItem("saved_events") || "[]"); 
+} catch {
+ return []; 
+}
 }
 
 function toggleSaveEvent(id) {

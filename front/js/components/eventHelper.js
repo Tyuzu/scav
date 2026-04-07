@@ -4,7 +4,9 @@ function createButton({ text, classes = [], id = '', events = {} }) {
     const button = document.createElement('button');
     button.textContent = text;
     button.classList.add(...classes);
-    if (id) button.id = id;
+    if (id) {
+button.id = id;
+}
 
     for (const event in events) {
         button.addEventListener(event, events[event]);
@@ -17,7 +19,9 @@ function createDivButton({ text, classes = [], id = '', events = {} }) {
     const button = document.createElement('div');
     button.textContent = text;
     button.classList.add(...classes);
-    if (id) button.id = id;
+    if (id) {
+button.id = id;
+}
 
     for (const event in events) {
         button.addEventListener(event, events[event]);
@@ -63,7 +67,9 @@ function createLink(id, classes = []) {
 function createContainer(classes = [], id = '', containerType = 'div') {
     const container = document.createElement(containerType);
     container.classList.add(...classes);
-    if (id) container.id = id;
+    if (id) {
+container.id = id;
+}
     return container;
 }
 

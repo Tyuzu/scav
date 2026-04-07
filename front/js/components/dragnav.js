@@ -24,7 +24,9 @@ export function makeDraggableScroll(container) {
   });
 
   container.addEventListener("mousemove", e => {
-    if (!isDown) return;
+    if (!isDown) {
+return;
+}
     e.preventDefault();
     dragged = true;
     const x = e.pageX - container.offsetLeft;

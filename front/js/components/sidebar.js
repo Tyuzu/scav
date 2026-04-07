@@ -29,7 +29,9 @@ const TILES = [
 /* ---------------------------------- */
 
 function buildControlCenter() {
-  if (controlCenter) return;
+  if (controlCenter) {
+return;
+}
 
   const personalHub = buildPersonalHub();
   const liveTiles = buildTiles();
@@ -154,7 +156,9 @@ function attachGestureHandling() {
   });
 
   controlCenter.addEventListener("pointermove", e => {
-    if (!dragging) return;
+    if (!dragging) {
+return;
+}
 
     currentY = e.clientY;
     const diff = Math.max(0, currentY - startY);
@@ -165,13 +169,18 @@ function attachGestureHandling() {
   });
 
   controlCenter.addEventListener("pointerup", () => {
-    if (!dragging) return;
+    if (!dragging) {
+return;
+}
 
     dragging = false;
     const diff = currentY - startY;
 
-    if (diff > 100) closeControlCenter();
-    else controlCenter.style.transform = "";
+    if (diff > 100) {
+closeControlCenter();
+} else {
+controlCenter.style.transform = "";
+}
   });
 
   controlCenter.addEventListener("pointercancel", () => {
@@ -190,7 +199,9 @@ export function toggleControlCenter() {
 }
 
 function openControlCenter() {
-  if (isOpen) return;
+  if (isOpen) {
+return;
+}
 
   isOpen = true;
   controlCenter.classList.remove("hidden");
@@ -203,7 +214,9 @@ function openControlCenter() {
 }
 
 function closeControlCenter() {
-  if (!isOpen) return;
+  if (!isOpen) {
+return;
+}
 
   isOpen = false;
   controlCenter.classList.remove("open");

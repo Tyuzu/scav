@@ -8,13 +8,19 @@ export function cropAside(cropData) {
         createElement("h3", {}, ["Actions"]),
         createElement("div", { class: "cta-list" }, [
             Button("Buy Products","buyprds-crp-btn",{
-                click: () => {navigate('/products')}
+                click: () => {
+navigate('/products')
+}
             }, "action-btn buttonx", {"margin-right":"4px"}),
             Button("See Recipes","recipes-crp-btn",{
-                click: () => {navigate('/recipes')}
+                click: () => {
+navigate('/recipes')
+}
             }, "buttonx secondary"),
             Button("List Your Farm","newfrm-btn",{
-                click: () => {navigate('/create-farm')}
+                click: () => {
+navigate('/create-farm')
+}
             }, "buttonx secondary", {"margin-right":"4px"}),
         ]),
 

@@ -28,13 +28,17 @@ export function createSearchBar(chatView) {
 
   const handler = debounce(() => {
     const term = (input.value || "").toLowerCase();
-    if (!chatView) return;
+    if (!chatView) {
+return;
+}
 
     chatView
       .querySelectorAll(".message-item")
       .forEach(item => {
         const content = item.querySelector(".msg-content");
-        if (!content) return;
+        if (!content) {
+return;
+}
 
         const text = (content.textContent || "").toLowerCase();
         item.hidden = term ? !text.includes(term) : false;
@@ -98,7 +102,9 @@ function createChatButton(chat, user, chatModal) {
    Chat list + infinite scroll
 --------------------------*/
 export async function loadChatList(listContainer, chatModal, reset = false) {
-  if (listContainer.dataset.loading === "true") return;
+  if (listContainer.dataset.loading === "true") {
+return;
+}
   listContainer.dataset.loading = "true";
 
   if (reset) {

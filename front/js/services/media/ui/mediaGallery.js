@@ -22,12 +22,20 @@ import { generateVideoPlayer } from "../../../components/ui/vidpopHelpers.js";
 ------------------------------------------------------ */
 function getFileType(media) {
   if (!media || !media.type) {
-    if (media.url && /\.(mp4|webm|ogg)$/i.test(media.url)) return "video";
-    if (media.url && /\.(jpg|jpeg|png|gif|webp)$/i.test(media.url)) return "image";
+    if (media.url && /\.(mp4|webm|ogg)$/i.test(media.url)) {
+return "video";
+}
+    if (media.url && /\.(jpg|jpeg|png|gif|webp)$/i.test(media.url)) {
+return "image";
+}
     return "unknown";
   }
-  if (media.type.startsWith("image")) return "image";
-  if (media.type.startsWith("video")) return "video";
+  if (media.type.startsWith("image")) {
+return "image";
+}
+  if (media.type.startsWith("video")) {
+return "video";
+}
   return "unknown";
 }
 
@@ -42,7 +50,9 @@ function buildMediaFragment(mediaData, entityType, entityId, isLoggedIn, prefix 
     const wrapper = createElement("div", { class: `${prefix}-group` });
 
     group.forEach((media, i) => {
-      if (!media.url) return;
+      if (!media.url) {
+return;
+}
 
       const mediaType = getFileType(media);
       const figure = createElement("figure", {
@@ -59,7 +69,9 @@ function buildMediaFragment(mediaData, entityType, entityId, isLoggedIn, prefix 
       const actions = createMediaActions(media, entityType, entityId, isLoggedIn, confirmDelete, prefix);
 
       figure.append(mediaEl, caption);
-      if (translation) figure.append(...translation);
+      if (translation) {
+figure.append(...translation);
+}
       figure.append(actions);
 
       wrapper.append(figure);
@@ -104,7 +116,9 @@ function buildMediaElement(media, thumbSrc, index, prefix, type) {
     // Load video player lazily
     generateVideoPlayer(videoSrc, thumbSrc, [], [], media.url)
       .then(videoPlayer => {
-        if (videoPlayer) vidEl.append(videoPlayer);
+        if (videoPlayer) {
+vidEl.append(videoPlayer);
+}
       })
       .catch(err => {
         console.error("Video load error:", err);
@@ -130,7 +144,9 @@ function buildMediaElement(media, thumbSrc, index, prefix, type) {
    TRANSLATION TOGGLE BUILDER
 ------------------------------------------------------ */
 function buildTranslationSection(captionText) {
-  if (!captionText) return null;
+  if (!captionText) {
+return null;
+}
 
   const translationBox = createElement("div", {
     class: "translation-container",
@@ -165,7 +181,9 @@ export async function displayMedia(content, entityType, entityId, isLoggedIn) {
   const list = createElement("div", { class: "media-list" });
 
   const addBtn = createAddMediaButton(isLoggedIn, entityType, entityId, list, showMediaUploadForm);
-  if (addBtn) content.append(addBtn);
+  if (addBtn) {
+content.append(addBtn);
+}
 
   // Append upfront to minimize layout shifts
   content.append(title, loader, list);
@@ -185,7 +203,9 @@ export async function displayMedia(content, entityType, entityId, isLoggedIn) {
     // Reserved for delegated interactions
     list.addEventListener("click", e => {
       const img = e.target.closest(".media-img");
-      if (img) return;
+      if (img) {
+return;
+}
     });
   } catch (err) {
     console.error("Media fetch error:", err);

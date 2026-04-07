@@ -6,6 +6,7 @@ import { ImageGallery } from "../../../components/ui/IMageGallery.mjs";
 import { navigate } from "../../../routes";
 import { resolveImagePath, EntityType, PictureType } from "../../../utils/imagePaths.js";
 import { addToCart } from "../../cart/addToCart.js";
+import { getState } from "../../../state/state.js";
 import {renderItemForm} from "./createOrEdit.js";
 
 export function renderItemCard(item, type, isLoggedIn, container, refresh) {
@@ -37,13 +38,18 @@ export function renderItemCard(item, type, isLoggedIn, container, refresh) {
     incrementBtn,
   ]);
 
-  const handleAdd = (e) => {
+  const handleAdd = async (e) => {
     e.stopPropagation();
-    // Event-based: only send itemId and quantity
-    addToCart({
+    // Add to cart with full metadata
+    await addToCart({
       itemId: item.productid,
       quantity,
-      isLoggedIn,
+      isLoggedIn: Boolean(getState("token")),
+      itemType: type,
+      itemName: item.name,
+      entityType: "product",
+      entityId: item.productid,
+      entityName: item.name
     });
   };
 

@@ -54,7 +54,9 @@ function createModalBody(content, doc) {
 }
 
 function createModalFooter(actions, doc) {
-  if (typeof actions !== 'function') return null;
+  if (typeof actions !== 'function') {
+return null;
+}
 
   const footer = doc.createElement('div');
   footer.className = 'modal-footer';
@@ -222,10 +224,15 @@ shadow.appendChild(style);
   openModals++;
 
   const wrappedOnClose = (data) => {
-    if (force) return;
+    if (force) {
+return;
+}
     cleanup();
-    if (returnDataOnClose) onClose?.(data);
-    else onClose?.();
+    if (returnDataOnClose) {
+onClose?.(data);
+} else {
+onClose?.();
+}
   };
 
   if (closeOnOverlayClick && !force) {
@@ -242,7 +249,9 @@ shadow.appendChild(style);
 
   dialog.appendChild(header);
   dialog.appendChild(body);
-  if (footer) dialog.appendChild(footer);
+  if (footer) {
+dialog.appendChild(footer);
+}
 
   shadow.appendChild(overlay);
   shadow.appendChild(dialog);
@@ -250,9 +259,13 @@ shadow.appendChild(style);
   const focusableSelectors = 'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])';
 
   const trapFocus = (e) => {
-    if (force && e.key === 'Escape') return;
+    if (force && e.key === 'Escape') {
+return;
+}
     const focusableEls = dialog.querySelectorAll(focusableSelectors);
-    if (!focusableEls.length) return;
+    if (!focusableEls.length) {
+return;
+}
 
     const firstEl = focusableEls[0];
     const lastEl = focusableEls[focusableEls.length - 1];
@@ -277,10 +290,14 @@ shadow.appendChild(style);
   dialog.classList.add('modal--fade-in');
 
   const modalContainer = document.getElementById('modalcon');
-  if (!modalContainer) throw new Error('No element with id "modalcon" found');
+  if (!modalContainer) {
+throw new Error('No element with id "modalcon" found');
+}
   modalContainer.appendChild(host);
 
-  if (onOpen) onOpen();
+  if (onOpen) {
+onOpen();
+}
 
   if (autofocusSelector) {
     const el = dialog.querySelector(autofocusSelector);

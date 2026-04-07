@@ -134,7 +134,9 @@ async function renderMediaTab(container, hashtag, page = 0, limit = DEFAULT_LIMI
                 ? post.media_url
                 : post.media_url ? [post.media_url] : [];
 
-            if (!mediaUrls.length) return;
+            if (!mediaUrls.length) {
+return;
+}
 
             const thumbSrc =
                 post.type === "video"

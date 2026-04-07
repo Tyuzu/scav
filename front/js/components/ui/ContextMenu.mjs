@@ -47,7 +47,9 @@ const ContextMenu = (() => {
   const setupEventListeners = () => {
     menu.addEventListener("click", (e) => {
       const item = e.target.closest(".ctx-item:not(.disabled)");
-      if (!item) return;
+      if (!item) {
+return;
+}
       item._action?.();
       removeMenu();
     });
@@ -55,7 +57,7 @@ const ContextMenu = (() => {
     menu.addEventListener("keydown", (e) => {
       const items = [...menu.querySelectorAll(".ctx-item:not(.disabled)")];
       const current = document.activeElement;
-      let idx = items.indexOf(current);
+      const idx = items.indexOf(current);
 
       if (e.key === "Escape") {
         e.preventDefault();

@@ -31,7 +31,9 @@ function renderFaqItem(title, content, container) {
 
 function showFaqForm(faqContainer, eventId) {
   // Prevent multiple modals
-  if (document.getElementById("faq-form")) return;
+  if (document.getElementById("faq-form")) {
+return;
+}
 
   const form = createElement("form", { id: "faq-form", class: "faq-form" });
 

@@ -34,7 +34,9 @@ async function addMenu(form, placeId, menuList) {
             const uploadObj = { id: uid(), file: imageFile, previewURL: URL.createObjectURL(imageFile), progress: 0, uploading: true, mediaEntity: "menu" };
             Notify("Uploading image...", { type: "info", duration: 2000 });
             uploadedImage = await uploadFile(uploadObj);
-            if (!uploadedImage?.filename && !uploadedImage?.file) throw new Error("Image upload failed.");
+            if (!uploadedImage?.filename && !uploadedImage?.file) {
+throw new Error("Image upload failed.");
+}
         }
 
         const payload = { name, price, stock, menu_pic: uploadedImage?.filename || uploadedImage?.file || "" };
@@ -44,7 +46,9 @@ async function addMenu(form, placeId, menuList) {
             Notify("Menu added successfully!", { type: "success", duration: 3000, dismissible: true });
             menuList.prepend(createMenuCard(response.data, true, true, placeId));
             form.reset();
-        } else throw new Error(response?.message || "Unknown server error");
+        } else {
+throw new Error(response?.message || "Unknown server error");
+}
     } catch (error) {
         console.error("Error adding Menu:", error);
         Notify(`Error adding Menu: ${error.message}`, { type: "error" });
@@ -80,14 +84,20 @@ function addMenuForm(placeId, menuList) {
 
 /** Delete a menu item */
 async function deleteMenu(menuId, placeId) {
-    if (!confirm('Are you sure you want to delete this Menu?')) return;
+    if (!confirm('Are you sure you want to delete this Menu?')) {
+return;
+}
     try {
         const response = await apiFetch(`/places/menu/${placeId}/${menuId}`, 'DELETE');
         if (response.success) {
             Notify("Menu deleted successfully!", { type: "success", duration: 3000, dismissible: true });
             const menuItem = document.getElementById(`menu-${menuId}`);
-            if (menuItem) menuItem.remove();
-        } else Notify(`Failed to delete Menu: ${response?.message || 'Unknown error'}`, { type: "error" });
+            if (menuItem) {
+menuItem.remove();
+}
+        } else {
+Notify(`Failed to delete Menu: ${response?.message || 'Unknown error'}`, { type: "error" });
+}
     } catch (error) {
         console.error(error);
         Notify(`Error deleting Menu: ${error.message}`, { type: "error" });
@@ -160,8 +170,12 @@ export async function displayMenu(container, placeId, isCreator, isLoggedIn) {
 
     const menuData = await apiFetch(`/places/menu/${placeId}`);
 
-    if (isCreator) container.prepend(Button("Add Menu", "add-menu-btn", { click: () => addMenuForm(placeId, menuList) }, "buttonx"));
-    if (!Array.isArray(menuData) || menuData.length === 0) return menuList.appendChild(createElement("p", {}, ["No Menu available for this place."]));
+    if (isCreator) {
+container.prepend(Button("Add Menu", "add-menu-btn", { click: () => addMenuForm(placeId, menuList) }, "buttonx"));
+}
+    if (!Array.isArray(menuData) || menuData.length === 0) {
+return menuList.appendChild(createElement("p", {}, ["No Menu available for this place."]));
+}
 
     menuData.forEach(menu => menuList.appendChild(createMenuCard(menu, isCreator, isLoggedIn, placeId)));
 }

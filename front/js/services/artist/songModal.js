@@ -41,7 +41,9 @@ function openSongModal({ mode, song = {}, artistID, container, isCreator }) {
         submitBtn.disabled = true;
         durationInput.value = "";
 
-        if (!file) return;
+        if (!file) {
+return;
+}
 
         if (!titleInput.value) {
             titleInput.value = file.name.replace(/\.[^/.]+$/, "");
@@ -55,7 +57,9 @@ function openSongModal({ mode, song = {}, artistID, container, isCreator }) {
             URL.revokeObjectURL(audioEl.src);
 
             const totalSeconds = Math.floor(audioEl.duration);
-            if (!totalSeconds || Number.isNaN(totalSeconds)) return;
+            if (!totalSeconds || Number.isNaN(totalSeconds)) {
+return;
+}
 
             const mins = Math.floor(totalSeconds / 60);
             const secs = (totalSeconds % 60).toString().padStart(2, "0");
@@ -166,7 +170,9 @@ function createSongForm(song = {}) {
 function setupFilePreview(input, preview, type) {
     input.addEventListener("change", () => {
         const file = input.files[0];
-        if (!file) { preview.style.display = "none"; return; }
+        if (!file) {
+ preview.style.display = "none"; return; 
+}
 
         const url = URL.createObjectURL(file);
         if (type === "audio" && file.type.startsWith("audio/")) {

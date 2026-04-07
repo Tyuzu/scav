@@ -16,7 +16,9 @@ const Datex = (DATE_TO_PRINT = "2026-01-03T12:39:00Z", asString = false) => {
     hour12: true
   });
 
-  if (asString) return formatted;
+  if (asString) {
+return formatted;
+}
 
   return createElement("span", {}, [formatted]);
 };

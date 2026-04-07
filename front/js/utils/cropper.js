@@ -16,7 +16,9 @@ export function openCropperWithCropperJSBoundedFixedBox({ file, type = "avatar" 
       return new Promise((res, rej) => {
         const existing = document.querySelector(`script[src="${src}"]`);
         if (existing) {
-          if (window.Cropper) return res(existing);
+          if (window.Cropper) {
+return res(existing);
+}
           existing.addEventListener("load", () => res(existing));
           existing.addEventListener("error", () => rej(new Error("Failed to load script")));
           return;
@@ -33,7 +35,9 @@ export function openCropperWithCropperJSBoundedFixedBox({ file, type = "avatar" 
     function loadCss(href) {
       return new Promise((res, rej) => {
         const existing = document.querySelector(`link[href="${href}"]`);
-        if (existing) return res(existing);
+        if (existing) {
+return res(existing);
+}
         const l = createElement("link", { rel: "stylesheet", href });
         l.dataset.cropperCss = "1";
         l.addEventListener("load", () => res(l));
@@ -160,7 +164,9 @@ export function openCropperWithCropperJSBoundedFixedBox({ file, type = "avatar" 
               this.crop();
             } catch (err) {
               // if setCropBoxData fails (e.g. image smaller), fallback to default crop
-              try { this.crop(); } catch (e) { /* ignore */ }
+              try {
+ this.crop(); 
+} catch (e) { /* ignore */ }
             }
           }
         });
@@ -235,13 +241,17 @@ export function openCropperWithCropperJSBoundedFixedBox({ file, type = "avatar" 
     function cleanup() {
       try {
         if (createdCropper) {
-          try { createdCropper.destroy(); } catch (e) { /* ignore */ }
+          try {
+ createdCropper.destroy(); 
+} catch (e) { /* ignore */ }
           createdCropper = null;
         }
       } catch (e) { /* ignore */ }
 
       if (objectUrl) {
-        try { URL.revokeObjectURL(objectUrl); } catch (e) { /* ignore */ }
+        try {
+ URL.revokeObjectURL(objectUrl); 
+} catch (e) { /* ignore */ }
         objectUrl = null;
       }
 
@@ -269,7 +279,9 @@ export function openCropperWithCropperJSBoundedFixedBox({ file, type = "avatar" 
       const newStageH = Math.max(newViewportH, cropTargetH * 1.15);
       stage.style.width = `${newStageW}px`;
       stage.style.height = `${newStageH}px`;
-      if (createdCropper) createdCropper.resize();
+      if (createdCropper) {
+createdCropper.resize();
+}
     }
     window.addEventListener("resize", onWindowResize);
 

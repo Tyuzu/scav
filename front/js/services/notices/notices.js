@@ -35,7 +35,9 @@ function openNoticeForm({ notice = {}, entityType, entityId, container, isEdit =
     click: async () => {
       const title = modalContent.querySelector("#notice-title-input").value.trim();
       const content = modalContent.querySelector("#notice-content-input").value.trim();
-      if (!title || !content) return alert("Both fields are required");
+      if (!title || !content) {
+return alert("Both fields are required");
+}
 
       let res;
       if (isEdit) {
@@ -81,7 +83,9 @@ function openNoticeModal(notice, { entityType, entityId, container, isCreator })
 
     const delBtn = Button("🗑️ Delete", "", {
       click: async () => {
-        if (!confirm("Delete this notice?")) return;
+        if (!confirm("Delete this notice?")) {
+return;
+}
         const res = await deleteNotice(entityType, entityId, notice.noticeid);
         if (res === null) {
           modal.close();
@@ -128,7 +132,7 @@ export async function displayNotices(entityType, entityId, container, isCreator)
   const loading = createElement("p", {}, [document.createTextNode("Loading notices...")]);
   container.appendChild(loading);
 
-  let notices = await fetchNotices(entityType, entityId);
+  const notices = await fetchNotices(entityType, entityId);
   loading.remove();
 
   const list = createElement("div", { id: "notice-list" });

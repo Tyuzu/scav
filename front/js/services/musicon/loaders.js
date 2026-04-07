@@ -35,7 +35,9 @@ async function loadSongs(fetchFunction, fetchParams, container, player, options 
         const addBtn = createElement("button", {}, ["Add to Queue"]);
         addBtn.addEventListener("click", () => {
             const selected = songs.filter(s => batchSelection.has(s.songid));
-            if (!selected.length) return Notify("No songs selected", { type: "info" });
+            if (!selected.length) {
+return Notify("No songs selected", { type: "info" });
+}
             player?.setQueue?.(selected);
             Notify(`${selected.length} songs added to queue`);
         });
@@ -43,11 +45,15 @@ async function loadSongs(fetchFunction, fetchParams, container, player, options 
         const removeBtn = createElement("button", {}, ["Remove from Playlist"]);
         removeBtn.addEventListener("click", async () => {
             const selected = Array.from(batchSelection);
-            if (!selected.length) return Notify("No songs selected", { type: "info" });
+            if (!selected.length) {
+return Notify("No songs selected", { type: "info" });
+}
             try {
                 await Promise.all(selected.map(id => MusicAPI.removeSongFromPlaylist(fetchParams[0], id)));
                 Notify(`${selected.length} songs removed`);
-                if (reloadCallback) reloadCallback();
+                if (reloadCallback) {
+reloadCallback();
+}
             } catch (err) {
                 console.error("[remove] Error:", err);
                 Notify("Failed to remove songs", { type: "error" });

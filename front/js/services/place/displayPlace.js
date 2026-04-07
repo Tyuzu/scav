@@ -97,7 +97,7 @@ export default async function displayPlace(isLoggedIn, placeId, contentContainer
       renderPlaceDetails(isLoggedIn, editSection, placeData, isCreator);
       contentContainer.appendChild(editSection);
 
-      let maparea = createElement("div", {}, []);
+      const maparea = createElement("div", {}, []);
       const mapButton = Button("Show Map", "showMapBtn", {
         click: () => {
           const mapElement = displayPlacesMap();
@@ -143,8 +143,11 @@ export default async function displayPlace(isLoggedIn, placeId, contentContainer
       title: "Info",
       id: "info-tab",
       render: (container) => {
-        try { displayPlaceInfo(container, placeData, isCreator); }
-        catch (err) { container.textContent = "Failed to load info."; console.warn(err); }
+        try {
+ displayPlaceInfo(container, placeData, isCreator); 
+} catch (err) {
+ container.textContent = "Failed to load info."; console.warn(err); 
+}
       },
     });
 
@@ -185,17 +188,35 @@ export default async function displayPlace(isLoggedIn, placeId, contentContainer
       {
         title: "Nearby",
         id: "nearby-tab",
-        render: (container) => { try { displayPlaceNearby(container, placeId); } catch { container.textContent = "Nearby places unavailable."; } },
+        render: (container) => {
+ try {
+ displayPlaceNearby(container, placeId); 
+} catch {
+ container.textContent = "Nearby places unavailable."; 
+} 
+},
       },
       {
         title: "Gallery",
         id: "gallery-tab",
-        render: (container) => { try { displayMedia(container, "place", placeId, isLoggedIn); } catch { container.textContent = "Gallery could not load."; } },
+        render: (container) => {
+ try {
+ displayMedia(container, "place", placeId, isLoggedIn); 
+} catch {
+ container.textContent = "Gallery could not load."; 
+} 
+},
       },
       {
         title: "Reviews",
         id: "reviews-tab",
-        render: (container) => { try { displayReviews(container, isCreator, isLoggedIn, "place", placeId); } catch { container.textContent = "Reviews unavailable."; } },
+        render: (container) => {
+ try {
+ displayReviews(container, isCreator, isLoggedIn, "place", placeId); 
+} catch {
+ container.textContent = "Reviews unavailable."; 
+} 
+},
       },
     );
 
@@ -204,7 +225,13 @@ export default async function displayPlace(isLoggedIn, placeId, contentContainer
       {
         title: "Jobs",
         id: "jobs-tab",
-        render: (container) => { try { displayPlaceJobs(container, isCreator, isLoggedIn, "place", placeId); } catch { container.textContent = "No jobs available."; } },
+        render: (container) => {
+ try {
+ displayPlaceJobs(container, isCreator, isLoggedIn, "place", placeId); 
+} catch {
+ container.textContent = "No jobs available."; 
+} 
+},
       },
     );
     // }
@@ -221,13 +248,20 @@ export default async function displayPlace(isLoggedIn, placeId, contentContainer
 
 // ─── Bookmark Utility Functions ─────────────────────────────────────────
 function getBookmarks() {
-  try { return JSON.parse(localStorage.getItem("bookmarked_places") || "[]"); } catch { return []; }
+  try {
+ return JSON.parse(localStorage.getItem("bookmarked_places") || "[]"); 
+} catch {
+ return []; 
+}
 }
 
 function toggleBookmark(placeId) {
   let bookmarks = getBookmarks();
-  if (bookmarks.includes(placeId)) bookmarks = bookmarks.filter(id => id !== placeId);
-  else bookmarks.push(placeId);
+  if (bookmarks.includes(placeId)) {
+bookmarks = bookmarks.filter(id => id !== placeId);
+} else {
+bookmarks.push(placeId);
+}
   localStorage.setItem("bookmarked_places", JSON.stringify(bookmarks));
 }
 

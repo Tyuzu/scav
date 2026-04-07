@@ -8,7 +8,9 @@ let dayCount = 0;
 /* ---------- helpers ---------- */
 
 function clearNode(node) {
-  while (node.firstChild) node.removeChild(node.firstChild);
+  while (node.firstChild) {
+node.removeChild(node.firstChild);
+}
 }
 
 function showFormError(form, message) {
@@ -24,7 +26,9 @@ function showFormError(form, message) {
 
 function clearFormError(form) {
   const box = form.querySelector(".form-error");
-  if (box) box.textContent = "";
+  if (box) {
+box.textContent = "";
+}
 }
 
 function createInputField({ name, type, placeholder, required, id, label, value, classes }) {
@@ -41,10 +45,18 @@ function createInputField({ name, type, placeholder, required, id, label, value,
       ? createElement("textarea", { name, id }, [])
       : createElement("input", { type, name, id }, []);
 
-  if (placeholder) input.setAttribute("placeholder", placeholder);
-  if (required) input.required = true;
-  if (value !== undefined) input.value = value;
-  if (classes) input.setAttribute("class", classes);
+  if (placeholder) {
+input.setAttribute("placeholder", placeholder);
+}
+  if (required) {
+input.required = true;
+}
+  if (value !== undefined) {
+input.value = value;
+}
+  if (classes) {
+input.setAttribute("class", classes);
+}
 
   group.append(input);
   return group;
@@ -59,7 +71,9 @@ function createTransportDropdown(selected) {
 
   ["airplane", "car", "train", "walking", "other"].forEach(v => {
     const opt = createElement("option", { value: v }, [v]);
-    if (selected === v) opt.selected = true;
+    if (selected === v) {
+opt.selected = true;
+}
     select.append(opt);
   });
 
@@ -175,7 +189,9 @@ function createStatusDropdown(selected) {
 
   ["draft", "confirmed"].forEach(v => {
     const opt = createElement("option", { value: v }, [v]);
-    if (selected === v) opt.selected = true;
+    if (selected === v) {
+opt.selected = true;
+}
     select.append(opt);
   });
 
@@ -190,7 +206,9 @@ function buildPayload(form, daysContainer, itineraryId) {
 
   daysContainer.querySelectorAll(".day-section").forEach(dayDiv => {
     const date = dayDiv.querySelector(".day-date").value;
-    if (!date) return;
+    if (!date) {
+return;
+}
 
     const visits = [];
     dayDiv.querySelectorAll(".visit-entry").forEach(v => {
@@ -198,17 +216,25 @@ function buildPayload(form, daysContainer, itineraryId) {
       const start = v.querySelector(".start-time").value;
       const end = v.querySelector(".end-time").value;
 
-      if (!location || !start || !end) return;
-      if (start >= end) return;
+      if (!location || !start || !end) {
+return;
+}
+      if (start >= end) {
+return;
+}
 
       const t = v.querySelector(".transport-mode");
       const visit = { location, start_time: start, end_time: end };
-      if (t) visit.transport = t.value;
+      if (t) {
+visit.transport = t.value;
+}
 
       visits.push(visit);
     });
 
-    if (visits.length) days.push({ date, visits });
+    if (visits.length) {
+days.push({ date, visits });
+}
   });
 
   return {

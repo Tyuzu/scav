@@ -2,7 +2,9 @@ import Imagex from "../../../components/base/Imagex.js";
 import { resolveImagePath, EntityType, PictureType } from "../../../utils/imagePaths.js";
 
 export function renderAvatar(msg, { isMine }) {
-  if (isMine || !msg.sender) return null;
+  if (isMine || !msg.sender) {
+return null;
+}
 
   return Imagex(
     {

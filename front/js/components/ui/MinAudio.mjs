@@ -99,7 +99,9 @@ function MinAudio(audioSrc) {
     const opt = document.createElement("option");
     opt.value = rate;
     opt.textContent = `${rate}x`;
-    if (rate === 1) opt.selected = true;
+    if (rate === 1) {
+opt.selected = true;
+}
     speedControl.appendChild(opt);
   });
 

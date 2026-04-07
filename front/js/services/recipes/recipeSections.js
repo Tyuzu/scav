@@ -22,11 +22,16 @@ export function renderIngredients(ingredients, isLoggedIn, recipe) {
 
   function makeAddBtn(item, qty, unit) {
     const btn = Button("Add to Cart", "", {}, "small-button");
-    btn.addEventListener("click", () =>
-      addToCart({
+    btn.addEventListener("click", async () =>
+      await addToCart({
         itemId: item.itemId,
         quantity: qty || 1,
-        isLoggedIn
+        isLoggedIn: Boolean(getState("token")),
+        itemType: "ingredient",
+        itemName: item.name,
+        entityType: "recipe",
+        entityId: recipe?.recipeid,
+        entityName: recipe?.name
       })
     );
     return btn;
@@ -40,11 +45,13 @@ export function renderIngredients(ingredients, isLoggedIn, recipe) {
 
     li.appendChild(textContainer);
 
-    if (!ing.itemId)
-      li.appendChild(createElement("span", { class: "warning" }, ["Unavailable in store"]));
+    if (!ing.itemId) {
+li.appendChild(createElement("span", { class: "warning" }, ["Unavailable in store"]));
+}
 
-    if (isLoggedIn && ing.itemId)
-      li.appendChild(makeAddBtn(ing, ing.quantity, ing.unit));
+    if (isLoggedIn && ing.itemId) {
+li.appendChild(makeAddBtn(ing, ing.quantity, ing.unit));
+}
 
     // Author controls
     if (getState("user")?.id === recipe.userId) {

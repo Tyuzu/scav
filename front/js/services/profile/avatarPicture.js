@@ -27,7 +27,9 @@ export async function updateAvatar() {
 
       const croppedBlob = await openCropper({ file: fileInput.files[0], type: "avatar" });
       document.body.removeChild(fileInput);
-      if (!croppedBlob) return resolve(false);
+      if (!croppedBlob) {
+return resolve(false);
+}
 
       showLoadingMessage("Updating avatar picture...");
       try {
@@ -35,7 +37,9 @@ export async function updateAvatar() {
         formData.append("avatar_picture", croppedBlob, "avatar.jpg");
 
         const response = await bannerFetch(`/api/v1/profile/avatar`, 'PUT', formData);
-        if (!response?.avatar) throw new Error("No avatar returned from server.");
+        if (!response?.avatar) {
+throw new Error("No avatar returned from server.");
+}
 
         const currentProfile = getState("userProfile") || {};
         setState({ userProfile: { ...currentProfile, avatar: response.avatar } }, true);
@@ -70,12 +74,16 @@ export function createAvatar(profile) {
   img.src = thumbSrc;
   img.alt = "Profile Picture";
   img.loading = "lazy";
-  img.onerror = () => { img.src = "/assets/icon-192.png"; };
+  img.onerror = () => {
+ img.src = "/assets/icon-192.png"; 
+};
   img.classList.add("imgful");
 
   thumb.appendChild(img);
 
-  if (profile.avatar) thumb.addEventListener("click", () => SightBox(fullSrc, "image"));
+  if (profile.avatar) {
+thumb.addEventListener("click", () => SightBox(fullSrc, "image"));
+}
   profileArea.appendChild(thumb);
 
   if (profile.userid === getState("user")) {

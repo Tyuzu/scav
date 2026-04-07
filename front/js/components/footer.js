@@ -7,7 +7,9 @@ import { createElement } from "../components/createElement.js";
 
 const handleNavigation = (event, href) => {
     event.preventDefault();
-    if (!href) return console.error("handleNavigation received null href");
+    if (!href) {
+return console.error("handleNavigation received null href");
+}
     navigate(href);
 };
 
@@ -41,7 +43,9 @@ const Footer = () => {
         "aria-label": "Select Page Language",
         onchange: async (e) => {
             const lang = e.target.value;
-            if (lang) await setLanguage(lang);
+            if (lang) {
+await setLanguage(lang);
+}
         }
     }, [
         createElement("option", { value: "en" }, ["English"]),

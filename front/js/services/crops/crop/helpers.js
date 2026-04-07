@@ -1,6 +1,8 @@
 import { createElement } from "../../../components/createElement";
 export function clearElement(el) {
-    while (el.firstChild) el.removeChild(el.firstChild);
+    while (el.firstChild) {
+el.removeChild(el.firstChild);
+}
   }
   
   export function createOption(value, text) {

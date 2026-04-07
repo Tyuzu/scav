@@ -38,8 +38,12 @@ const Figurex = (
   const img = document.createElement("img");
   img.src = src;
   img.alt = alt; // Ensures accessibility
-  if (srcset) img.srcset = srcset;
-  if (sizes) img.sizes = sizes;
+  if (srcset) {
+img.srcset = srcset;
+}
+  if (sizes) {
+img.sizes = sizes;
+}
 
   // Add custom event listeners to the image
   for (const [event, handler] of Object.entries(events)) {

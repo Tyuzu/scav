@@ -20,7 +20,9 @@ export function setupProgress(video, progressBar, progressIndicator) {
     });
   
     document.addEventListener("mousemove", (e) => {
-      if (isDragging) seek(e);
+      if (isDragging) {
+seek(e);
+}
     });
   
     document.addEventListener("mouseup", () => {

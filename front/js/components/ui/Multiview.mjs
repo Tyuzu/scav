@@ -78,7 +78,9 @@ const MultiView = (images) => {
         isSliderDragging = true;
       };
       const onSliderMouseMove = (event) => {
-        if (!isSliderDragging) return;
+        if (!isSliderDragging) {
+return;
+}
         const containerRect = slider.parentElement.getBoundingClientRect();
         let percentage =
           ((event.clientX - containerRect.left) / containerRect.width) * 100;
@@ -105,7 +107,9 @@ const MultiView = (images) => {
       slider.addEventListener(
         'touchmove',
         (event) => {
-          if (!isSliderDragging) return;
+          if (!isSliderDragging) {
+return;
+}
           const touch = event.touches[0];
           const containerRect = slider.parentElement.getBoundingClientRect();
           let percentage =

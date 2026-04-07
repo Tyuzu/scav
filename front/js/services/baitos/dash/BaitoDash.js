@@ -148,8 +148,9 @@ export async function baitoEmployerDash(container) {
   container.appendChild(createElement("h2", {}, ["🏢 Your Posted Baitos"]));
 
   let jobs = [];
-  try { jobs = await apiFetch("/baitos/mine"); }
-  catch {
+  try {
+ jobs = await apiFetch("/baitos/mine"); 
+} catch {
     container.appendChild(createElement("p", { class: "error" }, ["❌ Failed to load your baito listings."]));
     return;
   }

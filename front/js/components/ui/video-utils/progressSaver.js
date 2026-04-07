@@ -1,5 +1,7 @@
 export function saveVideoProgress(video, postId) {
-    if (!postId) return;
+    if (!postId) {
+return;
+}
   
     const interval = setInterval(() => {
       if (!video.paused && video.currentTime > 0) {
@@ -9,7 +11,9 @@ export function saveVideoProgress(video, postId) {
   
     video.addEventListener("loadedmetadata", () => {
       const saved = localStorage.getItem(`videoProgress-${postId}`);
-      if (saved) video.currentTime = parseFloat(saved);
+      if (saved) {
+video.currentTime = parseFloat(saved);
+}
     });
   
     video.addEventListener("ended", () => {

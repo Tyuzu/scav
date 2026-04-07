@@ -71,12 +71,16 @@ function getEnvInfo() {
 function enqueue(event) {
   queue.push({ ...event, ts: Date.now() });
   saveQueue();
-  if (queue.length >= MAX_BATCH) flush();
+  if (queue.length >= MAX_BATCH) {
+flush();
+}
 }
 
 // --- Core sync ---
 async function flush() {
-  if (!queue.length || !navigator.onLine || isSyncing) return;
+  if (!queue.length || !navigator.onLine || isSyncing) {
+return;
+}
 
   isSyncing = true;
   const payload = queue.slice();
@@ -100,8 +104,11 @@ async function flush() {
       console.warn("Activity sync failed:", err.message);
       retryDelay = Math.min(retryDelay * RETRY_MULTIPLIER, MAX_RETRY_DELAY);
       setTimeout(() => {
-        if (navigator.onLine) attemptSend();
-        else isSyncing = false;
+        if (navigator.onLine) {
+attemptSend();
+} else {
+isSyncing = false;
+}
       }, retryDelay);
     }
   }
@@ -123,7 +130,9 @@ function track(type, data = {}) {
 // Deduplicated tracking
 const seenEvents = new Set();
 function dedupTrack(key, type, data = {}) {
-  if (seenEvents.has(key)) return;
+  if (seenEvents.has(key)) {
+return;
+}
   seenEvents.add(key);
   track(type, data);
 }
@@ -145,7 +154,9 @@ track("pageview");
 
 document.addEventListener("click", (e) => {
   const el = e.target.closest("a, button");
-  if (!el) return;
+  if (!el) {
+return;
+}
   const tag = el.tagName.toLowerCase();
   const label = el.getAttribute("aria-label") || el.innerText?.slice(0, 40) || "";
   const href = el.href || null;
@@ -170,7 +181,7 @@ document.addEventListener("focusin", (e) => {
 });
 
 // --- Time on page ---
-let pageStart = Date.now();
+const pageStart = Date.now();
 window.addEventListener("beforeunload", () => {
   const duration = Date.now() - pageStart;
   track("time_on_page", { duration });
@@ -184,9 +195,15 @@ window.addEventListener("online", flush);
 setInterval(flush, INTERVAL_MS);
 
 // --- Public API ---
-function trackPageView() { track("page_view"); }
-function trackButtonClick(buttonName) { track("button_click", { button: buttonName }); }
-function trackPurchase(itemId, price) { track("purchase", { itemId, price }); }
+function trackPageView() {
+ track("page_view"); 
+}
+function trackButtonClick(buttonName) {
+ track("button_click", { button: buttonName }); 
+}
+function trackPurchase(itemId, price) {
+ track("purchase", { itemId, price }); 
+}
 
 export {
   track,

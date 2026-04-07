@@ -112,7 +112,9 @@ function createProfileActions(profile, isLoggedIn) {
             "Report",
             "report-btn",
             {
-                click: () => { reportPost(profile.userid, "user"); }
+                click: () => {
+ reportPost(profile.userid, "user"); 
+}
             },
             "report-btn",
             { backgroundColor: "#ee9090" }

@@ -9,6 +9,7 @@
     "preview": "vite preview",
     "prebuild": "node scripts/generate-manifest.mjs",
     "build": "npm run generate-sitemap && vite build",
+    "build:analyze": "vite build --analyze",
     "generate-sitemap": "node scripts/generate-sitemap.mjs",
     "lint": "eslint js/ --fix",
     "lint:check": "eslint js/",

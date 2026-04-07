@@ -12,7 +12,9 @@ function createImageField(label, id, currentSrc, previewId) {
     currentImg.src = currentSrc;
     currentImg.loading = "lazy";
     currentImg.style.maxWidth = "200px";
-    if (!currentSrc) currentImg.style.display = "none";
+    if (!currentSrc) {
+currentImg.style.display = "none";
+}
 
     const fileInput = document.createElement("input");
     fileInput.type = "file";

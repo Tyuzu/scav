@@ -28,7 +28,9 @@ export function setupMessageActions(msg, socket) {
     ]);
     editItem.firstChild.addEventListener("click", () => {
       const wrapper = document.getElementById(`msg-${msg.id || msg.messageid}`);
-      if (!wrapper) return;
+      if (!wrapper) {
+return;
+}
 
       const input = createElement("input", { 
         type: "text", 
@@ -80,7 +82,9 @@ export function setupMessageActions(msg, socket) {
 }
 
 export async function renderMessage(msg, container, currentUserId, socket) {
-  if (!msg || (!msg.id && !msg.messageid && !msg.content && !msg.files)) return;
+  if (!msg || (!msg.id && !msg.messageid && !msg.content && !msg.files)) {
+return;
+}
 
   const messageId = msg.id || msg.messageid || `temp-${msg.timestamp}`;
   let wrapper = document.getElementById(`msg-${messageId}`);

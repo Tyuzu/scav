@@ -26,7 +26,9 @@ export async function uploadChunk(formData, signal) {
         signal
     });
 
-    if (!res.ok) throw new Error("Chunk upload failed");
+    if (!res.ok) {
+throw new Error("Chunk upload failed");
+}
     return await res.json();
 }
 
@@ -70,7 +72,9 @@ export async function uploadFileInChunks({
                 success = true;
             } catch (err) {
                 attempt++;
-                if (attempt === maxRetries) throw err;
+                if (attempt === maxRetries) {
+throw err;
+}
                 await new Promise(res => setTimeout(res, 500 * attempt));
             }
         }
@@ -143,8 +147,12 @@ export async function uploadImagesWithQueue({
     const slots = Array.from({ length: concurrency }, (_, i) => startNext(i));
     await Promise.all(slots);
 
-    if (uploaded.length) onComplete(uploaded);
-    if (failed.length) onError(failed);
+    if (uploaded.length) {
+onComplete(uploaded);
+}
+    if (failed.length) {
+onError(failed);
+}
 
     return {
         cancelAll: () => controllers.forEach(ctrl => ctrl.abort())

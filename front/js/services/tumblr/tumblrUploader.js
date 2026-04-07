@@ -3,12 +3,16 @@ import { createEl } from "./tumblrHelpers.js";
 
 export function appendIfValue(obj, key, el) {
   const val = el?.value.trim();
-  if (val) obj[key] = val;
+  if (val) {
+obj[key] = val;
+}
 }
 
 export function appendTags(obj, el) {
   const tags = el?.value.split(",").map(t => t.trim()).filter(Boolean);
-  if (tags.length) obj.tags = tags;
+  if (tags.length) {
+obj.tags = tags;
+}
 }
 
 export function clearChildren(el) {

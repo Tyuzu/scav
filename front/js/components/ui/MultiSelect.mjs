@@ -24,7 +24,9 @@ function MultiSelect({ options = [], selected = [], placeholder = "", onChange }
   };
 
   document.addEventListener("click", (e) => {
-    if (!wrapper.contains(e.target)) closeDropdown();
+    if (!wrapper.contains(e.target)) {
+closeDropdown();
+}
   });
 
   input.addEventListener("focus", openDropdown);
@@ -35,7 +37,9 @@ function MultiSelect({ options = [], selected = [], placeholder = "", onChange }
   const refreshDropdown = () => {
     dropdown.replaceChildren();
 
-    if (!open) return;
+    if (!open) {
+return;
+}
 
     const query = input.value.trim().toLowerCase();
 

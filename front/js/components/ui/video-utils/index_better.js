@@ -44,9 +44,15 @@ const changeZoom = (delta, event, video) => {
 };
 
 // --- Flip & rotate ---
-const flipVideo = (video) => { flip = !flip; updateTransform(video); };
-const rotateVideo = (video, deg = 90) => { angle = (angle + deg) % 360; updateTransform(video); };
-const resetRotation = (video) => { angle = 0; updateTransform(video); };
+const flipVideo = (video) => {
+ flip = !flip; updateTransform(video); 
+};
+const rotateVideo = (video, deg = 90) => {
+ angle = (angle + deg) % 360; updateTransform(video); 
+};
+const resetRotation = (video) => {
+ angle = 0; updateTransform(video); 
+};
 
 // --- Gesture handlers ---
 const setupGestures = (video) => {
@@ -58,7 +64,9 @@ const setupGestures = (video) => {
 
   // Mouse drag
   const onMouseDown = (e) => {
-    if (zoomLevel <= 1) return;
+    if (zoomLevel <= 1) {
+return;
+}
     isDragging = true;
     startX = e.clientX - panX;
     startY = e.clientY - panY;
@@ -66,7 +74,9 @@ const setupGestures = (video) => {
   };
 
   const onMouseMove = (e) => {
-    if (!isDragging) return;
+    if (!isDragging) {
+return;
+}
     panX = e.clientX - startX;
     panY = e.clientY - startY;
     constrainPan(video);
@@ -110,7 +120,9 @@ const setupGestures = (video) => {
     }
   }, { passive: false });
 
-  video.addEventListener("touchend", () => { isDragging = false; });
+  video.addEventListener("touchend", () => {
+ isDragging = false; 
+});
 };
 
 // --- Utils ---
@@ -125,7 +137,9 @@ export function setupVideoUtilityFunctions(video, videoid) {
   setupGestures(video);     // drag + pinch + wheel zoom
   setupHotkeys(video);      // hotkeys
 
-  if (videoid) { saveVideoProgress(video, videoid); } // save progress
+  if (videoid) {
+ saveVideoProgress(video, videoid); 
+} // save progress
 
   if (window.matchMedia?.("(prefers-color-scheme: dark)").matches) {
     (video.parentElement || document.body).classList.add("dark-mode");

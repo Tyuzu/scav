@@ -51,10 +51,12 @@ export async function createActions(metadata, isCreator, postElement) {
     });
     actionsContainer.appendChild(commentButton);
 
-let embedURL = `${MAIN_URL}/embed/${postId}`;
-    let shareButton = createElement("button", {
+const embedURL = `${MAIN_URL}/embed/${postId}`;
+    const shareButton = createElement("button", {
         class: "comment", events: {
-            click: () => { navigator.clipboard.writeText(embedURL) }
+            click: () => {
+ navigator.clipboard.writeText(embedURL) 
+}
         }
     }, [svgToNode(shareSVG)]);
 

@@ -46,10 +46,14 @@ function isMobile() {
       if (document.fullscreenElement === videoPlayer) {
         videoPlayer.classList.add("fullscreen");
         showControls();
-        if (isMobile()) lockOrientation("landscape");
+        if (isMobile()) {
+lockOrientation("landscape");
+}
       } else {
         videoPlayer.classList.remove("fullscreen");
-        if (isMobile()) unlockOrientation();
+        if (isMobile()) {
+unlockOrientation();
+}
       }
     });
   

@@ -65,7 +65,9 @@ export async function displayCart(content, isLoggedIn) {
     {
       click: () => {
         const allItems = Object.values(grouped).flat();
-        if (!allItems.length) return;
+        if (!allItems.length) {
+return;
+}
         displayCheckout(container, allItems);
       }
     },

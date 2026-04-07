@@ -27,10 +27,14 @@ async function loadCropperAssets() {
 
   await whenDOMReady();
 
-  if (cropperAssetsLoaded && window.Cropper) return;
+  if (cropperAssetsLoaded && window.Cropper) {
+return;
+}
 
   const loadCSS = new Promise((resolve, reject) => {
-    if (document.querySelector(`link[href="${CSS_HREF}"]`)) return resolve();
+    if (document.querySelector(`link[href="${CSS_HREF}"]`)) {
+return resolve();
+}
     const link = createElement("link", { rel: "stylesheet", href: CSS_HREF });
     link.addEventListener("load", resolve);
     link.addEventListener("error", () => reject(new Error("Failed to load cropper CSS")));
@@ -38,7 +42,9 @@ async function loadCropperAssets() {
   });
 
   const loadJS = new Promise((resolve, reject) => {
-    if (window.Cropper) return resolve();
+    if (window.Cropper) {
+return resolve();
+}
     const existing = document.querySelector(`script[src="${JS_SRC}"]`);
     if (existing) {
       existing.addEventListener("load", resolve);
@@ -141,14 +147,24 @@ export async function openCropper({
     document.body.appendChild(overlay);
 
     let cropper = null;
-    let objectUrl = URL.createObjectURL(file);
+    const objectUrl = URL.createObjectURL(file);
     img.src = objectUrl;
 
     function cleanup() {
-      try { if (cropper) cropper.destroy(); } catch (e) {}
+      try {
+ if (cropper) {
+cropper.destroy();
+} 
+} catch (e) {}
       cropper = null;
-      if (objectUrl) { try { URL.revokeObjectURL(objectUrl); } catch (e) {} }
-      if (overlay && overlay.parentNode) overlay.parentNode.removeChild(overlay);
+      if (objectUrl) {
+ try {
+ URL.revokeObjectURL(objectUrl); 
+} catch (e) {} 
+}
+      if (overlay && overlay.parentNode) {
+overlay.parentNode.removeChild(overlay);
+}
       window.removeEventListener("resize", handleResize);
     }
 
@@ -156,7 +172,9 @@ export async function openCropper({
       const { width, height } = computeStageSize(cropTargetW, cropTargetH);
       stage.style.width = `${width}px`;
       stage.style.height = `${height}px`;
-      if (cropper) cropper.resize();
+      if (cropper) {
+cropper.resize();
+}
     }
 
     window.addEventListener("resize", handleResize);
@@ -197,7 +215,9 @@ export async function openCropper({
         zoomOut.addEventListener("click", () => cropper.zoom(-0.1));
       }
 
-      cancelBtn.addEventListener("click", () => { cleanup(); resolve(null); });
+      cancelBtn.addEventListener("click", () => {
+ cleanup(); resolve(null); 
+});
 
       confirmBtn.addEventListener("click", () => {
         try {
@@ -208,7 +228,9 @@ export async function openCropper({
             imageSmoothingEnabled: true,
             imageSmoothingQuality: "high"
           });
-          canvas.toBlob((blob) => { cleanup(); resolve(blob); }, outputFormat, outputQuality);
+          canvas.toBlob((blob) => {
+ cleanup(); resolve(blob); 
+}, outputFormat, outputQuality);
         } catch (err) {
           console.error("Crop failed:", err);
           cleanup();

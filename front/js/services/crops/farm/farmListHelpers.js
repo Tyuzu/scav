@@ -143,7 +143,9 @@ function createFarmBadges(farm) {
 // ---------- Sidebar Sections (Pure Renderers) ----------
 
 function renderFeaturedFarm(container, farm) {
-  if (!farm) return;
+  if (!farm) {
+return;
+}
 
   const farmId = String(farm.id || farm.farmid || "");
 
@@ -206,7 +208,9 @@ function renderFarmStats(container, farms) {
   const crops = new Set();
 
   for (const farm of farms) {
-    if (farm.location) locations.add(farm.location);
+    if (farm.location) {
+locations.add(farm.location);
+}
     (farm.crops || []).forEach(c => c?.name && crops.add(c.name));
   }
 

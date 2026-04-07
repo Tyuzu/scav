@@ -33,7 +33,7 @@ export function renderItemForm(container, mode, itemData, type, onDone) {
         { value: "Protective Gear", label: "Protective Gear" },
         { value: "Fertilizer Applicators", label: "Fertilizer Applicators" }
       ];
-    } else return [];
+    } return [];
   };
 
   // ---------- Form Groups ----------
@@ -128,7 +128,9 @@ export function renderItemForm(container, mode, itemData, type, onDone) {
       `delete-${type}-btn`,
       {
         click: async () => {
-          if (!confirm(`Delete this ${type}?`)) return;
+          if (!confirm(`Delete this ${type}?`)) {
+return;
+}
           try {
             await apiFetch(`/farm/${type}/${itemData.productid}`, "DELETE");
             onDone();
@@ -186,7 +188,9 @@ export function renderItemForm(container, mode, itemData, type, onDone) {
         headers: { "Content-Type": "application/json" }
       });
 
-      if (!res || !res.productid) throw new Error("Request failed");
+      if (!res || !res.productid) {
+throw new Error("Request failed");
+}
       onDone();
     } catch (err) {
       alert(`${mode === "create" ? "Create" : "Update"} failed`);

@@ -126,7 +126,9 @@ export async function render(rawPath, contentContainer) {
   // 2) Dynamic route match
   for (const route of dynamicRoutes) {
     const match = cleanPath.match(route.pattern);
-    if (!match) continue;
+    if (!match) {
+continue;
+}
 
     if (route.protected && !isLoggedIn) {
       localStorage.setItem("redirectAfterLogin", cleanPath);
@@ -161,10 +163,14 @@ export async function render(rawPath, contentContainer) {
    Redirect user after login — using token for reliability
 --------------------------------------------------------- */
 subscribe("token", (token) => {
-  if (!token) return;
+  if (!token) {
+return;
+}
 
   const redirect = localStorage.getItem("redirectAfterLogin");
-  if (!redirect) return;
+  if (!redirect) {
+return;
+}
 
   localStorage.removeItem("redirectAfterLogin");
 

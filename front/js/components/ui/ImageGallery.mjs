@@ -4,9 +4,15 @@ import ZoomBox from "./ZoomBox.mjs";
 
 function getMediaType(src) {
   const lower = src.toLowerCase();
-  if (/\.(jpg|jpeg|png|gif|webp|bmp|svg)$/.test(lower)) return "image";
-  if (/\.(mp4|webm|ogg|mov|avi|mkv)$/.test(lower)) return "video";
-  if (/\.(pdf)$/.test(lower)) return "pdf";
+  if (/\.(jpg|jpeg|png|gif|webp|bmp|svg)$/.test(lower)) {
+return "image";
+}
+  if (/\.(mp4|webm|ogg|mov|avi|mkv)$/.test(lower)) {
+return "video";
+}
+  if (/\.(pdf)$/.test(lower)) {
+return "pdf";
+}
   return "image"; // fallback
 }
 

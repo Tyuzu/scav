@@ -57,7 +57,9 @@ function setupVideoUtilityFunctions(video, videoid) {
     };
 
     const onMouseDown = (event) => {
-        if (zoomLevel <= 1) return;
+        if (zoomLevel <= 1) {
+return;
+}
         event.preventDefault();
         isDragging = true;
         startX = event.clientX - panX;
@@ -65,7 +67,9 @@ function setupVideoUtilityFunctions(video, videoid) {
     };
 
     const onMouseMove = (event) => {
-        if (!isDragging) return;
+        if (!isDragging) {
+return;
+}
         event.preventDefault();
         panX = event.clientX - startX;
         panY = event.clientY - startY;
@@ -112,7 +116,9 @@ function setupVideoUtilityFunctions(video, videoid) {
     };
 
     const onTouchMove = (event) => {
-        if (!isDragging || event.touches.length !== 1) return;
+        if (!isDragging || event.touches.length !== 1) {
+return;
+}
         panX = event.touches[0].clientX - startX;
         panY = event.touches[0].clientY - startY;
         constrainPan();
@@ -127,7 +133,9 @@ function setupVideoUtilityFunctions(video, videoid) {
     const isInputField = (element) => ["INPUT", "TEXTAREA"].includes(element.tagName) || element.isContentEditable;
 
     window.addEventListener("keydown", (e) => {
-        if (!hotkeysEnabled || isInputField(e.target)) return;
+        if (!hotkeysEnabled || isInputField(e.target)) {
+return;
+}
 
         e.preventDefault();
 
@@ -154,7 +162,9 @@ function setupVideoUtilityFunctions(video, videoid) {
             "Shift+ArrowDown": () => setVolume(video, -0.1),
             "Ctrl+ArrowLeft": () => video.currentTime = Math.max(0, video.currentTime - 5),
             "Ctrl+ArrowRight": () => video.currentTime = Math.min(video.duration, video.currentTime + 5),
-            "Alt+r": () => { angle = 0; video.style.width = ""; }, // Reset rotation
+            "Alt+r": () => {
+ angle = 0; video.style.width = ""; 
+}, // Reset rotation
         };
 
         const keyCombo = [
@@ -167,7 +177,9 @@ function setupVideoUtilityFunctions(video, videoid) {
 
         if (actions[keyCombo]) {
             actions[keyCombo]();
-            if (!["m", "v"].includes(e.key)) updateTransform(); // Only update transform if needed
+            if (!["m", "v"].includes(e.key)) {
+updateTransform();
+} // Only update transform if needed
         }
     });
 
@@ -229,9 +241,11 @@ function faster(video) {
 function saveVideoProgress(video, postIdArray) {
     // const postIds = Array.isArray(postIdArray) ? postIdArray : [];
     console.log("frhj", postIdArray);
-    let postId = postIdArray;
+    const postId = postIdArray;
 
-    if (!postId) return;
+    if (!postId) {
+return;
+}
 
     // Save progress every 5 seconds
     const saveInterval = setInterval(() => {

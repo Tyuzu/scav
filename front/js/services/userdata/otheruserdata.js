@@ -2,7 +2,7 @@ import { createElement } from "../../components/createElement.js";
 import { apiFetch } from "../../api/api.js";
 import Imagex from "../../components/base/Imagex.js";
 
-let stl = createElement('style');
+const stl = createElement('style');
 stl.innerHTML= `.user-profile-container {
     padding: 16px;
     font-family: sans-serif;

@@ -27,10 +27,14 @@ const BlockPlugins = {
     render: (block, update) => {
       const fileInput = createElement("input", { type: "file", accept: "image/*" });
       const preview = createElement("img", { class: "image-preview" });
-      if (block.url) preview.setAttribute("src", resolveImagePath("post", "photo", block.url));
+      if (block.url) {
+preview.setAttribute("src", resolveImagePath("post", "photo", block.url));
+}
 
       fileInput.addEventListener("change", async () => {
-        if (!fileInput.files.length) return;
+        if (!fileInput.files.length) {
+return;
+}
         const formData = new FormData();
         formData.append("image", fileInput.files[0]);
         try {
@@ -73,7 +77,9 @@ const BlockPlugins = {
       const urlInput = createElement("input", { type: "text", placeholder: "Video URL", value: block.url });
       const captionInput = createElement("input", { type: "text", placeholder: "Caption", value: block.caption });
       const preview = createElement("video", { controls: true, class: "video-preview" });
-      if (block.url) preview.setAttribute("src", block.url);
+      if (block.url) {
+preview.setAttribute("src", block.url);
+}
 
       urlInput.addEventListener("input", () => {
         update({ ...block, url: urlInput.value });
@@ -160,7 +166,9 @@ function createBlockManager(blocksContainer, blocksTextarea) {
     blocksContainer.replaceChildren();
     blocks.forEach((block, i) => {
       const plugin = BlockPlugins[block.type];
-      if (!plugin) return;
+      if (!plugin) {
+return;
+}
 
       const node = plugin.render(block, (newBlock) => {
         blocks[i] = newBlock;
@@ -183,7 +191,9 @@ function createBlockManager(blocksContainer, blocksTextarea) {
 
   function setupDrag(node, i) {
     node.addEventListener("dragstart", e => e.dataTransfer.setData("text/plain", i));
-    node.addEventListener("dragover", e => { e.preventDefault(); node.classList.add("drag-over"); });
+    node.addEventListener("dragover", e => {
+ e.preventDefault(); node.classList.add("drag-over"); 
+});
     node.addEventListener("dragleave", () => node.classList.remove("drag-over"));
     node.addEventListener("drop", e => {
       e.preventDefault();
@@ -200,7 +210,9 @@ function createBlockManager(blocksContainer, blocksTextarea) {
 
   function addBlock(type) {
     const plugin = BlockPlugins[type];
-    if (!plugin) return console.warn("Unknown block type:", type);
+    if (!plugin) {
+return console.warn("Unknown block type:", type);
+}
     blocks.push(plugin.create());
     render();
     sync();
@@ -211,7 +223,9 @@ function createBlockManager(blocksContainer, blocksTextarea) {
   }
 
   return {
-    setBlocks: b => { blocks = b; render(); sync(); },
+    setBlocks: b => {
+ blocks = b; render(); sync(); 
+},
     addBlock,
     getBlocks: () => blocks,
     getSanitizedBlocks,
@@ -376,7 +390,9 @@ async function renderPostEditor({ isLoggedIn, postId, contentContainer, mode }) 
 
       cfg.fields.forEach(f => {
         const el = extraFieldsContainer.querySelector(`[name=${f.id}]`);
-        if (el && el.value.trim()) formData.append(f.id, el.value.trim());
+        if (el && el.value.trim()) {
+formData.append(f.id, el.value.trim());
+}
       });
 
       formData.append("blocks", JSON.stringify(blockManager.getSanitizedBlocks(), null, 2));

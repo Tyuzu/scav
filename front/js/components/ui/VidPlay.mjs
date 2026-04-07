@@ -27,7 +27,9 @@ const VidPlay = (videoSrc, poster, qualities, subtitles, videoid) => {
     if (document.getElementById("app").contains(player)) {
       player.remove();
       window.removeEventListener("popstate", onPopState);
-      if (triggerBack) history.back();
+      if (triggerBack) {
+history.back();
+}
     }
   }
 

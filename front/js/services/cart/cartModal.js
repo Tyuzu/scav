@@ -78,8 +78,11 @@ function groupCart(items) {
   const map = {};
   items.forEach(it => {
     const key = it.itemId + (it.entityId || "");
-    if (!map[key]) map[key] = { ...it };
-    else map[key].quantity += it.quantity;
+    if (!map[key]) {
+map[key] = { ...it };
+} else {
+map[key].quantity += it.quantity;
+}
   });
   return Object.values(map);
 }

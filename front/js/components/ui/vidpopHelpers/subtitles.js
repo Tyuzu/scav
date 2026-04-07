@@ -10,7 +10,7 @@ async function setupSubtitles(video, subtitles, subtitleContainer) {
     }))
   );
 
-  let currentSubtitleTrackIndex = -1;
+  const currentSubtitleTrackIndex = -1;
 
   video.addEventListener("timeupdate", () => {
     if (currentSubtitleTrackIndex === -1) {

@@ -118,8 +118,12 @@ export function displayTumblr(isLoggedIn, root) {
       previews[cfg.type] = preview;
       container.append(input, preview);
 
-      if (cfg.type === "image") wireImageUpload(input, preview);
-      if (cfg.type === "video") wireVideoUpload(input, preview);
+      if (cfg.type === "image") {
+wireImageUpload(input, preview);
+}
+      if (cfg.type === "video") {
+wireVideoUpload(input, preview);
+}
     }
 
     cfg.fields.forEach(field => {
@@ -203,7 +207,9 @@ export function displayTumblr(isLoggedIn, root) {
   function wireImageUpload(input, preview) {
     input.addEventListener("change", async () => {
       const files = Array.from(input.files);
-      if (!files.length) return;
+      if (!files.length) {
+return;
+}
 
       state.uploading.image = true;
       updatePublishState();
@@ -232,7 +238,9 @@ export function displayTumblr(isLoggedIn, root) {
 
     input.addEventListener("change", async () => {
       const file = input.files[0];
-      if (!file) return;
+      if (!file) {
+return;
+}
 
       if (state.videoObjectUrl) {
         URL.revokeObjectURL(state.videoObjectUrl);

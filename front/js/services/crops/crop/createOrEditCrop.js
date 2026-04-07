@@ -144,7 +144,9 @@ export function createCommonCropForm({ crop = {}, currentFarmName = "", isEdit =
     function populateCrops(category) {
         cropSelect.innerHTML = '<option value="">Select Crop</option>';
         const crops = cropCategoryMap[category];
-        if (!crops) return cropSelect.disabled = true;
+        if (!crops) {
+return cropSelect.disabled = true;
+}
         crops.forEach(c => {
             const option = createElement("option", { value: c, selected: c === crop.name }, [c]);
             cropSelect.appendChild(option);

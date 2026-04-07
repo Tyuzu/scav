@@ -14,7 +14,9 @@ import Imagex from "../../components/base/Imagex.js";
  */
 export async function displayGtaMap(container, isLoggedIn, entity = "ls") {
   // remove previous children
-  while (container.firstChild) container.removeChild(container.firstChild);
+  while (container.firstChild) {
+container.removeChild(container.firstChild);
+}
 
   // remove previous resize listener if present to avoid duplicates
   if (container.__gtaMapResizeHandler) {
@@ -172,8 +174,12 @@ export async function displayGtaMap(container, isLoggedIn, entity = "ls") {
     el.addEventListener("click", (ev) => {
       ev.stopPropagation();
       // update infoPanel title/content by replacing children (no textContent)
-      while (infoTitle.firstChild) infoTitle.removeChild(infoTitle.firstChild);
-      while (infoContent.firstChild) infoContent.removeChild(infoContent.firstChild);
+      while (infoTitle.firstChild) {
+infoTitle.removeChild(infoTitle.firstChild);
+}
+      while (infoContent.firstChild) {
+infoContent.removeChild(infoContent.firstChild);
+}
       infoTitle.appendChild(createElement("span", {}, [marker.name]));
       infoContent.appendChild(createElement("span", {}, [`Type: ${marker.type}`]));
       infoPanel.style.display = "block";
@@ -187,8 +193,8 @@ export async function displayGtaMap(container, isLoggedIn, entity = "ls") {
   let skipLocks = false;
   if (lockedAreas.length > 0 && markers.length > 0) {
     outer:
-    for (let area of lockedAreas) {
-      for (let mk of markers) {
+    for (const area of lockedAreas) {
+      for (const mk of markers) {
         if (mk.x >= area.x && mk.x <= area.x + area.width && mk.y >= area.y && mk.y <= area.y + area.height) {
           skipLocks = true;
           console.warn("Locked areas overlap markers — skipping lock overlays to keep markers visible.");
@@ -202,8 +208,12 @@ export async function displayGtaMap(container, isLoggedIn, entity = "ls") {
     lockedLayer.style.pointerEvents = "auto";
     lockedAreas.forEach((area) => {
       const lockInfoNodes = [];
-      if (area.dependsOn) lockInfoNodes.push(createElement("div", {}, [`Requires: ${String(area.dependsOn).toUpperCase()}`]));
-      if (area.condition) lockInfoNodes.push(createElement("div", {}, [String(area.condition)]));
+      if (area.dependsOn) {
+lockInfoNodes.push(createElement("div", {}, [`Requires: ${String(area.dependsOn).toUpperCase()}`]));
+}
+      if (area.condition) {
+lockInfoNodes.push(createElement("div", {}, [String(area.condition)]));
+}
 
       const lockedDiv = createElement("div", {
         class: "locked-area",
@@ -263,7 +273,9 @@ export async function displayGtaMap(container, isLoggedIn, entity = "ls") {
   });
 
   document.addEventListener("mousemove", (e) => {
-    if (!isDragging) return;
+    if (!isDragging) {
+return;
+}
     mapX += e.clientX - startX;
     mapY += e.clientY - startY;
     startX = e.clientX;
@@ -278,8 +290,12 @@ export async function displayGtaMap(container, isLoggedIn, entity = "ls") {
 
   // zoom buttons
   const [zoomInBtn, zoomOutBtn] = zoomControls.querySelectorAll("button");
-  zoomInBtn.addEventListener("click", () => { zoom += zoomStep; applyTransform(); });
-  zoomOutBtn.addEventListener("click", () => { zoom = Math.max(0.5, zoom - zoomStep); applyTransform(); });
+  zoomInBtn.addEventListener("click", () => {
+ zoom += zoomStep; applyTransform(); 
+});
+  zoomOutBtn.addEventListener("click", () => {
+ zoom = Math.max(0.5, zoom - zoomStep); applyTransform(); 
+});
 
   // Legend toggle with L
   document.addEventListener("keydown", (ev) => {

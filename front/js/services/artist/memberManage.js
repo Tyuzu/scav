@@ -50,7 +50,9 @@ export function createUploadControls(member, artist, img) {
 
     fileInput.addEventListener("change", async () => {
         const file = fileInput.files[0];
-        if (!file) return;
+        if (!file) {
+return;
+}
 
         try {
             const uploaded = await uploadFile({

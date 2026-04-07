@@ -193,7 +193,9 @@ export const createZoomableMedia = (src, type = "image") => {
   }
 
   function momentumScroll() {
-    if (!state.momentum) return;
+    if (!state.momentum) {
+return;
+}
     state.offsetX += state.velocityX * 0.9;
     state.offsetY += state.velocityY * 0.9;
     state.velocityX *= 0.9;

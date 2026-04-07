@@ -18,7 +18,9 @@ export function createFormGroup({
 
   if (label) {
     const labelAttrs = {};
-    if (id) labelAttrs.for = id;
+    if (id) {
+labelAttrs.for = id;
+}
     const labelElement = createElement("label", labelAttrs, [label]);
     group.appendChild(labelElement);
   }
@@ -33,13 +35,17 @@ export function createFormGroup({
         name: inputName || undefined,
         placeholder: placeholder || undefined
       });
-      if (value !== undefined && value !== null) inputElement.value = String(value);
+      if (value !== undefined && value !== null) {
+inputElement.value = String(value);
+}
       break;
 
     case "select":
     case "multiselect":
       inputElement = createElement("select", { id: id || undefined, name: inputName || undefined });
-      if (type === "multiselect" || multiple) inputElement.multiple = true;
+      if (type === "multiselect" || multiple) {
+inputElement.multiple = true;
+}
 
       if (placeholder) {
         const placeholderOption = createElement("option", { value: "", disabled: true, selected: !value }, [placeholder]);
@@ -51,7 +57,9 @@ export function createFormGroup({
           typeof opt === "string" ? { value: opt, label: opt } : opt;
 
         const optionAttrs = { value: optValue };
-        if (optValue === "" && !placeholder) optionAttrs.disabled = true;
+        if (optValue === "" && !placeholder) {
+optionAttrs.disabled = true;
+}
 
         const option = createElement("option", optionAttrs, [optLabel]);
 
@@ -87,7 +95,9 @@ export function createFormGroup({
         name: inputName || undefined,
         accept: accept || undefined
       });
-      if (multiple) inputElement.multiple = true;
+      if (multiple) {
+inputElement.multiple = true;
+}
       break;
 
     default:
@@ -98,17 +108,26 @@ export function createFormGroup({
         placeholder: placeholder || undefined,
         value: (value != null) ? String(value) : ""
       });
-      if (accept) inputElement.accept = accept;
-      if (type === "file" && multiple) inputElement.multiple = true;
+      if (accept) {
+inputElement.accept = accept;
+}
+      if (type === "file" && multiple) {
+inputElement.multiple = true;
+}
       break;
   }
 
-  if (required) inputElement.required = true;
+  if (required) {
+inputElement.required = true;
+}
 
   Object.entries(additionalProps).forEach(([key, val]) => {
     try {
-      if (key in inputElement) inputElement[key] = val;
-      else inputElement.setAttribute(key, String(val));
+      if (key in inputElement) {
+inputElement[key] = val;
+} else {
+inputElement.setAttribute(key, String(val));
+}
     } catch {
       inputElement.setAttribute(key, String(val));
     }
@@ -117,7 +136,9 @@ export function createFormGroup({
   group.appendChild(inputElement);
 
   // Append any additional nodes like character counters
-  if (Array.isArray(additionalNodes)) additionalNodes.forEach(node => group.appendChild(node));
+  if (Array.isArray(additionalNodes)) {
+additionalNodes.forEach(node => group.appendChild(node));
+}
 
   return group;
 }

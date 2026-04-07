@@ -7,7 +7,9 @@ const Accordion = (sections = []) => {
   sections.forEach(({ title, content, open = false }) => {
     const details = document.createElement("details");
     details.className = "accordion-section";
-    if (open) details.open = true;
+    if (open) {
+details.open = true;
+}
 
     const summary = document.createElement("summary");
     summary.className = "accordion-header";

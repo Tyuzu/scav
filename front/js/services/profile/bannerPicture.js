@@ -24,7 +24,9 @@ export async function updateBanner() {
       entityId: profile.userid
     });
 
-    if (!response?.banner) throw new Error("No banner returned from server.");
+    if (!response?.banner) {
+throw new Error("No banner returned from server.");
+}
 
     const currentProfile = getState("userProfile") || {};
     setState({ userProfile: { ...currentProfile, banner: response.banner } }, true);
@@ -32,7 +34,9 @@ export async function updateBanner() {
     Notify(`${capitalize("banner")} updated successfully.`, { type: "success", duration: 3000, dismissible: true });
 
     const preview = document.getElementById("banner-picture-preview");
-    if (preview) preview.src = resolveImagePath(EntityType.USER, PictureType.BANNER, response.banner) + `?t=${Date.now()}`;
+    if (preview) {
+preview.src = resolveImagePath(EntityType.USER, PictureType.BANNER, response.banner) + `?t=${Date.now()}`;
+}
 
     return true;
   } catch (err) {

@@ -15,15 +15,17 @@ export default defineConfig({
     rollupOptions: {
       output: {
         // Split chunks for better caching and parallelization
-        manualChunks: {
+        manualChunks: (id) => {
           // Vendor chunks
-          'vendor-ui': ['hls.js'],
-          'vendor-util': ['uuid'],
+          if (id.includes('node_modules/hls.js')) return 'vendor-hls';
+          if (id.includes('node_modules/uuid')) return 'vendor-uuid';
           
           // Feature chunks (split by route/feature)
-          'routes': ['./js/routes'],
-          'services': ['./js/services'],
-          'components': ['./js/components'],
+          if (id.includes('/js/routes/')) return 'chunk-routes';
+          if (id.includes('/js/services/')) return 'chunk-services';
+          if (id.includes('/js/components/')) return 'chunk-components';
+          if (id.includes('/js/api/')) return 'chunk-api';
+          if (id.includes('/js/state/')) return 'chunk-state';
         },
         
         // Further optimize dynamic imports

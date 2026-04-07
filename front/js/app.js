@@ -18,7 +18,9 @@ import { detectLanguage, setLanguage } from "./i18n/i18n.js";
 async function measureEnvironment() {
   const measurePerformance = async () => {
     const t0 = performance.now();
-    for (let i = 0; i < 100000; i++) Math.sqrt(i);
+    for (let i = 0; i < 100000; i++) {
+Math.sqrt(i);
+}
     const t1 = performance.now();
     return Math.max(100 - (t1 - t0), 0);
   };
@@ -54,7 +56,7 @@ async function profileEnvironment() {
         window.__env = parsed.data;
         return;
       }
-    } catch (e) {
+    } catch (_e) {
       localStorage.removeItem(ENV_CACHE_KEY); // Clear corrupted cache
     }
   }
@@ -87,7 +89,9 @@ async function profileEnvironment() {
 let offlineTimer = null;
 
 function showOfflineBanner() {
-  if (document.getElementById("offline-banner")) return;
+  if (document.getElementById("offline-banner")) {
+return;
+}
   const banner = document.createElement("div");
   banner.id = "offline-banner";
   Object.assign(banner.style, {
@@ -108,7 +112,9 @@ function showOfflineBanner() {
 
 function removeOfflineBanner() {
   const banner = document.getElementById("offline-banner");
-  if (banner) banner.remove();
+  if (banner) {
+banner.remove();
+}
 }
 
 window.addEventListener("offline", () => {
@@ -121,22 +127,81 @@ window.addEventListener("online", () => {
   offlineTimer = setTimeout(removeOfflineBanner, 1000);
 });
 
-// --- App Init ---
-async function init() {
+// --- Start App ---
+window.addEventListener("error", (event) => {
+  console.error("🚨 Uncaught error:", event.error);
+  // Dispatch to error tracker if available
+  if (window.__errorTracker) {
+    window.__errorTracker.track(event.error, {
+      type: "uncaught_error",
+      message: event.message,
+      filename: event.filename,
+      lineno: event.lineno,
+      colno: event.colno
+    });
+  }
+});
+
+window.addEventListener("unhandledrejection", (event) => {
+  console.error("🚨 Unhandled rejection:", event.reason);
+  // Dispatch to error tracker if available
+  if (window.__errorTracker) {
+    window.__errorTracker.track(event.reason, {
+      type: "unhandled_rejection"
+    });
+  }
+});
+
+async function setupPerformanceMonitoring() {
+  if (!window.PerformanceObserver) {
+return;
+}
+
+  try {
+    const observer = new PerformanceObserver((list) => {
+      for (const entry of list.getEntries()) {
+        // Flag slow operations (> 3 seconds)
+        if (entry.duration > 3000) {
+          console.warn(`⚠️ Slow operation: ${entry.name} (${entry.duration.toFixed(0)}ms)`);
+          if (window.__errorTracker) {
+            window.__errorTracker.track(new Error("Performance degradation"), {
+              type: "slow_operation",
+              name: entry.name,
+              duration: entry.duration,
+              startTime: entry.startTime
+            });
+          }
+        }
+      }
+    });
+
+    observer.observe({ 
+      entryTypes: ["navigation", "resource", "paint", "largest-contentful-paint"],
+      buffered: true
+    });
+  } catch (e) {
+    console.warn("Performance monitoring unavailable:", e);
+  }
+}
+
+window.addEventListener("DOMContentLoaded", async () => {
   try {
     await profileEnvironment();
+    await setupPerformanceMonitoring();
 
     const lang = detectLanguage();
     await setLanguage(lang);
     await loadContent(window.location.pathname);
 
     window.addEventListener("popstate", async () => {
-      if (!document.hidden) await loadContent(window.location.pathname);
+      if (!document.hidden) {
+await loadContent(window.location.pathname);
+}
     });
 
     window.addEventListener("pageshow", async (event) => {
       if (event.persisted) {
-        console.log("Restored from bfcache");
+        console.warn("Restored from bfcache");
         const token = sessionStorage.getItem("token") || localStorage.getItem("token") || null;
         setState("token", token);
         await loadContent(window.location.pathname);
@@ -144,7 +209,9 @@ async function init() {
     });
 
     window.addEventListener("pagehide", (event) => {
-      if (event.persisted) console.log("Page *may* be cached by bfcache.");
+      if (event.persisted) {
+        console.warn("Page *may* be cached by bfcache.");
+      }
     });
 
     if (!navigator.onLine) {
@@ -152,56 +219,21 @@ async function init() {
       console.warn("📴 Offline mode: degraded functionality expected.");
     }
   } catch (error) {
-    console.error("App init failed:", error);
-    const errEl = document.createElement("h1");
-    errEl.textContent = "⚠️ Something went wrong. Please reload.";
+    console.error("🚨 App initialization failed:", error);
+    if (window.__errorTracker) {
+      window.__errorTracker.track(error, { type: "init_failure" });
+    }
+    const errEl = document.createElement("div");
+    Object.assign(errEl.style, {
+      padding: "2rem",
+      textAlign: "center",
+      fontFamily: "system-ui, -apple-system, sans-serif"
+    });
+    errEl.innerHTML = `
+      <h1>⚠️ Application Error</h1>
+      <p>Unable to start the application. Please refresh the page.</p>
+      <p style="font-size: 0.9em; color: #666;">${error.message}</p>
+    `;
     document.body.replaceChildren(errEl);
   }
-}
-
-// // --- PWA Install Prompt ---
-// let deferredPrompt = null;
-
-// window.addEventListener("beforeinstallprompt", (e) => {
-//   e.preventDefault();
-//   deferredPrompt = e;
-
-//   if (localStorage.getItem("pwa-dismissed")) return;
-
-//   let installBtn = document.getElementById("install-pwa");
-//   if (!installBtn) {
-//     installBtn = document.createElement("button");
-//     installBtn.id = "install-pwa";
-//     installBtn.textContent = "Install App";
-//     Object.assign(installBtn.style, {
-//       position: "fixed",
-//       top: "3rem",
-//       right: "0",
-//       zIndex: "10",
-//       padding: "0.6rem 1rem",
-//       background: "#1976d2",
-//       color: "#fff",
-//       border: "none",
-//       borderRadius: "4px",
-//       cursor: "pointer",
-//     });
-//     document.body.appendChild(installBtn);
-//   }
-
-//   installBtn.style.display = "block";
-//   installBtn.addEventListener(
-//     "click",
-//     () => {
-//       installBtn.style.display = "none";
-//       deferredPrompt.prompt();
-//       deferredPrompt.userChoice.then(({ outcome }) => {
-//         if (outcome !== "accepted") localStorage.setItem("pwa-dismissed", "1");
-//         deferredPrompt = null;
-//       });
-//     },
-//     { once: true }
-//   );
-// });
-
-// --- Start App ---
-window.addEventListener("DOMContentLoaded", init);
+});

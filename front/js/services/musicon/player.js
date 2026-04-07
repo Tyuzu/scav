@@ -61,9 +61,13 @@ class AudioPlayer {
     }
 
     async play(song, idx = undefined, startTime = 0) {
-        if (!song || !song.audioUrl) return;
+        if (!song || !song.audioUrl) {
+return;
+}
         const audio = this.state.audio;
-        if (!audio) return;
+        if (!audio) {
+return;
+}
 
         // if same song playing -> toggle pause
         if (this.state.currentSong === song && !audio.paused) {
@@ -78,7 +82,9 @@ class AudioPlayer {
             audio.volume = this.state.volume;
             audio.play();
             this.state.currentSong = song;
-            if (typeof idx === "number") this.state.currentIndex = idx;
+            if (typeof idx === "number") {
+this.state.currentIndex = idx;
+}
             console.log(`[player] Playing: ${song.title}`);
         };
 
@@ -96,7 +102,9 @@ class AudioPlayer {
                     audio.pause();
                     audio.volume = this.state.volume;
                     switchSong();
-                } else audio.volume = Math.max(0, vol);
+                } else {
+audio.volume = Math.max(0, vol);
+}
             }, step);
         } else {
             switchSong();
@@ -104,13 +112,17 @@ class AudioPlayer {
     }
 
     playNext() {
-        if (!this.state.queue?.length) return;
+        if (!this.state.queue?.length) {
+return;
+}
         this.state.currentIndex = this.state.shuffle ? Math.floor(Math.random() * this.state.queue.length) : (this.state.currentIndex + 1) % this.state.queue.length;
         this.play(this.state.queue[this.state.currentIndex], this.state.currentIndex);
     }
 
     playPrev() {
-        if (!this.state.queue?.length) return;
+        if (!this.state.queue?.length) {
+return;
+}
         this.state.currentIndex = this.state.shuffle ? Math.floor(Math.random() * this.state.queue.length) : (this.state.currentIndex - 1 + this.state.queue.length) % this.state.queue.length;
         this.play(this.state.queue[this.state.currentIndex], this.state.currentIndex);
     }
@@ -160,8 +172,16 @@ class PlayerUI {
     _setupEventListeners(audio, prevBtn, playBtn, pauseBtn, nextBtn) {
         prevBtn.addEventListener("click", () => this.audioPlayer.playPrev());
         nextBtn.addEventListener("click", () => this.audioPlayer.playNext());
-        playBtn.addEventListener("click", () => { if (audio.src) audio.play(); });
-        pauseBtn.addEventListener("click", () => { if (audio.src) audio.pause(); });
+        playBtn.addEventListener("click", () => {
+ if (audio.src) {
+audio.play();
+} 
+});
+        pauseBtn.addEventListener("click", () => {
+ if (audio.src) {
+audio.pause();
+} 
+});
 
         this.repeatBtn.addEventListener("click", () => {
             const currentIndex = REPEAT_MODES.indexOf(this.state.repeat);
@@ -193,8 +213,12 @@ class PlayerUI {
         audio.addEventListener("ended", () => {
             if (this.state.repeat === "one") {
                 const cur = this.state.queue[this.state.currentIndex];
-                if (cur) this.audioPlayer.play(cur, this.state.currentIndex, 0);
-            } else this.audioPlayer.playNext();
+                if (cur) {
+this.audioPlayer.play(cur, this.state.currentIndex, 0);
+}
+            } else {
+this.audioPlayer.playNext();
+}
         });
 
         // update UI when metadata loads (duration)
@@ -210,7 +234,9 @@ class PlayerUI {
                         const minutes = Math.floor(audio.duration / 60);
                         const seconds = Math.floor(audio.duration % 60).toString().padStart(2, "0");
                         // replace children safely
-                        while (metaEl.firstChild) metaEl.removeChild(metaEl.firstChild);
+                        while (metaEl.firstChild) {
+metaEl.removeChild(metaEl.firstChild);
+}
                         metaEl.append(createElement("span", {}, [`${cur.genre || ""} • ${minutes}:${seconds}`]));
                     }
                 }
@@ -222,13 +248,15 @@ class PlayerUI {
         this.footer = this.container.querySelector(".songs-footer");
         if (this.footer) {
             const audio = this.footer.querySelector("#songs-audio");
-            if (audio) this.state.audio = audio;
+            if (audio) {
+this.state.audio = audio;
+}
             return;
         }
 
-        let playcon = createElement("div", { "class": "playcon" }, []);
-        let progresscon = createElement("div", { "class": "progresscon" }, []);
-        let volumecon = createElement("div", { "class": "volumecon" }, []);
+        const playcon = createElement("div", { "class": "playcon" }, []);
+        const progresscon = createElement("div", { "class": "progresscon" }, []);
+        const volumecon = createElement("div", { "class": "volumecon" }, []);
 
         this.footer = createElement("footer", { class: "songs-footer hvflex" });
         const audio = this._createAudioElement();
@@ -282,7 +310,9 @@ class Player {
 
     reset() {
         this.state.reset();
-        if (this.state.audio) this.state.audio.pause();
+        if (this.state.audio) {
+this.state.audio.pause();
+}
         console.log("[player] Reset");
     }
 
@@ -294,7 +324,9 @@ class Player {
 export function initPlayer(container) {
     const player = new Player(container);
     activePlayer = {
-        play: (song, idx, startTime) => { player.play(song, idx, startTime); activePlayer = activePlayer; },
+        play: (song, idx, startTime) => {
+ player.play(song, idx, startTime); activePlayer = activePlayer; 
+},
         setQueue: (songs) => player.setQueue(songs),
         playNext: () => player.playNext(),
         playPrev: () => player.playPrev(),
@@ -308,12 +340,24 @@ export function initPlayer(container) {
 
 // Keyboard shortcuts (global)
 document.addEventListener("keydown", (e) => {
-    if (!activePlayer) return;
+    if (!activePlayer) {
+return;
+}
     const st = activePlayer.getState();
-    if (!st || !st.audio) return;
+    if (!st || !st.audio) {
+return;
+}
     const tag = document.activeElement?.tagName;
-    if (tag === "INPUT" || tag === "TEXTAREA") return;
-    if (e.code === "Space") { e.preventDefault(); st.audio.paused ? st.audio.play() : st.audio.pause(); }
-    if (e.code === "ArrowRight") activePlayer.playNext();
-    if (e.code === "ArrowLeft") activePlayer.playPrev();
+    if (tag === "INPUT" || tag === "TEXTAREA") {
+return;
+}
+    if (e.code === "Space") {
+ e.preventDefault(); st.audio.paused ? st.audio.play() : st.audio.pause(); 
+}
+    if (e.code === "ArrowRight") {
+activePlayer.playNext();
+}
+    if (e.code === "ArrowLeft") {
+activePlayer.playPrev();
+}
 });

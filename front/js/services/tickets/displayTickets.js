@@ -28,7 +28,9 @@ function createTicketCard(ticket, eventId, isCreator, isLoggedIn) {
         color: ticket.color || "#f3f3f3",
         attributes: { "data-ticket-id": ticket.ticketid },
         onClick: async () => {
-            if (!isLoggedIn || isCreator) return;
+            if (!isLoggedIn || isCreator) {
+return;
+}
           
             const quantityInput = createElement("input", {
               type: "number",

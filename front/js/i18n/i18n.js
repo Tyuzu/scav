@@ -1,7 +1,10 @@
-import { setState, getState } from "../state/state.js";
+import { setState } from "../state/state.js";
 
 let translations = {};
 let currentLang = "en";
+
+const SUPPORTED_LANGS = ["en", "ja"];
+const FALLBACK_LANG = "en";
 
 /**
  * Load translations from a JSON file and store in memory.
@@ -9,13 +12,34 @@ let currentLang = "en";
 async function loadTranslations(lang) {
   try {
     const res = await fetch(`/static/i18n/${lang}.json`);
+    if (!res.ok) {
+      throw new Error(`Failed to load ${lang} translations: ${res.status}`);
+    }
     translations = await res.json();
     currentLang = lang;
     localStorage.setItem("lang", lang);
     setState("lang", lang);
   } catch (err) {
     console.error(`Failed to load translations for "${lang}"`, err);
-    translations = {};
+    
+    // Fallback to default language if not already trying it
+    if (lang !== FALLBACK_LANG) {
+      console.warn(`Falling back to ${FALLBACK_LANG}`);
+      try {
+        const res = await fetch(`/static/i18n/${FALLBACK_LANG}.json`);
+        if (!res.ok) {
+throw new Error(`Cannot load fallback language`);
+}
+        translations = await res.json();
+        currentLang = FALLBACK_LANG;
+        setState("lang", FALLBACK_LANG);
+      } catch (fallbackErr) {
+        console.error(`Fallback language load failed:`, fallbackErr);
+        translations = {}; // Empty translations if all fail
+      }
+    } else {
+      translations = {}; // Empty translations if fallback fails
+    }
   }
 }
 
@@ -23,6 +47,10 @@ async function loadTranslations(lang) {
  * Set the current language and load its translations.
  */
 export async function setLanguage(lang) {
+  if (!SUPPORTED_LANGS.includes(lang)) {
+    console.warn(`Language "${lang}" not supported. Using ${FALLBACK_LANG}`);
+    lang = FALLBACK_LANG;
+  }
   await loadTranslations(lang);
 }
 
@@ -31,8 +59,23 @@ export async function setLanguage(lang) {
  */
 export function detectLanguage() {
   const saved = localStorage.getItem("lang");
-  if (saved) return saved;
-  return navigator.language.startsWith("ja") ? "ja" : "en"; // use "ja" for Japanese
+  if (saved && SUPPORTED_LANGS.includes(saved)) {
+return saved;
+}
+  
+  // Browser language chain with fallback
+  const browseLangs = navigator.languages || [navigator.language];
+  for (const browserLang of browseLangs) {
+    const base = browserLang.split("-")[0];
+    if (SUPPORTED_LANGS.includes(base)) {
+return base;
+}
+    if (SUPPORTED_LANGS.includes(browserLang)) {
+return browserLang;
+}
+  }
+  
+  return FALLBACK_LANG;
 }
 
 /**
@@ -59,7 +102,10 @@ export function t(key, vars = {}, fallback = "") {
     template = translations[pluralKey] || template;
   }
 
-  if (!template) template = fallback || key;
+  if (!template) {
+    console.warn(`Missing translation: ${key}`);
+    template = fallback || key;
+  }
 
   // Interpolation
   return template.replace(/\{(\w+)\}/g, (_, k) =>

@@ -55,10 +55,15 @@ function renderSeatingChart(canvas, seatData, isLoggedIn) {
 
         // Seat colors based on status
         let color;
-        if (status === "available") color = "green";
-        else if (status === "booked") color = "red";
-        else if (status === "VIP") color = "gold";
-        else color = "gray";
+        if (status === "available") {
+color = "green";
+} else if (status === "booked") {
+color = "red";
+} else if (status === "VIP") {
+color = "gold";
+} else {
+color = "gray";
+}
 
         ctx.fillStyle = color;
         ctx.fillRect(x, y, seatSize, seatSize);

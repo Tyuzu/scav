@@ -108,7 +108,9 @@ const Galleryx = ({
         Notify("Updating images...", { type: "info", duration: 1500, dismissible: true });
         const result = await onSubmit(payload); // Your fetch or API handler
         Notify("Images updated successfully!", { type: "success", duration: 3000, dismissible: true });
-        if (typeof onSuccess === "function") onSuccess(result);
+        if (typeof onSuccess === "function") {
+onSuccess(result);
+}
       } catch (err) {
         Notify(`Error: ${err.message || "Failed to update images."}`, { type: "error", duration: 4000, dismissible: true });
       } finally {

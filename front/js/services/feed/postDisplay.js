@@ -16,7 +16,7 @@ async function displayPost(isLoggedIn, postId, contentContainer) {
 
         clearContainer(contentContainer);
 
-        let containerx = createElement("div",{id:"feedpostcon"},[]);
+        const containerx = createElement("div",{id:"feedpostcon"},[]);
         contentContainer.appendChild(containerx);
 
         const isAuthor = getState("user") === postData.userid;

@@ -17,7 +17,9 @@ const Imagex = (attributes = {}) => {
   const img = createElement("img", rest);
 
   // Async decoding
-  if (decodeAsync) img.decoding = "async";
+  if (decodeAsync) {
+img.decoding = "async";
+}
 
   // Fallback on error
   let triedFallback = false;

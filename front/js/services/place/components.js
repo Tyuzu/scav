@@ -1,6 +1,8 @@
 // GalleryComponent: displays an image gallery
 function GalleryComponent(images = [], title = "📸 Gallery") {
-    if (!images.length) return "";
+    if (!images.length) {
+return "";
+}
   
     return `
       <div class="gallery-component">
@@ -14,13 +16,17 @@ function GalleryComponent(images = [], title = "📸 Gallery") {
   
   // TagList: displays a list of tags as styled spans
   function TagList(tags = []) {
-    if (!tags.length) return "None";
+    if (!tags.length) {
+return "None";
+}
     return tags.map(tag => `<span class="tag">${tag}</span>`).join(" ");
   }
   
   // SocialLinks: generates social media links with icons
   function SocialLinks(links = []) {
-    if (!links.length) return "";
+    if (!links.length) {
+return "";
+}
     return `
       <div class="social-links">
         <h3>🔗 Follow Us</h3>
@@ -35,7 +41,9 @@ function GalleryComponent(images = [], title = "📸 Gallery") {
   // CustomFields: renders custom field key-value pairs
   function CustomFields(fields = {}) {
     const entries = Object.entries(fields);
-    if (!entries.length) return "<p>No custom fields provided.</p>";
+    if (!entries.length) {
+return "<p>No custom fields provided.</p>";
+}
     return `
       <div class="custom-fields">
         <h3>📄 Additional Info</h3>

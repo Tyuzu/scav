@@ -5,7 +5,9 @@ import { xSVG } from "../svgs";
 
 const LightBox = (div) => {
   // prevent duplicate instance
-  if (document.getElementById("sightbox")) return;
+  if (document.getElementById("sightbox")) {
+return;
+}
 
   const lightbox = document.createElement("div");
   lightbox.id = "sightbox";
@@ -81,11 +83,15 @@ const LightBox = (div) => {
 
   // clean close
   function closeLightBox(fromPop = false) {
-    if (!document.body.contains(lightbox)) return;
+    if (!document.body.contains(lightbox)) {
+return;
+}
     lightbox.remove();
     window.removeEventListener("keydown", onKeyDown);
     window.removeEventListener("popstate", onPopState);
-    if (!fromPop) history.back();
+    if (!fromPop) {
+history.back();
+}
   }
 
   window.addEventListener("keydown", onKeyDown);
