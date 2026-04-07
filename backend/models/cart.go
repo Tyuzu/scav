@@ -4,6 +4,7 @@ import "time"
 
 // CartItem represents a single item in the user's cart.
 type CartItem struct {
+	CartItemID string    `json:"cartItemId" bson:"_id,omitempty"`
 	UserID     string    `json:"userId" bson:"userId"`
 	Category   string    `json:"category" bson:"category"`
 	ItemID     string    `json:"itemId" bson:"itemId"`

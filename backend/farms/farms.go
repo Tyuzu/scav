@@ -2,12 +2,15 @@ package farms
 
 import (
 	"encoding/json"
+	"log"
 	"net/http"
 	"strings"
 	"time"
 
+	"naevis/auditlog"
 	"naevis/globals"
 	"naevis/infra"
+	"naevis/middleware"
 	"naevis/models"
 	"naevis/utils"
 
@@ -23,35 +26,31 @@ func CreateFarm(app *infra.Deps) httprouter.Handle {
 	return func(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
 		ctx := r.Context()
 
-		if err := r.ParseMultipartForm(10 << 20); err != nil {
+		// SECURITY: Limit multipart form size to prevent DoS (max 50MB)
+		if err := r.ParseMultipartForm(50 << 20); err != nil {
+			log.Printf("Farm creation: form parse error from %s: %v", r.RemoteAddr, err)
 			utils.RespondWithJSON(w, http.StatusBadRequest, utils.M{
 				"success": false,
-				"message": "Failed to parse form",
+				"message": "Invalid form data",
 			})
 			return
 		}
 
 		requestingUserID, ok := ctx.Value(globals.UserIDKey).(string)
 		if !ok {
-			http.Error(w, "Invalid user", http.StatusBadRequest)
+			http.Error(w, "Unauthorized", http.StatusUnauthorized)
 			return
 		}
 
-		farm := models.Farm{
-			FarmID:             utils.GenerateRandomString(14),
-			Name:               r.FormValue("name"),
-			Location:           r.FormValue("location"),
-			Description:        r.FormValue("description"),
-			Owner:              r.FormValue("owner"),
-			Contact:            r.FormValue("contact"),
-			AvailabilityTiming: r.FormValue("availabilityTiming"),
-			Crops:              []models.Crop{},
-			CreatedBy:          requestingUserID,
-			CreatedAt:          time.Now(),
-			UpdatedAt:          time.Now(),
-		}
+		name := strings.TrimSpace(r.FormValue("name"))
+		location := strings.TrimSpace(r.FormValue("location"))
+		description := strings.TrimSpace(r.FormValue("description"))
+		owner := strings.TrimSpace(r.FormValue("owner"))
+		contact := strings.TrimSpace(r.FormValue("contact"))
+		availabilityTiming := strings.TrimSpace(r.FormValue("availabilityTiming"))
 
-		if farm.Name == "" || farm.Location == "" || farm.Owner == "" || farm.Contact == "" {
+		// Validation
+		if name == "" || location == "" || owner == "" || contact == "" {
 			utils.RespondWithJSON(w, http.StatusBadRequest, utils.M{
 				"success": false,
 				"message": "Missing required fields",
@@ -59,13 +58,54 @@ func CreateFarm(app *infra.Deps) httprouter.Handle {
 			return
 		}
 
-		if err := app.DB.InsertOne(ctx, farmsCollection, farm); err != nil {
-			utils.RespondWithJSON(w, http.StatusInternalServerError, utils.M{
+		// SECURITY: Validate email/phone format
+		if !middleware.ValidatePhone(contact) && !middleware.ValidateEmail(contact) {
+			log.Printf("Farm creation: invalid contact format from user %s: %s", requestingUserID, contact)
+			utils.RespondWithJSON(w, http.StatusBadRequest, utils.M{
 				"success": false,
-				"message": "Failed to insert farm",
+				"message": "Invalid contact format. Provide valid email or phone number",
 			})
 			return
 		}
+
+		// Check input length to prevent injection/spam
+		if len(name) > 200 || len(location) > 500 || len(description) > 2000 {
+			utils.RespondWithJSON(w, http.StatusBadRequest, utils.M{
+				"success": false,
+				"message": "Field values too long",
+			})
+			return
+		}
+
+		farm := models.Farm{
+			FarmID:             utils.GenerateRandomString(14),
+			Name:               name,
+			Location:           location,
+			Description:        description,
+			Owner:              owner,
+			Contact:            contact,
+			AvailabilityTiming: availabilityTiming,
+			Crops:              []models.Crop{},
+			CreatedBy:          requestingUserID,
+			CreatedAt:          time.Now(),
+			UpdatedAt:          time.Now(),
+		}
+
+		if err := app.DB.InsertOne(ctx, farmsCollection, farm); err != nil {
+			log.Printf("Farm creation failed for user %s: %v", requestingUserID, err)
+			utils.RespondWithJSON(w, http.StatusInternalServerError, utils.M{
+				"success": false,
+				"message": "Failed to create farm",
+			})
+			return
+		}
+
+		// SECURITY: Log audit trail
+		go auditlog.LogAction(ctx, app, r, requestingUserID, models.AuditActionFarmCreate,
+			"farm", farm.FarmID, "success", map[string]interface{}{
+				"name":     farm.Name,
+				"location": farm.Location,
+			})
 
 		utils.RespondWithJSON(w, http.StatusOK, utils.M{
 			"success": true,

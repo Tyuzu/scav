@@ -57,7 +57,8 @@ func ConfirmMerchPurchase(app *infra.Deps) httprouter.Handle {
 		ctx := r.Context()
 
 		var body struct {
-			Quantity int `json:"quantity"`
+			Quantity int     `json:"quantity"`
+			Price    float64 `json:"price,omitempty"` // Optional, will be verified against DB
 		}
 		if err := json.NewDecoder(r.Body).Decode(&body); err != nil || body.Quantity < 1 {
 			http.Error(w, "Invalid request body", http.StatusBadRequest)
@@ -70,6 +71,36 @@ func ConfirmMerchPurchase(app *infra.Deps) httprouter.Handle {
 		userID, ok := ctx.Value(globals.UserIDKey).(string)
 		if !ok || userID == "" {
 			http.Error(w, "Invalid user", http.StatusUnauthorized)
+			return
+		}
+
+		// SECURITY: First lookup current merch details to verify price
+		var currentMerch models.Merch
+		if err := app.DB.FindOne(
+			ctx,
+			merchCollection,
+			bson.M{
+				"entity_id": eventID,
+				"merchid":   merchID,
+			},
+			&currentMerch,
+		); err != nil {
+			http.Error(w, "Merch not found", http.StatusNotFound)
+			return
+		}
+
+		// Verify price matches current database price (with small tolerance for floating point)
+		if body.Price > 0 {
+			priceDiff := currentMerch.Price - body.Price
+			if priceDiff < -0.01 || priceDiff > 0.01 { // Allow 1 paise tolerance
+				http.Error(w, "Price mismatch. Please refresh and try again", http.StatusConflict)
+				return
+			}
+		}
+
+		// Check stock availability
+		if currentMerch.Stock < body.Quantity {
+			http.Error(w, "Not enough merch available", http.StatusBadRequest)
 			return
 		}
 
@@ -111,6 +142,7 @@ func ConfirmMerchPurchase(app *infra.Deps) httprouter.Handle {
 				"eventId":        updatedMerch.EntityID,
 				"quantityBought": body.Quantity,
 				"remainingStock": updatedMerch.Stock,
+				"unitPrice":      currentMerch.Price,
 			},
 		}
 

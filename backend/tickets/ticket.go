@@ -25,6 +25,25 @@ func CreateTicket(app *infra.Deps) httprouter.Handle {
 			return
 		}
 
+		// SECURITY: Verify user is authenticated
+		userID, ok := r.Context().Value(globals.UserIDKey).(string)
+		if !ok || userID == "" {
+			http.Error(w, "Unauthorized", http.StatusUnauthorized)
+			return
+		}
+
+		// SECURITY: Verify user is the event owner
+		var event models.Event
+		if err := app.DB.FindOne(r.Context(), "events", map[string]interface{}{"eventid": eventID}, &event); err != nil {
+			http.Error(w, "Event not found", http.StatusNotFound)
+			return
+		}
+
+		if event.CreatorID != userID {
+			http.Error(w, "Forbidden: Only event owner can create tickets", http.StatusForbidden)
+			return
+		}
+
 		var payload struct {
 			Name      string  `json:"name"`
 			Price     float64 `json:"price"`

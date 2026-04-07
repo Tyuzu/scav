@@ -7,6 +7,7 @@ import (
 	"net/http"
 	"time"
 
+	"naevis/auditlog"
 	"naevis/infra"
 	"naevis/models"
 	"naevis/utils"
@@ -45,19 +46,25 @@ func BuyCrop(app *infra.Deps) httprouter.Handle {
 		farmID := ps.ByName("farmid")
 		cropID := ps.ByName("cropid")
 
-		filter := bson.M{
-			"farmid":           farmID,
-			"crops.cropid":     cropID,
-			"crops.quantity":   bson.M{"$gt": 0},
-			"crops.outOfStock": false,
-		}
+		// SECURITY: Use atomic FindOneAndUpdate to prevent race condition
+		// This ensures only one concurrent request can successfully decrement inventory
+		var updatedCrop bson.M
+		err := app.DB.FindOneAndUpdate(
+			ctx,
+			cropsCollection,
+			bson.M{
+				"farmid":     farmID,
+				"cropid":     cropID,
+				"quantity":   bson.M{"$gt": 0}, // Atomic check
+				"outOfStock": false,
+			},
+			bson.M{
+				"$inc": bson.M{"quantity": -1},
+				"$set": bson.M{"updatedAt": time.Now()},
+			},
+			&updatedCrop,
+		)
 
-		update := bson.M{
-			"$inc": bson.M{"crops.$.quantity": -1},
-			"$set": bson.M{"crops.$.updatedAt": time.Now()},
-		}
-
-		err := app.DB.UpdateOne(ctx, farmsCollection, filter, update)
 		if err != nil {
 			utils.RespondWithJSON(
 				w,
@@ -67,18 +74,15 @@ func BuyCrop(app *infra.Deps) httprouter.Handle {
 			return
 		}
 
-		filterZero := bson.M{
-			"farmid":         farmID,
-			"crops.cropid":   cropID,
-			"crops.quantity": 0,
+		// Check if this was the last crop (quantity is now 0)
+		if quantity, ok := updatedCrop["quantity"].(int32); ok && quantity == 0 {
+			app.DB.UpdateOne(
+				ctx,
+				cropsCollection,
+				bson.M{"farmid": farmID, "cropid": cropID},
+				bson.M{"$set": bson.M{"outOfStock": true}},
+			)
 		}
-
-		_ = app.DB.UpdateOne(
-			ctx,
-			farmsCollection,
-			filterZero,
-			bson.M{"$set": bson.M{"crops.$.outOfStock": true}},
-		)
 
 		utils.RespondWithJSON(w, http.StatusOK, utils.M{"success": true})
 	}
@@ -90,18 +94,79 @@ func BuyCrop(app *infra.Deps) httprouter.Handle {
 
 func updateOrderStatus(
 	w http.ResponseWriter,
+	r *http.Request,
 	orderID string,
 	newStatus string,
 	app *infra.Deps,
 ) {
-	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	ctx, cancel := context.WithTimeout(r.Context(), 5*time.Second)
 	defer cancel()
+
+	// SECURITY: Verify the user is the farm owner
+	userID := utils.GetUserIDFromRequest(r)
+	if userID == "" {
+		http.Error(w, "Unauthorized", http.StatusUnauthorized)
+		return
+	}
+
+	// Fetch the order to verify the requester is the farm owner
+	var order models.FarmOrder
+	if err := app.DB.FindOne(ctx, farmOrdersCollection, bson.M{"orderid": orderID}, &order); err != nil {
+		utils.RespondWithJSON(
+			w,
+			http.StatusNotFound,
+			utils.M{"success": false, "message": "Order not found"},
+		)
+		return
+	}
+
+	// Verify authorization: only the farm owner can change order status
+	var farm models.Farm
+	if err := app.DB.FindOne(ctx, farmsCollection, bson.M{"farmid": order.FarmID}, &farm); err != nil {
+		utils.RespondWithJSON(
+			w,
+			http.StatusNotFound,
+			utils.M{"success": false, "message": "Farm not found"},
+		)
+		return
+	}
+
+	if farm.CreatedBy != userID {
+		http.Error(w, "Forbidden: Only farm owner can update order status", http.StatusForbidden)
+		return
+	}
+
+	// Prevent invalid status transitions
+	validTransitions := map[string][]string{
+		"pending":   {"accepted", "rejected"},
+		"accepted":  {"paid", "rejected"},
+		"paid":      {"delivered"},
+		"rejected":  {},
+		"delivered": {},
+	}
+
+	allowed := false
+	for _, validStatus := range validTransitions[string(order.Status)] {
+		if validStatus == newStatus {
+			allowed = true
+			break
+		}
+	}
+
+	if !allowed {
+		utils.RespondWithJSON(
+			w,
+			http.StatusBadRequest,
+			utils.M{"success": false, "message": "Invalid status transition from " + string(order.Status) + " to " + newStatus},
+		)
+		return
+	}
 
 	err := app.DB.UpdateOne(
 		ctx,
 		farmOrdersCollection,
 		bson.M{"orderid": orderID},
-		bson.M{"$set": bson.M{"status": newStatus}},
+		bson.M{"$set": bson.M{"status": newStatus, "updatedat": time.Now()}},
 	)
 
 	if err != nil {
@@ -113,6 +178,36 @@ func updateOrderStatus(
 		return
 	}
 
+	// SECURITY: Log audit trail for farm order status changes
+	auditAction := ""
+	switch newStatus {
+	case "accepted":
+		auditAction = models.AuditActionOrderAccept
+	case "rejected":
+		auditAction = models.AuditActionOrderReject
+	case "paid":
+		auditAction = models.AuditActionOrderMarkPaid
+	case "delivered":
+		auditAction = models.AuditActionOrderMarkDeliver
+	}
+
+	if auditAction != "" {
+		auditlog.LogAction(
+			ctx,
+			app,
+			r,
+			userID,
+			auditAction,
+			"farm_order",
+			orderID,
+			"success",
+			map[string]interface{}{
+				"oldStatus": order.Status,
+				"newStatus": newStatus,
+			},
+		)
+	}
+
 	utils.RespondWithJSON(
 		w,
 		http.StatusOK,
@@ -122,25 +217,25 @@ func updateOrderStatus(
 
 func AcceptOrder(app *infra.Deps) httprouter.Handle {
 	return func(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
-		updateOrderStatus(w, ps.ByName("id"), "accepted", app)
+		updateOrderStatus(w, r, ps.ByName("id"), "accepted", app)
 	}
 }
 
 func RejectOrder(app *infra.Deps) httprouter.Handle {
 	return func(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
-		updateOrderStatus(w, ps.ByName("id"), "rejected", app)
+		updateOrderStatus(w, r, ps.ByName("id"), "rejected", app)
 	}
 }
 
 func MarkOrderDelivered(app *infra.Deps) httprouter.Handle {
 	return func(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
-		updateOrderStatus(w, ps.ByName("id"), "delivered", app)
+		updateOrderStatus(w, r, ps.ByName("id"), "delivered", app)
 	}
 }
 
 func MarkOrderPaid(app *infra.Deps) httprouter.Handle {
 	return func(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
-		updateOrderStatus(w, ps.ByName("id"), "paid", app)
+		updateOrderStatus(w, r, ps.ByName("id"), "paid", app)
 	}
 }
 

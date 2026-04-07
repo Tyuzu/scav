@@ -7,6 +7,7 @@ import (
 	"net/http"
 	"time"
 
+	"naevis/auditlog"
 	"naevis/globals"
 	"naevis/infra"
 	"naevis/models"
@@ -36,6 +37,48 @@ func CreateMerch(app *infra.Deps) httprouter.Handle {
 		if !validateEntityType(entityType) {
 			respond(w, 400, map[string]any{"success": false, "error": "invalid entity type"})
 			return
+		}
+
+		// SECURITY: Verify user is authenticated
+		userID, ok := r.Context().Value(globals.UserIDKey).(string)
+		if !ok || userID == "" {
+			respond(w, 401, map[string]any{"success": false, "error": "unauthorized"})
+			return
+		}
+
+		// SECURITY: Verify user is the owner of the entity
+		collection := ""
+		switch entityType {
+		case "event":
+			collection = "events"
+		case "farm":
+			collection = "farms"
+		case "artist":
+			collection = "artists"
+		}
+
+		if collection != "" {
+			var ownerEntity bson.M
+			err := app.DB.FindOne(r.Context(), collection, bson.M{
+				"eventid": eventID,
+			}, &ownerEntity)
+
+			if err != nil {
+				respond(w, 404, map[string]any{"success": false, "error": "entity not found"})
+				return
+			}
+
+			// Check ownership based on entity type
+			createdBy, ok := ownerEntity["createdBy"].(string)
+			if !ok {
+				respond(w, 403, map[string]any{"success": false, "error": "cannot verify ownership"})
+				return
+			}
+
+			if createdBy != userID {
+				respond(w, 403, map[string]any{"success": false, "error": "forbidden: only entity owner can create merch"})
+				return
+			}
 		}
 
 		var body struct {
@@ -73,6 +116,20 @@ func CreateMerch(app *infra.Deps) httprouter.Handle {
 			return
 		}
 
+		// Log audit trail for merchandise creation
+		auditlog.LogAction(
+			r.Context(), app, r, userID,
+			models.AuditActionMerchCreate,
+			"merchandise", merch.MerchID, "success",
+			map[string]interface{}{
+				"name":        merch.Name,
+				"price":       merch.Price,
+				"stock":       merch.Stock,
+				"entity_type": entityType,
+				"entity_id":   eventID,
+			},
+		)
+
 		respond(w, 201, map[string]any{"success": true, "data": merch})
 	}
 }
@@ -83,6 +140,42 @@ func EditMerch(app *infra.Deps) httprouter.Handle {
 		entityType := ps.ByName("entityType")
 		eventID := ps.ByName("eventid")
 		merchID := ps.ByName("merchid")
+
+		// SECURITY: Verify user is authenticated
+		userID, ok := r.Context().Value(globals.UserIDKey).(string)
+		if !ok || userID == "" {
+			respond(w, 401, map[string]any{"success": false, "error": "unauthorized"})
+			return
+		}
+
+		// SECURITY: Verify user is the owner of the entity
+		collection := ""
+		switch entityType {
+		case "event":
+			collection = "events"
+		case "farm":
+			collection = "farms"
+		case "artist":
+			collection = "artists"
+		}
+
+		if collection != "" {
+			var ownerEntity bson.M
+			err := app.DB.FindOne(r.Context(), collection, bson.M{
+				"eventid": eventID,
+			}, &ownerEntity)
+
+			if err != nil {
+				respond(w, 404, map[string]any{"success": false, "error": "entity not found"})
+				return
+			}
+
+			createdBy, ok := ownerEntity["createdBy"].(string)
+			if !ok || createdBy != userID {
+				respond(w, 403, map[string]any{"success": false, "error": "forbidden: only entity owner can edit merch"})
+				return
+			}
+		}
 
 		var body struct {
 			Name  *string  `json:"name"`
@@ -124,6 +217,16 @@ func EditMerch(app *infra.Deps) httprouter.Handle {
 			return
 		}
 
+		// Log audit trail for merchandise update
+		auditlog.LogAction(
+			r.Context(), app, r, userID,
+			models.AuditActionMerchUpdate,
+			"merchandise", merchID, "success",
+			map[string]interface{}{
+				"updates": update,
+			},
+		)
+
 		respond(w, 200, map[string]any{"success": true})
 	}
 }
@@ -131,19 +234,76 @@ func EditMerch(app *infra.Deps) httprouter.Handle {
 // ---------------------- Delete Merch ----------------------
 func DeleteMerch(app *infra.Deps) httprouter.Handle {
 	return func(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
-		_, err := app.DB.DeleteOne(
+		entityType := ps.ByName("entityType")
+		eventID := ps.ByName("eventid")
+		merchID := ps.ByName("merchid")
+
+		// SECURITY: Verify user is authenticated
+		userID, ok := r.Context().Value(globals.UserIDKey).(string)
+		if !ok || userID == "" {
+			respond(w, 401, map[string]any{"success": false, "error": "unauthorized"})
+			return
+		}
+
+		// SECURITY: Verify user is the owner of the entity
+		collection := ""
+		switch entityType {
+		case "event":
+			collection = "events"
+		case "farm":
+			collection = "farms"
+		case "artist":
+			collection = "artists"
+		}
+
+		if collection != "" {
+			var ownerEntity bson.M
+			err := app.DB.FindOne(r.Context(), collection, bson.M{
+				"eventid": eventID,
+			}, &ownerEntity)
+
+			if err != nil {
+				respond(w, 404, map[string]any{"success": false, "error": "entity not found"})
+				return
+			}
+
+			createdBy, ok := ownerEntity["createdBy"].(string)
+			if !ok || createdBy != userID {
+				respond(w, 403, map[string]any{"success": false, "error": "forbidden: only entity owner can delete merch"})
+				return
+			}
+		}
+
+		// SECURITY: Use soft delete instead of hard delete
+		now := time.Now()
+		err := app.DB.UpdateOne(
 			r.Context(),
 			merchCollection,
 			bson.M{
-				"entity_type": ps.ByName("entityType"),
-				"entity_id":   ps.ByName("eventid"),
-				"merchid":     ps.ByName("merchid"),
+				"entity_type": entityType,
+				"entity_id":   eventID,
+				"merchid":     merchID,
+				"deletedAt":   bson.M{"$exists": false}, // Only soft-delete if not already deleted
 			},
+			bson.M{"$set": bson.M{
+				"deletedAt": now,
+				"updatedat": now,
+			}},
 		)
 		if err != nil {
 			respond(w, 404, map[string]any{"success": false, "error": "merch not found"})
 			return
 		}
+
+		// Log audit trail for merchandise deletion
+		auditlog.LogAction(
+			r.Context(), app, r, userID,
+			models.AuditActionMerchDelete,
+			"merchandise", merchID, "success",
+			map[string]interface{}{
+				"deleted_at": now,
+			},
+		)
 
 		respond(w, 200, map[string]any{"success": true})
 	}

@@ -88,6 +88,7 @@ type Merch struct {
 	Tags        []string  `json:"tags,omitempty" bson:"tags,omitempty"`             // e.g. ["rock", "tshirt"]
 	CreatedAt   time.Time `json:"created_at" bson:"created_at"`
 	UpdatedAt   time.Time `json:"updated_at" bson:"updatedAt"`
+	DeletedAt   *time.Time `json:"deleted_at,omitempty" bson:"deletedAt,omitempty"` // Soft delete timestamp
 	UserID      string    `bson:"userid" json:"userid"`
 }
 

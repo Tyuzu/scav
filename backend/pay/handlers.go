@@ -2,6 +2,7 @@ package pay
 
 import (
 	"encoding/json"
+	"naevis/auditlog"
 	"naevis/models"
 	"naevis/utils"
 	"net/http"
@@ -92,6 +93,18 @@ func (p *PaymentService) TopUp(w http.ResponseWriter, r *http.Request, _ httprou
 		map[string]any{"$set": map[string]any{"state": "success", "updated_at": now}},
 	)
 
+	// Log audit trail for topup transaction
+	auditlog.LogAction(
+		ctx, p.app, r, userID,
+		models.AuditActionTopUp,
+		"transaction", txnID, "success",
+		map[string]interface{}{
+			"amount":  req.Amount,
+			"method":  req.Method,
+			"account": accID,
+		},
+	)
+
 	utils.RespondWithJSON(w, http.StatusOK, map[string]interface{}{
 		"success": true,
 	})
@@ -142,11 +155,32 @@ func (p *PaymentService) Pay(w http.ResponseWriter, r *http.Request, _ httproute
 		return
 	}
 
+	// SECURITY: Handle custom amounts carefully
 	if req.Amount > 0 {
 		if !rule.AllowCustomAmt {
 			http.Error(w, "custom amount not allowed", http.StatusBadRequest)
 			return
 		}
+		
+		// Only allow custom amounts for specific payment types (funding/donations)
+		// not for purchases, orders, etc
+		if req.PaymentType != "funding" && req.PaymentType != "donation" {
+			http.Error(w, "custom amounts only allowed for donations", http.StatusBadRequest)
+			return
+		}
+		
+		// SECURITY: Set reasonable limits on custom amounts
+		const maxCustomAmount = 1000000 // 10 lakh rupees max
+		if req.Amount > maxCustomAmount {
+			http.Error(w, "custom amount exceeds maximum limit", http.StatusBadRequest)
+			return
+		}
+		
+		if req.Amount < 0 {
+			http.Error(w, "amount must be positive", http.StatusBadRequest)
+			return
+		}
+		
 		price = req.Amount
 	}
 
@@ -261,6 +295,20 @@ func (p *PaymentService) Pay(w http.ResponseWriter, r *http.Request, _ httproute
 	}
 
 	p.successTxn(ctx, txnID)
+
+	// Log audit trail for payment transaction
+	auditlog.LogAction(
+		ctx, p.app, r, userID,
+		models.AuditActionPayment,
+		"transaction", txnID, "success",
+		map[string]interface{}{
+			"amount":       price,
+			"method":       req.Method,
+			"entity_type":  req.EntityType,
+			"entity_id":    req.EntityID,
+			"payment_type": req.PaymentType,
+		},
+	)
 
 	utils.RespondWithJSON(w, http.StatusOK, map[string]interface{}{
 		"success":        true,

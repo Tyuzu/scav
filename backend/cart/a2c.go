@@ -42,6 +42,32 @@ func AddToCart(app *infra.Deps) httprouter.Handle {
 
 		item.UserID = userID
 
+		// Look up and validate item details from database
+		itemDetails, err := lookupItemDetails(ctx, item.ItemID, app)
+		if err != nil {
+			log.Println("AddToCart lookup error:", err)
+			http.Error(w, "Item not found or unavailable: "+err.Error(), http.StatusBadRequest)
+			return
+		}
+
+		// Check if requested quantity is available
+		if item.Quantity > itemDetails.Available {
+			http.Error(w, "Requested quantity exceeds available stock", http.StatusBadRequest)
+			return
+		}
+
+		// Populate item with verified backend data
+		item.ItemName = itemDetails.Name
+		item.ItemType = itemDetails.Type
+		item.Unit = itemDetails.Unit
+		item.Price = itemDetails.Price // Use verified price from database
+		item.Category = itemDetails.Category
+		if itemDetails.EntityType != "" {
+			item.EntityID = itemDetails.EntityID
+			item.EntityName = itemDetails.EntityName
+			item.EntityType = itemDetails.EntityType
+		}
+
 		filter := bson.M{
 			"userId":     userID,
 			"itemId":     item.ItemID,
@@ -172,13 +198,27 @@ func InitiateCheckout(app *infra.Deps) httprouter.Handle {
 
 func CreateCheckoutSession(app *infra.Deps) httprouter.Handle {
 	return func(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
-		_, cancel := context.WithTimeout(r.Context(), 10*time.Second)
+		ctx, cancel := context.WithTimeout(r.Context(), 10*time.Second)
 		defer cancel()
 
-		var session models.CheckoutSession
-		if err := json.NewDecoder(r.Body).Decode(&session); err != nil {
+		var payload struct {
+			Address       string  `json:"address"`
+			PaymentMethod string  `json:"paymentMethod"`
+		}
+
+		if err := json.NewDecoder(r.Body).Decode(&payload); err != nil {
 			log.Println("CreateCheckoutSession decode error:", err)
 			http.Error(w, "Invalid session data", http.StatusBadRequest)
+			return
+		}
+
+		if payload.Address == "" {
+			http.Error(w, "Address is required", http.StatusBadRequest)
+			return
+		}
+
+		if payload.PaymentMethod == "" {
+			http.Error(w, "Payment method is required", http.StatusBadRequest)
 			return
 		}
 
@@ -188,8 +228,42 @@ func CreateCheckoutSession(app *infra.Deps) httprouter.Handle {
 			return
 		}
 
-		session.UserID = userID
-		session.CreatedAt = time.Now()
+		// Fetch user's cart items grouped by category
+		groupedItems, err := getGroupedCart(ctx, userID, "", app)
+		if err != nil {
+			http.Error(w, "Failed to retrieve cart", http.StatusInternalServerError)
+			return
+		}
+
+		if len(groupedItems) == 0 {
+			http.Error(w, "Cart is empty", http.StatusBadRequest)
+			return
+		}
+
+		// Calculate totals from cart items
+		var subtotal, tax float64 = 0, 0
+		for _, items := range groupedItems {
+			for _, item := range items {
+				subtotal += item.Price * float64(item.Quantity)
+			}
+		}
+
+		// Simple tax calculation (assuming 10% tax)
+		tax = subtotal * 0.1
+		total := subtotal + tax
+
+		session := models.CheckoutSession{
+			UserID:         userID,
+			Items:          groupedItems,
+			Address:        payload.Address,
+			PaymentMethod:  payload.PaymentMethod,
+			Subtotal:       subtotal,
+			Tax:            tax,
+			Delivery:       0, // TODO: calculate based on address
+			Discount:       0, // applied via coupon separately
+			Total:          total,
+			CreatedAt:      time.Now(),
+		}
 
 		utils.RespondWithJSON(w, http.StatusCreated, session)
 	}
@@ -242,7 +316,48 @@ func PlaceOrder(app *infra.Deps) httprouter.Handle {
 			return
 		}
 
+		if checkout.Address == "" || checkout.PaymentMethod == "" {
+			http.Error(w, "Address and payment method required", http.StatusBadRequest)
+			return
+		}
+
+		if len(checkout.Items) == 0 {
+			http.Error(w, "No items in checkout", http.StatusBadRequest)
+			return
+		}
+
 		checkout.UserID = userID
+
+		// Validate all items before processing order
+		for category, items := range checkout.Items {
+			for _, item := range items {
+				// Lookup current item details to verify price and availability
+				details, err := lookupItemDetails(ctx, item.ItemID, app)
+				if err != nil {
+					http.Error(w, "Item "+item.ItemID+" is no longer available", http.StatusBadRequest)
+					return
+				}
+
+				// Verify price hasn't changed significantly (allow small floating point variations)
+				if item.Price != details.Price {
+					log.Printf("Price mismatch for item %s: expected %.2f, got %.2f\n", item.ItemID, details.Price, item.Price)
+					http.Error(w, "Item price changed. Please review your cart", http.StatusConflict)
+					return
+				}
+
+				// Verify quantity is still available
+				if item.Quantity > details.Available {
+					http.Error(w, "Requested quantity of "+item.ItemName+" exceeds available stock", http.StatusBadRequest)
+					return
+				}
+
+				// Verify category matches
+				if item.Category != category {
+					http.Error(w, "Item category mismatch", http.StatusBadRequest)
+					return
+				}
+			}
+		}
 
 		farmOrders, err := processFarmOrders(ctx, checkout, app)
 		if err != nil {

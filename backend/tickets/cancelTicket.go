@@ -8,6 +8,7 @@ import (
 	"net/http"
 	"time"
 
+	"naevis/auditlog"
 	"naevis/infra"
 	"naevis/models"
 	"naevis/utils"
@@ -71,6 +72,59 @@ func CancelTicket(app *infra.Deps) httprouter.Handle {
 			return
 		}
 
+		if ticket.Transferred {
+			http.Error(w, "Cannot cancel transferred ticket", http.StatusBadRequest)
+			return
+		}
+
+		/* --------------------
+		   SECURITY: Verify ticket was paid (not free)
+		   Only refund if there was an actual payment
+		-------------------- */
+		if ticket.Price <= 0 {
+			// Free ticket - no refund needed
+			// Mark as canceled without refund
+			if err := app.DB.Update(
+				ctx,
+				purchasedTicketsCollection,
+				bson.M{
+					"eventid":    eventID,
+					"uniquecode": payload.UniqueCode,
+				},
+				bson.M{
+					"$set": bson.M{
+						"canceled":        true,
+						"canceledat":      time.Now().UTC(),
+						"cancelledreason": "user_requested",
+					},
+				},
+			); err != nil {
+				http.Error(w, "Failed to cancel ticket", http.StatusInternalServerError)
+				return
+			}
+
+			auditlog.LogAction(
+				ctx,
+				app,
+				r,
+				requestingUserID,
+				models.AuditActionTicketCancel,
+				"ticket",
+				ticket.TicketID,
+				"success",
+				map[string]interface{}{
+					"reason": "free_ticket_no_refund",
+				},
+			)
+
+			utils.RespondWithJSON(w, http.StatusOK, map[string]any{
+				"success": true,
+				"message": "Free ticket canceled successfully",
+				"refund":  0,
+			})
+			return
+		}
+
 		/* --------------------
 		   Mark ticket as canceled
 		-------------------- */
@@ -129,9 +183,26 @@ func CancelTicket(app *infra.Deps) httprouter.Handle {
 		   Response
 		-------------------- */
 
+		// SECURITY: Log audit trail for ticket cancellation and refund
+		auditlog.LogAction(
+			ctx,
+			app,
+			r,
+			requestingUserID,
+			models.AuditActionTicketCancel,
+			"ticket",
+			ticket.TicketID,
+			"success",
+			map[string]interface{}{
+				"refundAmount": ticket.Price,
+				"reason":       "user_requested",
+			},
+		)
+
 		utils.RespondWithJSON(w, http.StatusOK, map[string]any{
 			"success": true,
 			"message": "Ticket canceled successfully and marked for refund",
+			"refund":  ticket.Price,
 		})
 	}
 }

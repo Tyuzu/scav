@@ -349,6 +349,9 @@ func AddCartRoutes(router *httprouter.Router, app *infra.Deps, rateLimiter *rate
 	router.POST("/api/v1/cart", rateLimiter.Limit(authmidware(cart.AddToCart(app))))
 	router.GET("/api/v1/cart", authmidware(cart.GetCart(app)))
 	router.POST("/api/v1/cart/update", rateLimiter.Limit(authmidware(cart.UpdateCart(app))))
+	router.DELETE("/api/v1/cart/item", rateLimiter.Limit(authmidware(cart.RemoveFromCart(app))))
+	router.DELETE("/api/v1/cart", rateLimiter.Limit(authmidware(cart.ClearCart(app))))
+	router.PATCH("/api/v1/cart/item", rateLimiter.Limit(authmidware(cart.UpdateItemQuantity(app))))
 	router.POST("/api/v1/cart/checkout", rateLimiter.Limit(authmidware(cart.InitiateCheckout(app))))
 
 	// Checkout session creation
