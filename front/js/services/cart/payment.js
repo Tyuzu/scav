@@ -1,10 +1,33 @@
 import { createElement } from "../../components/createElement.js";
 import { apiFetch } from "../../api/api.js";
 import { showPaymentModal } from "../pay/pay.js";
+import Notify from \"../../components/ui/Notify.mjs\";
 
 /* ---------------- Utilities ---------------- */
 const formatINR = val =>
-  Intl.NumberFormat("en-IN", { style: "currency", currency: "INR" }).format(val);
+  Intl.NumberFormat(\"en-IN\", { style: \"currency\", currency: \"INR\" }).format(val);
+
+// Validate coupon code before checkout
+async function validateCoupon(couponCode, cartTotal) {
+  if (!couponCode || couponCode.trim().length === 0) {
+    return { valid: false, discount: 0 };
+  }
+  
+  try {
+    const res = await apiFetch(\"/cart/validate-coupon\", \"POST\", {
+      coupon_code: couponCode,
+      cart_total: Math.round(cartTotal * 100) // Convert to paise
+    });
+    
+    if (res && res.data) {
+      return res.data;
+    }
+    return { valid: false, discount: 0, reason: res?.message || \"Coupon validation failed\" };
+  } catch (error) {
+    console.error(\"Coupon validation error:\", error);
+    return { valid: false, discount: 0, reason: error.message };
+  }
+}
 
 function calculateTotals(items = {}, discount = 0, delivery = 20, taxRate = 0.05) {
   const flat = Object.values(items).flat();
@@ -73,7 +96,14 @@ export function displayPayment(container, sessionData = {}) {
     confirmBtn.disabled = true;
     confirmBtn.replaceChildren("Processing…");
 
-    try {
+    try {      // 0️⃣ VALIDATE COUPON (if provided)
+      if (sessionData.couponCode) {
+        const couponValidation = await validateCoupon(sessionData.couponCode, totals.total);
+        if (!couponValidation.valid) {
+          throw new Error(`Invalid coupon: ${couponValidation.reason || \"Coupon not found\"}`);
+        }
+        Notify(`✅ Coupon valid: ${couponValidation.discount_percent || 0}% off`, { type: \"success\" });
+      }
       // 1️⃣ PAYMENT (authoritative)
       const paymentResult = await showPaymentModal({
         paymentType: "purchase",
@@ -88,9 +118,11 @@ export function displayPayment(container, sessionData = {}) {
         return;
       }
 
-      // 2️⃣ ORDER CONFIRMATION (no payment data sent)
-      const res = await apiFetch("/order", "POST", {
-        ...sessionData
+      // 2️⃣ ORDER CONFIRMATION (with validated coupon)
+      const res = await apiFetch(\"/order\", \"POST\", {
+        ...sessionData,
+        coupon_code: sessionData.couponCode || null, // Include validated coupon
+        discount_amount: totals.discount
       });
 
       if (!res?.success) {

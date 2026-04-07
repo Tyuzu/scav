@@ -77,7 +77,7 @@ func CreateTicket(app *infra.Deps) httprouter.Handle {
 			EntityID:   eventID,
 			EntityType: "event",
 			Name:       payload.Name,
-			Price:      payload.Price,
+			Price:      int64(payload.Price * 100), // Convert rupees to paise (int64)
 			Currency:   payload.Currency,
 			Color:      payload.Color,
 			Quantity:   payload.Quantity,

@@ -1,6 +1,7 @@
 import { apiFetch } from "../../api/api.js";
 import Button from "../../components/base/Button.js";
 import { createElement } from "../../components/createElement.js";
+import Notify from "../../components/ui/Notify.mjs";
 
 /**
  * Render a single cart category section
@@ -115,9 +116,17 @@ details.push(
         "✕ Remove",
         "remove-btn",
         {
-          click: () => {
-            items.splice(index, 1);
-            syncCategory().then(renderItems);
+          click: async () => {
+            try {
+              await removeItem(it.itemId, category, it.entityId, it.entityType);
+              items.splice(index, 1);
+              renderItems();
+              updateGrandTotal();
+              Notify("Item removed from cart", { type: "success", duration: 2000 });
+            } catch (err) {
+              console.error("Failed to remove item:", err);
+              Notify("Failed to remove item", { type: "error", duration: 3000 });
+            }
           }
         },
         "buttonx danger"
@@ -147,23 +156,98 @@ details.push(
 return;
 }
 
-    item.quantity = Math.max(1, (item.quantity || 1) + delta);
-    await syncCategory();
-    renderItems();
+    const newQty = Math.max(1, (item.quantity || 1) + delta);
+    
+    try {
+      await updateItemQuantity(item.itemId, category, newQty, item.entityId, item.entityType);
+      item.quantity = newQty;
+      renderItems();
+      updateGrandTotal();
+    } catch (err) {
+      console.error("Failed to update quantity:", err);
+      Notify("Failed to update quantity", { type: "error", duration: 3000 });
+    }
   }
 
   async function syncCategory() {
     try {
-      await apiFetch("/cart/update", "POST", {
-        category,
-        items
-      });
+      await updateCartCategory(category, items);
     } catch (err) {
       console.error(`Cart sync failed for ${category}:`, err);
+      Notify(`Failed to sync ${category} items`, { type: "error", duration: 3000 });
     }
   }
 }
 
 function capitalize(str = "") {
   return str ? str[0].toUpperCase() + str.slice(1) : "";
+}
+
+/* ────────────────────── Cart Item Operations ────────────────────── */
+
+/**
+ * Remove a single item from cart via backend API
+ * @param {string} itemId - Item identifier
+ * @param {string} category - Item category
+ * @param {string} [entityId] - Optional entity ID
+ * @param {string} [entityType] - Optional entity type
+ * @returns {Promise<Object>} Updated grouped cart
+ */
+export async function removeItem(itemId, category, entityId = "", entityType = "") {
+  const payload = {
+    itemId,
+    category
+  };
+  if (entityId) payload.entityId = entityId;
+  if (entityType) payload.entityType = entityType;
+
+  return await apiFetch("/cart/item", "DELETE", JSON.stringify(payload), {
+    headers: { "Content-Type": "application/json" }
+  });
+}
+
+/**
+ * Update quantity of a single cart item via backend API
+ * @param {string} itemId - Item identifier
+ * @param {string} category - Item category
+ * @param {number} quantity - New quantity
+ * @param {string} [entityId] - Optional entity ID
+ * @param {string} [entityType] - Optional entity type
+ * @returns {Promise<Object>} Updated grouped cart
+ */
+export async function updateItemQuantity(itemId, category, quantity, entityId = "", entityType = "") {
+  const payload = {
+    itemId,
+    category,
+    quantity
+  };
+  if (entityId) payload.entityId = entityId;
+  if (entityType) payload.entityType = entityType;
+
+  return await apiFetch("/cart/item", "PATCH", JSON.stringify(payload), {
+    headers: { "Content-Type": "application/json" }
+  });
+}
+
+/**
+ * Clear entire cart via backend API
+ * @returns {Promise<Object>} Server response
+ */
+export async function clearCart() {
+  return await apiFetch("/cart", "DELETE");
+}
+
+/**
+ * Update all items in a category via backend API
+ * @param {string} category - Item category
+ * @param {Array} items - Array of cart items for this category
+ * @returns {Promise<Object>} Updated grouped cart
+ */
+export async function updateCartCategory(category, items) {
+  return await apiFetch("/cart/update", "POST", JSON.stringify({
+    category,
+    items
+  }), {
+    headers: { "Content-Type": "application/json" }
+  });
 }

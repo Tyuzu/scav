@@ -66,11 +66,13 @@ return { valid: false, discount: 0 };
 }
 
   try {
-    const res = await apiFetch("/coupon/validate", "POST", {
+    const res = await apiFetch("/coupon/validate", "POST", JSON.stringify({
       code,
       cart: subtotal,
       entityId,
       entityType
+    }), {
+      headers: { "Content-Type": "application/json" }
     });
 
     return {
@@ -153,12 +155,14 @@ export async function displayCheckout(container, passedItems = null) {
         btn.replaceChildren("Preparing checkout…");
 
         try {
-          // IMPORTANT: no totals, no amount, no method
-          const session = await apiFetch("/checkout/session", "POST", {
+          // Create checkout session with all required data
+          const session = await apiFetch("/checkout/session", "POST", JSON.stringify({
             address,
-            couponCode,
-            discount: coupon.discount,
-            items: groupItems(items)
+            coupon: couponCode,
+            discount: coupon.valid ? coupon.discount : 0,
+            paymentMethod: "" // Will be set during payment
+          }), {
+            headers: { "Content-Type": "application/json" }
           });
 
           displayPayment(container, session);

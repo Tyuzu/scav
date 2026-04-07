@@ -15,6 +15,14 @@ import { listMyTickets } from './listmyTickets.js';
 import { showPaymentModal } from '../pay/pay.js';
 import Modal from '../../components/ui/Modal.mjs';
 
+// CRITICAL FIX: Format currency from paise to rupees
+function formatCurrency(paise) {
+    return new Intl.NumberFormat('en-IN', {
+        style: 'currency',
+        currency: 'INR'
+    }).format((paise || 0) / 100);
+}
+
 /* ────────── Ticket Card ────────── */
 function createTicketCard(ticket, eventId, isCreator, isLoggedIn) {
     const card = TicketCard({
@@ -23,7 +31,7 @@ function createTicketCard(ticket, eventId, isCreator, isLoggedIn) {
         seatend: ticket.seatend,
         creator: isCreator,
         name: ticket.name,
-        price: `${ticket.currency} ${ticket.price / 100}`,
+        price: formatCurrency(ticket.price), // CRITICAL FIX: Use proper currency formatting
         quantity: ticket.quantity,
         color: ticket.color || "#f3f3f3",
         attributes: { "data-ticket-id": ticket.ticketid },

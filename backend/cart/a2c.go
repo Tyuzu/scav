@@ -35,8 +35,8 @@ func AddToCart(app *infra.Deps) httprouter.Handle {
 			return
 		}
 
-		if item.ItemID == "" || item.ItemName == "" || item.Category == "" || item.Quantity <= 0 {
-			http.Error(w, "Missing or invalid fields", http.StatusBadRequest)
+		if item.ItemID == "" || item.Quantity <= 0 {
+			http.Error(w, "Missing or invalid fields: itemId and quantity required", http.StatusBadRequest)
 			return
 		}
 
@@ -60,8 +60,11 @@ func AddToCart(app *infra.Deps) httprouter.Handle {
 		item.ItemName = itemDetails.Name
 		item.ItemType = itemDetails.Type
 		item.Unit = itemDetails.Unit
-		item.Price = itemDetails.Price // Use verified price from database
-		item.Category = itemDetails.Category
+		item.Price = int64(itemDetails.Price * 100) // Convert rupees to paise (int64)
+		// Use provided category or infer from lookup
+		if item.Category == "" {
+			item.Category = itemDetails.Category
+		}
 		if itemDetails.EntityType != "" {
 			item.EntityID = itemDetails.EntityID
 			item.EntityName = itemDetails.EntityName
@@ -204,6 +207,8 @@ func CreateCheckoutSession(app *infra.Deps) httprouter.Handle {
 		var payload struct {
 			Address       string  `json:"address"`
 			PaymentMethod string  `json:"paymentMethod"`
+			Coupon        string  `json:"coupon"`
+			Discount      float64 `json:"discount"`
 		}
 
 		if err := json.NewDecoder(r.Body).Decode(&payload); err != nil {
@@ -214,11 +219,6 @@ func CreateCheckoutSession(app *infra.Deps) httprouter.Handle {
 
 		if payload.Address == "" {
 			http.Error(w, "Address is required", http.StatusBadRequest)
-			return
-		}
-
-		if payload.PaymentMethod == "" {
-			http.Error(w, "Payment method is required", http.StatusBadRequest)
 			return
 		}
 
@@ -240,29 +240,38 @@ func CreateCheckoutSession(app *infra.Deps) httprouter.Handle {
 			return
 		}
 
-		// Calculate totals from cart items
-		var subtotal, tax float64 = 0, 0
+		// Calculate totals from cart items (CRITICAL FIX: handle int64 prices)
+		var subtotal int64 = 0
+		var tax int64 = 0
 		for _, items := range groupedItems {
 			for _, item := range items {
-				subtotal += item.Price * float64(item.Quantity)
+				subtotal += item.Price * int64(item.Quantity)
 			}
 		}
 
-		// Simple tax calculation (assuming 10% tax)
-		tax = subtotal * 0.1
-		total := subtotal + tax
+		// Apply discount if provided (convert float64 to int64)
+		discountAmount := int64(payload.Discount * 100) // Convert rupees to paise
+		discountedSubtotal := subtotal - discountAmount
+		if discountedSubtotal < 0 {
+			discountedSubtotal = 0
+		}
+
+		// Simple tax calculation (5% on discounted amount)
+		tax = int64(float64(discountedSubtotal) * 0.05)
+		delivery := int64(2000) // 20 rupees = 2000 paise
+		total := discountedSubtotal + tax + delivery
 
 		session := models.CheckoutSession{
-			UserID:         userID,
-			Items:          groupedItems,
-			Address:        payload.Address,
-			PaymentMethod:  payload.PaymentMethod,
-			Subtotal:       subtotal,
-			Tax:            tax,
-			Delivery:       0, // TODO: calculate based on address
-			Discount:       0, // applied via coupon separately
-			Total:          total,
-			CreatedAt:      time.Now(),
+			UserID:        userID,
+			Items:         groupedItems,
+			Address:       payload.Address,
+			PaymentMethod: payload.PaymentMethod,
+			Subtotal:      subtotal,
+			Tax:           tax,
+			Delivery:      delivery,
+			Discount:      discountAmount,
+			Total:         total,
+			CreatedAt:     time.Now(),
 		}
 
 		utils.RespondWithJSON(w, http.StatusCreated, session)
@@ -316,8 +325,8 @@ func PlaceOrder(app *infra.Deps) httprouter.Handle {
 			return
 		}
 
-		if checkout.Address == "" || checkout.PaymentMethod == "" {
-			http.Error(w, "Address and payment method required", http.StatusBadRequest)
+		if checkout.Address == "" {
+			http.Error(w, "Address is required", http.StatusBadRequest)
 			return
 		}
 
@@ -339,9 +348,9 @@ func PlaceOrder(app *infra.Deps) httprouter.Handle {
 				}
 
 				// Verify price hasn't changed significantly (allow small floating point variations)
-				if item.Price != details.Price {
-					log.Printf("Price mismatch for item %s: expected %.2f, got %.2f\n", item.ItemID, details.Price, item.Price)
-					http.Error(w, "Item price changed. Please review your cart", http.StatusConflict)
+				convertedPrice := int64(details.Price * 100) // Convert rupees to paise
+				if item.Price != convertedPrice {
+					log.Printf("Price mismatch for item %s: expected %d paise, got %d paise\n", item.ItemID, convertedPrice, item.Price)
 					return
 				}
 
@@ -451,4 +460,30 @@ func processGeneralOrders(ctx context.Context, checkout models.CheckoutSession, 
 		return nil, err
 	}
 	return &order, nil
+}
+
+/* ───────────────────────── Get User Orders ───────────────────────── */
+
+func GetMyOrders(app *infra.Deps) httprouter.Handle {
+	return func(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
+		ctx, cancel := context.WithTimeout(r.Context(), 10*time.Second)
+		defer cancel()
+
+		userID := utils.GetUserIDFromRequest(r)
+		if userID == "" {
+			http.Error(w, "Unauthorized", http.StatusUnauthorized)
+			return
+		}
+
+		var orders []models.Order
+		if err := app.DB.FindMany(ctx, ordersCollection, bson.M{"userId": userID}, &orders); err != nil {
+			log.Println("GetMyOrders FindMany error:", err)
+			http.Error(w, "Failed to fetch orders", http.StatusInternalServerError)
+			return
+		}
+
+		utils.RespondWithJSON(w, http.StatusOK, map[string]any{
+			"orders": orders,
+		})
+	}
 }

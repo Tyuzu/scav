@@ -11,7 +11,11 @@ export async function openCartModal() {
   let cart = [];
   try {
     const resp = await apiFetch("/cart", "GET");
-    cart = Array.isArray(resp?.crops) ? resp.crops : [];
+    // Backend returns grouped cart: { crops: [...], products: [...], ... }
+    // Flatten all categories into single array
+    cart = resp && typeof resp === "object" 
+      ? Object.values(resp).flat() 
+      : [];
   } catch {
     wrapper.appendChild(createElement("p", {}, ["❌ Failed to load cart."]));
   }
@@ -24,7 +28,7 @@ export async function openCartModal() {
     const list = createElement("ul", { style: "list-style: none; padding: 0; margin: 0;" });
 
     grouped.forEach(item => {
-      const label = `${item.itemName} (${item.quantity} ${item.unit || "kg"})`;
+      const label = `${item.itemName} (${item.quantity} ${item.unit || "unit"})`;
       const entityInfo = item.entityName ? ` from ${item.entityName}` : "";
       const price = `₹${(item.price * item.quantity).toFixed(2)}`;
 

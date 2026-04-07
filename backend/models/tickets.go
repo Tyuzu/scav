@@ -20,7 +20,7 @@ type Ticket struct {
 	TicketID    string    `json:"ticketid" bson:"ticketid"`
 	EventID     string    `json:"eventid" bson:"eventid"`
 	Name        string    `json:"name" bson:"name"`
-	Price       float64   `json:"price" bson:"price"`
+	Price       int64     `json:"price" bson:"price"` // CRITICAL FIX: Changed from float64 to int64 (stored in paise)
 	Currency    string    `json:"currency" bson:"currency"`
 	Color       string    `json:"color" bson:"color"`
 	Quantity    int       `json:"quantity" bson:"quantity"`

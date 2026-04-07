@@ -359,6 +359,7 @@ func AddCartRoutes(router *httprouter.Router, app *infra.Deps, rateLimiter *rate
 
 	// Order placement
 	router.POST("/api/v1/order", rateLimiter.Limit(authmidware(cart.PlaceOrder(app))))
+	router.GET("/api/v1/order/mine", authmidware(cart.GetMyOrders(app)))
 
 	router.POST("/api/v1/coupon/validate", rateLimiter.Limit(authmidware(cart.ValidateCouponHandler(app))))
 

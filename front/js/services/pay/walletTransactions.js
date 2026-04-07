@@ -5,6 +5,14 @@ import { v4 as uuidv4 } from "https://jspm.dev/uuid";
 import Datex from "../../components/base/Datex.js";
 import Notify from "../../components/ui/Notify.mjs";
 
+// Format currency: convert paise to rupees for display
+function formatCurrency(paise) {
+    return new Intl.NumberFormat('en-IN', {
+        style: 'currency',
+        currency: 'INR'
+    }).format((paise || 0) / 100);
+}
+
 export function WalletTransactions({ onBalanceChange }) {
     const container = createElement("div", { id: "wallet-transactions", class: "wallet-card" }, [
         createElement("h3", { class: "wallet-section-title" }, ["Transactions"])
@@ -38,7 +46,7 @@ export function WalletTransactions({ onBalanceChange }) {
 
                 const txnEl = createElement("div", { class: `txn-item ${typeClass}` }, [
                     createElement("div", { class: "txn-info" }, [
-                        `${typeLabel} ${txn.amount.toLocaleString()} ${txn.currency} via ${txn.method}`
+                        `${typeLabel} ${formatCurrency(txn.amount)} via ${txn.method}`
                     ]),
                     createElement("div", { class: "txn-meta" }, [
                         renderStatusBadge(txn.state),

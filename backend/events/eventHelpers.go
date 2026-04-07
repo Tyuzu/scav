@@ -39,7 +39,7 @@ func toSafeEvent(e models.Event) models.Event {
 	var currency string
 	if len(e.Tickets) > 0 {
 		for _, t := range e.Tickets {
-			prices = append(prices, t.Price)
+			prices = append(prices, float64(t.Price)/100) // Convert paise to rupees (float64)
 			if currency == "" && t.Currency != "" {
 				currency = t.Currency
 			}

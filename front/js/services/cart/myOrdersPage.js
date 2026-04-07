@@ -19,7 +19,7 @@ export async function displayMyOrders(container, isLoggedIn) {
   container.append(section);
 
   try {
-    const res = await apiFetch("/orders/mine", "GET");
+    const res = await apiFetch("/order/mine", "GET");
 
     if (!res || !Array.isArray(res.orders)) {
       throw new Error("Invalid orders response");

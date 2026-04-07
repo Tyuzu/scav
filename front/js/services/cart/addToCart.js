@@ -2,6 +2,27 @@ import { apiFetch } from "../../api/api.js";
 import Notify from "../../components/ui/Notify.mjs";
 
 /**
+ * Map itemType to backend category
+ */
+function getCategory(itemType = "", entityType = "") {
+  if (!itemType) return entityType || "general";
+  
+  const typeMap = {
+    "product": "products",
+    "book": "products",
+    "merch": "merchandise",
+    "merchandise": "merchandise",
+    "menu": "menu",
+    "food": "menu",
+    "crop": "crops",
+    "farm": "crops",
+    "service": "services"
+  };
+  
+  return typeMap[itemType.toLowerCase()] || (entityType ? entityType.toLowerCase() : "general");
+}
+
+/**
  * Add item to cart with enhanced metadata support
  * @param {Object} options - Cart item options
  * @param {string} options.itemId - Unique item identifier (required)
@@ -43,7 +64,8 @@ export async function addToCart({
 
   const payload = {
     itemId,
-    quantity: qty
+    quantity: qty,
+    category: getCategory(itemType, entityType)
   };
 
   // Add optional metadata for better cart display
