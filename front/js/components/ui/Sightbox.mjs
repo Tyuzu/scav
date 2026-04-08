@@ -1,13 +1,12 @@
-import "../../../css/ui/Sightbox.css";
-import { createIconButton } from "../../utils/svgIconButton";
-import Imagex from "../base/Imagex";
-import { xSVG } from "../svgs";
+/**
+ * @deprecated Use Sightbox_zoom.mjs instead for improved zoom and focus management
+ * This file is kept for backward compatibility only
+ */
+
+import SightboxZoom from "./Sightbox_zoom.mjs";
 
 const Sightbox = (mediaSrc, mediaType = "image") => {
-  // prevent duplicate instance
-  if (document.getElementById("sightbox")) {
-return;
-}
+  return SightboxZoom(mediaSrc, { mediaType });
 
   const sightbox = document.createElement("div");
   sightbox.id = "sightbox";

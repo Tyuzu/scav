@@ -1,4 +1,9 @@
-import {debounce} from "../../utils/deutils";
+/**
+ * @deprecated Use video-utils/index.js and component files instead
+ * Kept for backward compatibility - video utilities have been refactored
+ */
+
+import { debounce } from "../utils/timing.js";
 
 function setupVideoUtilityFunctions(video, videoid) {
     const container = video.parentElement || document.body;
