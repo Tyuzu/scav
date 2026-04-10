@@ -65,7 +65,8 @@ function renderOrdersTab(container) {
 function buildStatsSummary(farm, crops) {
   const totalCrops = crops.length;
   const totalQuantity = crops.reduce((sum, c) => sum + (c.quantity || 0), 0);
-  const totalValue = crops.reduce((sum, c) => sum + ((c.quantity || 0) * (c.price || 0)), 0);
+  // CRITICAL FIX: Convert price from paise (int64) to rupees for calculation
+  const totalValue = crops.reduce((sum, c) => sum + ((c.quantity || 0) * ((c.price || 0) / 100)), 0);
   const uniqueCategories = new Set(crops.map(c => c.category)).size;
   const featuredCrops = crops.filter(c => c.featured).length;
 
@@ -91,8 +92,9 @@ function buildCropSection(crops) {
       "ul",
       {},
       crops.map((crop) =>
+        // CRITICAL FIX: Convert price from paise (int64) to rupees for display
         createElement("li", {}, [
-          `${crop.name} – ${crop.quantity} ${crop.unit} @ ₹${crop.price}/${crop.unit}`,
+          `${crop.name} – ${crop.quantity} ${crop.unit} @ ₹${(crop.price / 100).toFixed(2)}/${crop.unit}`,
         ])
       )
     );

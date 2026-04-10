@@ -3,7 +3,7 @@ import { setState } from "../state/state.js";
 let translations = {};
 let currentLang = "en";
 
-const SUPPORTED_LANGS = ["en", "ja"];
+const SUPPORTED_LANGS = ["en", "es", "fr", "hi", "ar", "ja", "jp"];
 const FALLBACK_LANG = "en";
 
 /**

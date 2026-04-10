@@ -76,8 +76,9 @@ payload.itemType = itemType;
 payload.itemName = itemName;
 }
   if (entityType) {
-payload.entityType = entityType;
-}
+    // CRITICAL FIX: Normalize entityType to lowercase for API consistency
+    payload.entityType = entityType.toLowerCase();
+  }
   if (entityId) {
 payload.entityId = entityId;
 }

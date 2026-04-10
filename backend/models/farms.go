@@ -59,6 +59,7 @@ type Crop struct {
 	CreatedAt    time.Time    `json:"createdAt"`
 	CreatedBy    string       `json:"createdby"`
 	FarmID       string       `bson:"farmid,omitempty" json:"farmid,omitempty"`
+	FarmName     string       `json:"farmName,omitempty"` // CRITICAL FIX: Add farm name for cart/display
 }
 
 type IncomingOrder struct {

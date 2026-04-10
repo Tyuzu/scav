@@ -17,7 +17,7 @@ const PAYMENT_RULES = {
     methods: ["card"]
   },
   purchase: {
-    allowedEntities: ["menu", "event", "product", "ticket", "merch"],
+    allowedEntities: ["order", "menu", "booking", "product", "ticket", "merch", "crop"],
     methods: ["wallet", "card"]
   }
 };
