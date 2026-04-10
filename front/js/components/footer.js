@@ -49,9 +49,11 @@ await setLanguage(lang);
         }
     }, [
         createElement("option", { value: "en" }, ["English"]),
-        createElement("option", { value: "fr" }, ["Français"]),
         createElement("option", { value: "es" }, ["Español"]),
-        createElement("option", { value: "hi" }, ["हिन्दी"])
+        createElement("option", { value: "fr" }, ["Français"]),
+        createElement("option", { value: "hi" }, ["हिन्दी"]),
+        createElement("option", { value: "ar" }, ["العربية"]),
+        createElement("option", { value: "jp" }, ["日本語"])
     ]);
 
     const savedLang = localStorage.getItem("lang") || "en";

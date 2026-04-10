@@ -64,8 +64,9 @@ return;
       cardsContainer.appendChild(createCard(item, index));
     });
 
+    // CRITICAL FIX: Convert price from paise (int64) to rupees for calculation
     const subtotal = items.reduce(
-      (sum, x) => sum + (x.price || 0) * (x.quantity || 0),
+      (sum, x) => sum + ((x.price || 0) / 100) * (x.quantity || 0),
       0
     );
 
@@ -74,7 +75,7 @@ return;
 
     subtotalDisplay.replaceChildren(
       createElement("strong", {}, ["Subtotal: "]),
-      `₹${subtotal}`
+      `₹${subtotal.toFixed(2)}`
     );
   }
 
@@ -104,10 +105,12 @@ details.push(
       Button("+", "qty-inc", { click: () => updateQty(index, 1) }, "buttonx subtle")
     ]);
 
+    // CRITICAL FIX: Convert price from paise (int64) to rupees for display
+    const priceInRupees = (it.price || 0) / 100;
     const pricing = [
-      createElement("p", {}, [`Unit Price: ₹${it.price || 0}`]),
+      createElement("p", {}, [`Unit Price: ₹${priceInRupees.toFixed(2)}`]),
       createElement("p", {}, [
-        `Subtotal: ₹${(it.price || 0) * (it.quantity || 1)}`
+        `Subtotal: ₹${(priceInRupees * (it.quantity || 1)).toFixed(2)}`
       ])
     ];
 
@@ -118,7 +121,8 @@ details.push(
         {
           click: async () => {
             try {
-              await removeItem(it.itemId, category, it.entityId, it.entityType);
+              // CRITICAL FIX: Normalize entityType to lowercase for API consistency
+              await removeItem(it.itemId, category, it.entityId, (it.entityType || "").toLowerCase());
               items.splice(index, 1);
               renderItems();
               updateGrandTotal();

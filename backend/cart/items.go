@@ -91,8 +91,8 @@ func lookupCrop(ctx context.Context, cropID string, app *infra.Deps) (*ItemDetai
 		CropID       string  `bson:"cropid"`
 		Name         string  `bson:"name"`
 		Breed        string  `bson:"breed"`
-		PricePerKg   float64 `bson:"pricePerKg"`
-		AvailableQty int     `bson:"availableQtyKg"`
+		Price        float64 `bson:"price"`
+		AvailableQty int     `bson:"quantity"`
 		FarmID       string  `bson:"farmid"`
 		FarmName     string  `bson:"farmName"`
 	}
@@ -106,14 +106,25 @@ func lookupCrop(ctx context.Context, cropID string, app *infra.Deps) (*ItemDetai
 		return nil, errors.New("crop out of stock")
 	}
 
+	// CRITICAL FIX: If farm name not populated, fetch from farm collection
+	farmName := crop.FarmName
+	if farmName == "" && crop.FarmID != "" {
+		var farm struct {
+			Name string `bson:"name"`
+		}
+		if err := app.DB.FindOne(ctx, "farms", bson.M{"farmid": crop.FarmID}, &farm); err == nil {
+			farmName = farm.Name
+		}
+	}
+
 	return &ItemDetails{
 		Name:       crop.Name,
 		Type:       crop.Breed,
 		Category:   "crops",
-		Price:      crop.PricePerKg,
+		Price:      crop.Price,
 		Unit:       "kg",
 		EntityID:   crop.FarmID,
-		EntityName: crop.FarmName,
+		EntityName: farmName,
 		EntityType: "farm",
 		Available:  crop.AvailableQty,
 	}, nil

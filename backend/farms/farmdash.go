@@ -55,6 +55,11 @@ func GetFarmDash(app *infra.Deps) httprouter.Handle {
 			return
 		}
 
+		// CRITICAL FIX: Populate farmName in each crop for frontend display
+		for i := range crops {
+			crops[i].FarmName = farm.Name
+		}
+
 		farm.Crops = crops
 
 		utils.RespondWithJSON(w, http.StatusOK, utils.M{
