@@ -1,26 +1,6 @@
-import { resolveImagePath, EntityType, PictureType } from "../../../utils/imagePaths.js";
-// import ZoomBox from "../../../components/ui/ZoomBox.mjs";
-import Imagex from "../../../components/base/Imagex.js";
-import Sightbox from "../../../components/ui/Sightbox_zoom.mjs";
-
-async function RenderImagePost(mediaContainer, media) {
-    const mediaClasses = [
-        'PostPreviewImageView_-one__-6MMx',
-        'PostPreviewImageView_-two__WP8GL',
-        'PostPreviewImageView_-three__HLsVN',
-        'PostPreviewImageView_-four__fYIRN',
-        'PostPreviewImageView_-five__RZvWx',
-        'PostPreviewImageView_-six__EG45r',
-        'PostPreviewImageView_-seven__65gnj',
-        'PostPreviewImageView_-eight__SoycA'
-    ];
-    const classIndex = Math.min(media.length - 1, mediaClasses.length - 1);
-    const assignedClass = mediaClasses[classIndex];
-
-    const imageList = document.createElement('ul');
-    imageList.className = `preview_image_wrap__Q29V8 PostPreviewImageView_-artist__WkyUA PostPreviewImageView_-bottom_radius__Mmn-- ${assignedClass}`;
-
-    const fullImagePaths = media.map(img => resolveImagePath(EntityType.CHAT, PictureType.PHOTO, img.src));
+// MediaRenders - Consolidated component
+// Re-exports from shared for backward compatibility
+export { RenderImagePost } from "../../../shared/components/MediaRenders.js";
 
     media.forEach((img, index) => {
         const listItem = document.createElement('li');

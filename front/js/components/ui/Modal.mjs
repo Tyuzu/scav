@@ -1,5 +1,6 @@
 import "../../../css/ui/Modal.css";
-import { createElement } from "../../components/createElement.js";
+import { createElement } from "../domUtils.js";
+import { createFocusTrap } from "../utils/focusTrap.js";
 
 let openModals = 0;
 let bodyStyleEl = null;
@@ -20,31 +21,14 @@ function unlockBodyScroll() {
   }
 }
 
-function makeHeader(title, onClose, uid, showCloseButton) {
-  if (!title && !showCloseButton) {
-return null;
-}
+function getDurationMs(el) {
+  const cs = window.getComputedStyle(el);
 
-  const heading = title
-    ? createElement("h3", { id: `modal-title-${uid}` }, [title])
-    : null;
-
-  const closeBtn = showCloseButton
-    ? createElement("button", {
-        class: "modal-close",
-        "aria-label": "Close"
-      }, ["×"])
-    : null;
-
-  closeBtn?.addEventListener("click", onClose);
-
-  return {
-    header: createElement(
-      "div",
-      { class: "modal-header" },
-      [heading, closeBtn].filter(Boolean)
-    ),
-    titleId: heading?.id || null
+  const parseTime = (val) => {
+    if (!val) return 0;
+    val = val.split(",")[0].trim();
+    const num = parseFloat(val) || 0;
+    return val.endsWith("s") ? num * 1000 : num;
   };
 }
 
@@ -63,56 +47,35 @@ function makeBody(content, uid) {
   return { body, descId: body.id };
 }
 
-function simpleDurationMs(el) {
-  const cs = window.getComputedStyle(el);
-  const toMs = v => {
-    if (!v) {
-return 0;
-}
-    v = v.split(",")[0].trim();
-    if (v.endsWith("ms")) {
-return parseFloat(v) || 0;
-}
-    if (v.endsWith("s")) {
-return (parseFloat(v) || 0) * 1000;
-}
-    return parseFloat(v) || 0;
-  };
   return Math.max(
-    toMs(cs.animationDuration) + toMs(cs.animationDelay),
-    toMs(cs.transitionDuration) + toMs(cs.transitionDelay),
+    parseTime(cs.animationDuration) + parseTime(cs.animationDelay),
+    parseTime(cs.transitionDuration) + parseTime(cs.transitionDelay),
     0
   );
 }
 
 export default function Modal({
-  // existing
   title = "",
   content = "",
   onClose = null,
   onConfirm = null,
   onOpen = null,
+  onBeforeClose = null,
+  onAfterClose = null,
   size = "medium",
+  variant = "default",
   closeOnOverlayClick = true,
-  autofocusSelector = null,
-  returnDataOnClose = false,
-  actions = null,
-  force = false,
-
-  // NEW (all optional, backward-safe)
-  variant = "default",          // default | theater | alert | sheet
   showHeader = true,
   showCloseButton = true,
   autofocus = true,
-  flushBody = false,
-  onBeforeClose = null,
-  onAfterClose = null
+  autofocusSelector = null,
+  force = false,
+  returnDataOnClose = false,
+  actions = null
 } = {}) {
   openModals += 1;
   const uid = openModals;
-
-  const zBase = 1000;
-  const zIndex = zBase + uid * 10;
+  const zIndex = 1000 + uid * 10;
 
   const overlay = createElement("div", { class: "modal-overlay" });
   const dialog = createElement("div", {
@@ -121,22 +84,29 @@ export default function Modal({
     role: "dialog"
   });
 
-  const modal = createElement("div", {
-    class: `modal modal--${size} modal--${variant}`,
-    style: `z-index:${zIndex};`
-  }, [overlay, dialog]);
+  const modal = createElement(
+    "div",
+    {
+      class: `modal modal--${size} modal--${variant}`,
+      style: `z-index: ${zIndex};`
+    },
+    [overlay, dialog]
+  );
 
   lockBodyScroll();
+
   const previouslyFocused = document.activeElement;
+  let focusTrapInstance = null;
 
   const cleanup = () => {
-    dialog.removeEventListener("keydown", trap);
+    focusTrapInstance?.cleanup();
+
     modal.classList.remove("modal--fade-in");
     modal.classList.add("modal--fade-out");
 
-    const ms = Math.max(
-      simpleDurationMs(modal),
-      simpleDurationMs(dialog),
+    const animDuration = Math.max(
+      getDurationMs(modal),
+      getDurationMs(dialog),
       300
     );
 
@@ -145,20 +115,14 @@ export default function Modal({
       openModals = Math.max(0, openModals - 1);
       unlockBodyScroll();
       previouslyFocused?.focus?.();
-    }, ms + 40);
+    }, animDuration + 50);
   };
 
   const wrappedClose = (data) => {
-    if (force) {
-return;
-}
+    if (force) return;
     onBeforeClose?.();
     cleanup();
-    if (returnDataOnClose) {
-onClose?.(data);
-} else {
-onClose?.();
-}
+    returnDataOnClose ? onClose?.(data) : onClose?.();
     onAfterClose?.();
   };
 
@@ -166,85 +130,74 @@ onClose?.();
     overlay.addEventListener("click", () => wrappedClose());
   }
 
-  let titleId = null;
-  if (showHeader) {
-    const headerData = makeHeader(
-      title,
-      () => wrappedClose(),
-      uid,
-      showCloseButton
-    );
+  // Header
+  if (showHeader && (title || showCloseButton)) {
+    const header = createElement("div", { class: "modal-header" });
 
-    if (headerData) {
-      dialog.appendChild(headerData.header);
-      titleId = headerData.titleId;
+    if (title) {
+      const titleEl = createElement("h3", { id: `modal-title-${uid}` }, [title]);
+      header.appendChild(titleEl);
+      dialog.setAttribute("aria-labelledby", `modal-title-${uid}`);
     }
+
+    if (showCloseButton) {
+      const btn = createElement(
+        "button",
+        { class: "modal-close", "aria-label": "Close" },
+        ["×"]
+      );
+      btn.addEventListener("click", () => wrappedClose());
+      header.appendChild(btn);
+    }
+
+    dialog.appendChild(header);
   }
 
-  const { body, descId } = makeBody(content, uid);
-  if (flushBody) {
-body.classList.add("modal-body--flush");
-}
+  // Body
+  const contentNode =
+    typeof content === "function" ? content() : content;
 
+  const body = createElement(
+    "div",
+    {
+      class: "modal-body",
+      id: `modal-desc-${uid}`
+    },
+    [
+      contentNode instanceof HTMLElement
+        ? contentNode
+        : String(contentNode ?? "")
+    ]
+  );
+
+  dialog.setAttribute("aria-describedby", `modal-desc-${uid}`);
   dialog.appendChild(body);
 
+  // Footer
   if (typeof actions === "function") {
     const act = actions();
     if (act instanceof HTMLElement) {
-      const footer = createElement("div", { class: "modal-footer" }, [act]);
-      dialog.appendChild(footer);
+      dialog.appendChild(
+        createElement("div", { class: "modal-footer" }, [act])
+      );
     }
   }
 
   dialog.setAttribute("aria-modal", "true");
-  if (titleId) {
-dialog.setAttribute("aria-labelledby", titleId);
-}
-  dialog.setAttribute("aria-describedby", descId);
 
-  const focusableSel =
-    "button, [href], input, select, textarea, [tabindex]:not([tabindex='-1'])";
-
-  function trap(e) {
-    const focusables = Array
-      .from(dialog.querySelectorAll(focusableSel))
-      .filter(n => !n.disabled);
-
-    if (!focusables.length) {
-return;
-}
-
-    const first = focusables[0];
-    const last = focusables[focusables.length - 1];
-
-    if (e.key === "Tab") {
-      if (e.shiftKey && document.activeElement === first) {
-        e.preventDefault();
-        last.focus();
-      } else if (!e.shiftKey && document.activeElement === last) {
-        e.preventDefault();
-        first.focus();
-      }
-    } else if (e.key === "Escape" && !force) {
-      wrappedClose();
-    } else if (
-      e.key === "Enter" &&
-      onConfirm &&
-      variant !== "theater"
-    ) {
-      e.preventDefault();
-      onConfirm();
-    }
-  }
-
-  dialog.addEventListener("keydown", trap);
+  // Focus trap
+  focusTrapInstance = createFocusTrap(dialog, {
+    cycleOnTab: true,
+    closeOnEscape: !force,
+    onEscape: wrappedClose,
+    enterConfirm: true,
+    onConfirm: () => onConfirm?.()
+  });
 
   const container = document.getElementById("modalcon");
   if (!container) {
-    dialog.removeEventListener("keydown", trap);
-    unlockBodyScroll();
-    openModals = Math.max(0, openModals - 1);
-    throw new Error('No element with id "modalcon" found');
+    cleanup();
+    throw new Error("Modal container with id 'modalcon' not found");
   }
 
   modal.classList.add("modal--fade-in");
@@ -254,21 +207,21 @@ return;
 
   if (autofocus) {
     setTimeout(() => {
-      if (autofocusSelector) {
-        dialog.querySelector(autofocusSelector)?.focus();
-      } else {
-        dialog.focus();
-      }
+      autofocusSelector
+        ? dialog.querySelector(autofocusSelector)?.focus()
+        : dialog.focus();
     }, 0);
   }
 
   if (returnDataOnClose) {
     let resolve;
-    const closed = new Promise(r => (resolve = r));
+    const closed = new Promise((r) => (resolve = r));
+
     const close = (data) => {
       wrappedClose(data);
       resolve(data);
     };
+
     return { modal, dialog, overlay, close, closed };
   }
 

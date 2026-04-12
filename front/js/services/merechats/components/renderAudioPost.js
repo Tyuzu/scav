@@ -1,25 +1,6 @@
-import { resolveImagePath, EntityType, PictureType } from "../../../utils/imagePaths.js";
-import AudioPlayer from "../../../components/ui/AudioPlayer.mjs";
-
-async function RenderAudioPost(container, id = "") {
-  const src = resolveImagePath(EntityType.CHAT, PictureType.AUDIO, `${id}.mp3`);
-  const poster = resolveImagePath(EntityType.CHAT, PictureType.THUMB, `${id}.jpg`);
-
-  const audio = AudioPlayer({
-    src,
-    poster,
-    controls: true,
-    muted: false
-  });
-
-  container.appendChild(audio);
-}
-
-export { RenderAudioPost };
-
-// // renderAudioPost.js
-// import { resolveImagePath, EntityType, PictureType } from "../../../utils/imagePaths.js";
-// import AudioPlayer from '../../../components/ui/AudioPlayer.mjs';
+// MediaRenders - Consolidated component
+// Re-exports from shared for backward compatibility
+export { RenderAudioPost } from "../../../shared/components/MediaRenders.js";
 
 // async function RenderAudioPost(mediaContainer, media_url = "", resolution) {
 //     const audioSrc = resolveImagePath(EntityType.CHAT, PictureType.AUDIO, `${media_url}.mp3`);

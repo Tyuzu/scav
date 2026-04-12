@@ -5,8 +5,6 @@ import { getState, subscribeDeep } from "../state/state.js";
 import { openNotificationsModal } from "../services/notifications/notifModal.js";
 import { toggleSidebar } from "./sidebar.js";
 import { createIconButton } from "../utils/svgIconButton.js";
-// import { tmessaging } from "./tumblrSvgs.js";
-// import { openCartModal } from "../services/cart/cartModal.js";
 
 // --- Update container children based on login state
 function updateNav(container, divs) {
