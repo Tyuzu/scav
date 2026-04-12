@@ -52,7 +52,7 @@ function makeBody(content, uid) {
   const node = typeof content === "function" ? content() : content;
   const children = node instanceof HTMLElement
     ? [node]
-    : [document.createTextNode(node == null ? "" : String(node))];
+    : [document.createTextNode(node === null ? "" : String(node))];
 
   const body = createElement(
     "div",

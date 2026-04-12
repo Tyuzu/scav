@@ -21,6 +21,7 @@ import { displayNotices } from "../../notices/notices.js";
 import { displayFanMedia } from "../../fanmade/ui/mediaGallery.js";
 import { renderWeatherDetails } from "../weather/weather.js";
 import { createCrop } from "../crop/createCrop.js";
+import Modal from "../../../components/ui/Modal.mjs";
 
 export async function displayFarm(isLoggedIn, farmId, content) {
   const container = createElement("div", { class: "farmpage" });
@@ -169,7 +170,27 @@ export async function displayFarm(isLoggedIn, farmId, content) {
         if (isCreator) {
           tabContainer.append(
             Button("Add Crop", "add-crop-btn", {
-              click: () => createCrop(normalizedFarmId, content)
+              click: async () => {
+                // temporary placeholder while form builds
+                const placeholder = createElement("div", {}, ["Loading..."]);
+
+                const modalRef = Modal({
+                  title: "Add Crop",
+                  content: placeholder,
+                  size: "medium",
+                  closeOnOverlayClick: true
+                });
+
+                // build form and inject close handler
+                const formEl = await createCrop(
+                  normalizedFarmId,
+                  () => modalRef.close()
+                );
+
+                // replace placeholder with actual form
+                const body = modalRef.dialog.querySelector(".modal-body");
+                body.replaceChildren(formEl);
+              }
             }, "buttonx")
           );
         }

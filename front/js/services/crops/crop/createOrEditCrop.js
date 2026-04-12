@@ -122,7 +122,7 @@ export function createCommonCropForm({ crop = {}, currentFarmName = "", isEdit =
 
     const fields = [
         categoryGroup, cropGroup, priceGroup, quantityGroup, unitGroup,
-        notesGroup, harvestGroup, expiryGroup, featuredGroup, outOfStockGroup, 
+        notesGroup, harvestGroup, expiryGroup, featuredGroup, outOfStockGroup,
         //imageGroup
     ];
 
@@ -145,8 +145,8 @@ export function createCommonCropForm({ crop = {}, currentFarmName = "", isEdit =
         cropSelect.innerHTML = '<option value="">Select Crop</option>';
         const crops = cropCategoryMap[category];
         if (!crops) {
-return cropSelect.disabled = true;
-}
+            return cropSelect.disabled = true;
+        }
         crops.forEach(c => {
             const option = createElement("option", { value: c, selected: c === crop.name }, [c]);
             cropSelect.appendChild(option);
