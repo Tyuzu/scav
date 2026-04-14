@@ -54,17 +54,17 @@ export async function displayCreateOrEditBaitoProfile(isLoggedIn, contentContain
             const worker = await apiFetch(`/baitos/worker/${workerId}`);
             form.querySelector("#profile-name").value = worker.name || "";
             form.querySelector("#profile-age").value = worker.age || "";
-            form.querySelector("#profile-phone").value = worker.phone_number || "";
+            form.querySelector("#profile-phone").value = worker.phone || "";
             form.querySelector("#profile-email").value = worker.email || "";
-            form.querySelector("#profile-location").value = worker.address || "";
-            form.querySelector("#profile-roles").value = Array.isArray(worker.preferred_roles)
-                ? worker.preferred_roles.join(", ")
-                : worker.preferred_roles || "";
+            form.querySelector("#profile-location").value = worker.location || "";
+            form.querySelector("#profile-roles").value = Array.isArray(worker.preferredRoles)
+                ? worker.preferredRoles.join(", ")
+                : worker.preferredRoles || "";
             form.querySelector("#profile-category").value = worker.category || "";
             form.querySelector("#profile-experience").value = worker.experience || "";
             form.querySelector("#profile-skills").value = worker.skills || "";
             form.querySelector("#profile-availability").value = worker.availability || "";
-            form.querySelector("#profile-wage").value = worker.expected_wage || "";
+            form.querySelector("#profile-wage").value = worker.expectedWage || "";
             form.querySelector("#profile-languages").value = worker.languages || "";
             form.querySelector("#profile-bio").value = worker.bio || "";
             bioCounter.textContent = `${worker.bio?.length || 0} / 500 characters`;

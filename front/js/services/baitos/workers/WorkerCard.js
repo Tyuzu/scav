@@ -7,7 +7,7 @@ import Imagex from "../../../components/base/Imagex.js";
 
 export function HireWorkerCard(worker) {
   const isLoggedIn = Boolean(getState("token"));
-  const isSelf = getState("user") === worker.userid;
+  const isSelf = getState("user") === worker.userId;
 
   const card = createElement("div", { class: "worker-card" });
 
@@ -15,7 +15,7 @@ export function HireWorkerCard(worker) {
   const photo = createElement("div", { class: "worker-photo" });
 
   const profileImg = Imagex( {
-    src: resolveImagePath(EntityType.WORKER, PictureType.THUMB, worker.photo),
+    src: resolveImagePath(EntityType.WORKER, PictureType.THUMB, worker.profilePic),
     classes: "profile-thumbnail",
     loading: "lazy",
     alt: `${worker.name || "Worker"}'s profile photo`
@@ -37,18 +37,18 @@ return null;
 
   const details = createElement("div", { class: "worker-details" }, [
     createElement("h3", {}, [worker.name || "Unnamed Worker"]),
-    renderDetail("📞", worker.phone_number),
-    renderDetail("🛠", worker.preferred_roles),
-    renderDetail("📍", worker.address),
+    renderDetail("📞", worker.phone),
+    renderDetail("🛠", worker.preferredRoles?.join(", ")),
+    renderDetail("📍", worker.location),
     renderDetail("📝", worker.bio),
     !isSelf && isLoggedIn
       ? Button(
         "View Profile",
-        `hire-${worker.baito_user_id}`,
+        `hire-${worker.baitoUserId}`,
         {
           click: (e) => {
             e.stopPropagation();
-            navigate(`/baitos/worker/${worker.baito_user_id}`);
+            navigate(`/baitos/worker/${worker.baitoUserId}`);
           }
         },
         "btn btn-primary",
@@ -64,7 +64,7 @@ return null;
   card.appendChild(details);
 
   // Click anywhere on card to view profile
-  card.addEventListener("click", () => navigate(`/baitos/worker/${worker.baito_user_id}`));
+  card.addEventListener("click", () => navigate(`/baitos/worker/${worker.baitoUserId}`));
 
   return card;
   // return createElement("a", {

@@ -46,9 +46,17 @@ export async function userProfileCard(profile = {
               }
       
               try {
+                // Map entity types to valid fundable types
+                let fundableType = profile.entityType;
+                if (fundableType === "post") {
+                  fundableType = "creator";
+                } else if (!fundableType || fundableType === "user") {
+                  fundableType = "artist";
+                }
+
                 const result = await payViaStripe({
                   paymentType: "funding",
-                  entityType: profile.entityType || "artist",
+                  entityType: fundableType,
                   entityId: profile.entityId
                 });
       

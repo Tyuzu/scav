@@ -28,7 +28,7 @@ func GetWorkerById(app *infra.Deps) httprouter.Handle {
 		err := app.DB.FindOne(
 			ctx,
 			BaitoWorkersCollection,
-			bson.M{"baito_user_id": ps.ByName("workerId")},
+			bson.M{"baitoUserId": ps.ByName("workerId")},
 			&worker,
 		)
 		if err != nil {
@@ -55,8 +55,8 @@ func GetWorkerSkills(app *infra.Deps) httprouter.Handle {
 			to keep the Database interface Mongo-agnostic
 		*/
 		pipeline := mongo.Pipeline{
-			{{Key: "$unwind", Value: "$preferred_roles"}},
-			{{Key: "$group", Value: bson.M{"_id": "$preferred_roles"}}},
+			{{Key: "$unwind", Value: "$preferredRoles"}},
+			{{Key: "$group", Value: bson.M{"_id": "$preferredRoles"}}},
 			{{Key: "$project", Value: bson.M{"_id": 0, "skill": "$_id"}}},
 		}
 
@@ -98,7 +98,7 @@ func GetWorkers(app *infra.Deps) httprouter.Handle {
 		}
 
 		if skill != "" {
-			filter["preferred_roles"] = skill
+			filter["preferredRoles"] = skill
 		}
 
 		skip, limit := utils.ParsePagination(r, 10, 100)

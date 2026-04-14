@@ -21,7 +21,8 @@
     "showMore": "और दिखाएं",
     "showLess": "कम दिखाएं",
     "close": "बंद करें",
-    "open": "खोलें"
+    "open": "खोलें",
+    "advertisement": "विज्ञापन"
   },
   "nav": {
     "farms": "खेत",
@@ -91,6 +92,7 @@
   "recipes": {
     "recipes": "व्यंजन विधि",
     "createNewRecipe": "नई व्यंजन विधि बनाएं",
+    "filters": "फ़िल्टर",
     "filterByTags": "टैग के अनुसार फ़िल्टर करें",
     "prepTime": "तैयारी का समय: {cookTime}",
     "viewRecipe": "व्यंजन विधि देखें",

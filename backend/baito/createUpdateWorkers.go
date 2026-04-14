@@ -47,15 +47,15 @@ func parseWorkerForm(r *http.Request, isUpdate bool) (models.BaitoWorker, bson.M
 		set["age"] = age
 		set["phone"] = r.FormValue("phone")
 		set["location"] = r.FormValue("location")
-		set["preferred_roles"] = roles
+		set["preferredRoles"] = roles
 		set["bio"] = r.FormValue("bio")
 		set["email"] = r.FormValue("email")
 		set["experience"] = r.FormValue("experience")
 		set["skills"] = r.FormValue("skills")
 		set["availability"] = r.FormValue("availability")
-		set["expected_wage"] = r.FormValue("expected_wage")
+		set["expectedWage"] = r.FormValue("expected_wage")
 		set["languages"] = r.FormValue("languages")
-		set["updated_at"] = time.Now()
+		set["updatedAt"] = time.Now().Unix()
 	} else {
 		worker = models.BaitoWorker{
 			UserID:       utils.GetUserIDFromRequest(r),
@@ -72,7 +72,7 @@ func parseWorkerForm(r *http.Request, isUpdate bool) (models.BaitoWorker, bson.M
 			Availability: r.FormValue("availability"),
 			ExpectedWage: r.FormValue("expected_wage"),
 			Languages:    r.FormValue("languages"),
-			CreatedAt:    time.Now(),
+			CreatedAt:    time.Now().Unix(),
 		}
 	}
 
@@ -92,7 +92,7 @@ func CreateWorkerProfile(app *infra.Deps) httprouter.Handle {
 		err := app.DB.FindOne(
 			ctx,
 			BaitoWorkersCollection,
-			bson.M{"userid": userID},
+			bson.M{"userId": userID},
 			&existing,
 		)
 		if err == nil {
@@ -166,8 +166,8 @@ func UpdateWorkerProfile(app *infra.Deps) httprouter.Handle {
 		}
 
 		filter := bson.M{
-			"baito_user_id": workerID,
-			"userid":        userID,
+			"baitoUserId": workerID,
+			"userId":      userID,
 		}
 
 		err = app.DB.UpdateOne(ctx, BaitoWorkersCollection, filter, update)

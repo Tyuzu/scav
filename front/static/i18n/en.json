@@ -21,7 +21,8 @@
     "showMore": "Show more",
     "showLess": "Show less",
     "close": "Close",
-    "open": "Open"
+    "open": "Open",
+    "advertisement": "Advertisement"
   },
   "nav": {
     "farms": "Farms",
@@ -91,6 +92,7 @@
   "recipes": {
     "recipes": "Recipes",
     "createNewRecipe": "Create New Recipe",
+    "filters": "Filters",
     "filterByTags": "Filter by Tags",
     "prepTime": "Prep Time: {cookTime}",
     "viewRecipe": "View Recipe",

@@ -34,16 +34,16 @@ type BaitosResponse struct {
 }
 
 type BaitoWorkersResponse struct {
-	UserID      string    `json:"userid" bson:"userid"`
-	BaitoUserID string    `json:"baito_user_id" bson:"baito_user_id"`
-	Name        string    `json:"name" bson:"name"`
-	Age         int       `json:"age" bson:"age"`
-	Phone       string    `json:"phone_number" bson:"phone_number"`
-	Location    string    `json:"address" bson:"address"`
-	Preferred   []string  `json:"preferred_roles" bson:"preferred_roles"`
-	Bio         string    `json:"bio" bson:"bio"`
-	ProfilePic  string    `json:"photo" bson:"photo"`
-	CreatedAt   time.Time `json:"created_at" bson:"created_at"`
+	UserID      string   `json:"userId" bson:"userId"`
+	BaitoUserID string   `json:"baitoUserId" bson:"baitoUserId"`
+	Name        string   `json:"name" bson:"name"`
+	Age         int      `json:"age" bson:"age"`
+	Phone       string   `json:"phone" bson:"phone"`
+	Location    string   `json:"location" bson:"location"`
+	Preferred   []string `json:"preferredRoles" bson:"preferredRoles"`
+	Bio         string   `json:"bio" bson:"bio"`
+	ProfilePic  string   `json:"profilePic" bson:"profilePic"`
+	CreatedAt   int64    `json:"createdAt" bson:"createdAt"`
 }
 
 // --- BlogPostResponse for list view ---

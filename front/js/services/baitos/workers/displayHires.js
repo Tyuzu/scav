@@ -2,10 +2,8 @@ import { createElement } from "../../../components/createElement.js";
 import { Button } from "../../../components/base/Button.js";
 import { navigate } from "../../../routes/index.js";
 import { renderWorkerList } from "./WorkerList.js";
-import { HireWorkerCard } from "./WorkerCard.js";
 import { apiFetch } from "../../../api/api.js";
 import { adspace } from "../../home/homeHelpers.js";
-import Datex from "../../../components/base/Datex.js";
 
 export async function displayHireWorkers(isLoggedIn, container) {
   container.replaceChildren();

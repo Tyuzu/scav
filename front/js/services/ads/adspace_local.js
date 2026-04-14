@@ -6,7 +6,7 @@ let adCounter = 0;
 export function advertEmbed(page, position = "", options = {}) {
   adCounter++;
 
-  const { classes = "", fallbackText = t("advertisement", {}, "Advertisement") } = options;
+  const { classes = "", fallbackText = t("common.advertisement", {}, "Advertisement") } = options;
 
   const slotId = `ad-slot-${page}-${Date.now()}-${adCounter}`;
 

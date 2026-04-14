@@ -21,7 +21,8 @@
     "showMore": "Mostrar más",
     "showLess": "Mostrar menos",
     "close": "Cerrar",
-    "open": "Abrir"
+    "open": "Abrir",
+    "advertisement": "Publicidad"
   },
   "nav": {
     "farms": "Granjas",
@@ -91,6 +92,7 @@
   "recipes": {
     "recipes": "Recetas",
     "createNewRecipe": "Crear Nueva Receta",
+    "filters": "Filtros",
     "filterByTags": "Filtrar por Etiquetas",
     "prepTime": "Tiempo de Preparación: {cookTime}",
     "viewRecipe": "Ver Receta",

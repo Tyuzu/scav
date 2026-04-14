@@ -18,7 +18,7 @@ export function advertEmbed(page, position = "", options = {}) {
 
   const {
     classes = "",
-    fallbackText = t("advertisement", {}, "Advertisement"),
+    fallbackText = t("common.advertisement", {}, "Advertisement"),
     adNetworkInit = null,
     debug = false
   } = options;
@@ -35,7 +35,7 @@ export function advertEmbed(page, position = "", options = {}) {
   ]);
 
   if (debug) {
-    console.log("Ad slot created:", slotId, "page:", page, "position:", position);
+    console.warn("Ad slot created:", slotId, "page:", page, "position:", position);
   }
 
   // Lazy-load ad when the slot enters the viewport

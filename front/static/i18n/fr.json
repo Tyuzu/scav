@@ -21,7 +21,8 @@
     "showMore": "Afficher plus",
     "showLess": "Afficher moins",
     "close": "Fermer",
-    "open": "Ouvrir"
+    "open": "Ouvrir",
+    "advertisement": "Publicité"
   },
   "nav": {
     "farms": "Fermes",
@@ -91,6 +92,7 @@
   "recipes": {
     "recipes": "Recettes",
     "createNewRecipe": "Créer une Nouvelle Recette",
+    "filters": "Filtres",
     "filterByTags": "Filtrer par Étiquettes",
     "prepTime": "Temps de Préparation: {cookTime}",
     "viewRecipe": "Voir la Recette",

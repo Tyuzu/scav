@@ -7,6 +7,7 @@ import Imagex from "../../components/base/Imagex.js";
 import { navigate } from "../../routes/index.js";
 import { debounce } from "../../utils/deutils.js";
 import Datex from "../../components/base/Datex.js";
+import { reportPost } from "../reporting/reporting.js";
 
 /* =========================
    INTERNAL STATE
@@ -49,7 +50,7 @@ async function fetchComments(entityType, entityId, page = 1, sort = "newest") {
    RENDER SINGLE COMMENT
 ========================= */
 
-function renderComment(comment) {
+function renderComment(comment, entityType, entityId) {
     const user = comment.user || {};
     const avatarSrc = resolveImagePath(
         EntityType.USER,
@@ -98,8 +99,22 @@ navigate(`/user/${user.username}`);
     ]);
 
     const actions = createElement("div", { class: "comment-actions" }, [
-        Button("Reply", "", {}, "comment-reply buttonx"),
-        Button("Report", "", {}, "comment-report buttonx")
+        Button(
+            "Reply",
+            `reply-${comment.commentid}`,
+            { click: () => console.warn("Reply to:", comment.commentid) },
+            "comment-reply buttonx"
+        ),
+        Button(
+            "Report",
+            `report-${comment.commentid}`,
+            {
+                click: () => {
+                    reportPost(comment.commentid, "comment", entityType, entityId);
+                }
+            },
+            "comment-report buttonx"
+        )
     ]);
 
     return createElement("div", { class: "comment" }, [
@@ -129,7 +144,7 @@ return;
 
     state.comments.forEach(c => {
         const user = usersMeta[c.createdBy] || {};
-        state.list.appendChild(renderComment({ ...c, user }));
+        state.list.appendChild(renderComment({ ...c, user }, state.entityType, state.entityId));
     });
 
     if (state.hasMore) {
@@ -231,7 +246,7 @@ return;
 
         state.comments.unshift({ ...newComment, user });
         state.input.value = "";
-        renderComments(key);
+        await renderComments(key);
     } catch (err) {
         console.error("Failed to post comment", err);
     }
@@ -248,7 +263,7 @@ export function createCommentsSection(entityType, entityId, currentUser) {
     const container = createElement("div", {
         class: "comments-section",
         dataset: { entityType, entityId }
-    });
+    }, []);
 
     const list = createElement("div", { class: "comments-list" });
 
@@ -274,7 +289,7 @@ export function createCommentsSection(entityType, entityId, currentUser) {
 
     container.append(sort, form, list);
 
-    commentState.set(key, {
+    const state = {
         entityType,
         entityId,
         currentUser,
@@ -285,9 +300,10 @@ export function createCommentsSection(entityType, entityId, currentUser) {
         sort: "newest",
         page: 1,
         hasMore: true
-    });
+    };
 
-    renderComments(key);
+    commentState.set(key, state);
+
     loadComments(key, true);
 
     form.addEventListener("submit", e => handleSubmit(e, key));

@@ -21,7 +21,8 @@
     "showMore": "عرض المزيد",
     "showLess": "عرض أقل",
     "close": "إغلاق",
-    "open": "فتح"
+    "open": "فتح",
+    "advertisement": "إعلان"
   },
   "nav": {
     "farms": "المزارع",
@@ -91,6 +92,7 @@
   "recipes": {
     "recipes": "الوصفات",
     "createNewRecipe": "إنشاء وصفة جديدة",
+    "filters": "مرشحات",
     "filterByTags": "تصفية حسب الوسوم",
     "prepTime": "وقت التحضير: {cookTime}",
     "viewRecipe": "عرض الوصفة",

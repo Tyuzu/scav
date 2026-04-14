@@ -21,10 +21,10 @@ export async function displayRecipes(container, isLoggedIn) {
 
   // ---------- SIDEBAR ----------
   aside.append(
-    createElement("h2", {}, [t("filters", {}, "Filters")]),
+    createElement("h2", {}, [t("recipes.filters", {}, "Filters")]),
     adspace("aside"),
     Button(
-      t("createNewRecipe", {}, "Create Recipe"),
+      t("recipes.createNewRecipe", {}, "Create Recipe"),
       "create-recipe-shortcut",
       { click: () => createRecipe(container) },
       "buttonx secondary"
@@ -33,7 +33,7 @@ export async function displayRecipes(container, isLoggedIn) {
 
   // ---------- TITLE ----------
   main.append(
-    createElement("h1", {}, [t("recipes", {}, "Recipes")])
+    createElement("h1", {}, [t("recipes.recipes", {}, "Recipes")])
   );
 
   // ---------- ACTIONS ----------
@@ -42,7 +42,7 @@ export async function displayRecipes(container, isLoggedIn) {
   if (isLoggedIn) {
     actions.append(
       Button(
-        t("createNewRecipe", {}, "Create New Recipe"),
+        t("recipes.createNewRecipe", {}, "Create New Recipe"),
         "create-recipe-btn",
         { click: () => createRecipe(container) },
         "buttonx primary"
@@ -83,7 +83,7 @@ export async function displayRecipes(container, isLoggedIn) {
 }
 
 // ---------- CARD ----------
-function createRecipeCard(recipe, isLoggedIn) {
+function createRecipeCard(recipe, _isLoggedIn) {
   const imageUrl = resolveImagePath(
     EntityType.RECIPE,
     PictureType.THUMB,
@@ -99,7 +99,7 @@ function createRecipeCard(recipe, isLoggedIn) {
       {},
       [
         t(
-          "prepTime",
+          "recipes.prepTime",
           { cookTime: recipe.cookTime || "N/A" },
           `Prep Time: ${recipe.cookTime || "N/A"}`
         )
@@ -113,7 +113,7 @@ function createRecipeCard(recipe, isLoggedIn) {
       )
     ),
     Button(
-      t("viewRecipe", {}, "View Recipe"),
+      t("recipes.viewRecipe", {}, "View Recipe"),
       `view-${recipe.recipeid}`,
       { click: () => navigate(`/recipe/${recipe.recipeid}`) },
       "buttonx primary"

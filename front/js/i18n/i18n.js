@@ -88,18 +88,21 @@ export function getCurrentLanguage() {
 /**
  * Translate a key with optional variables and fallback.
  * Supports:
+ * - nested keys using dot notation (e.g., "recipes.createNewRecipe")
  * - pluralization (key.one / key.other)
  * - {var} interpolation
  * - fallback key if missing
  */
 export function t(key, vars = {}, fallback = "") {
-  let template = translations[key];
+  // Support nested key lookup with dot notation
+  let template = key.split(".").reduce((obj, k) => obj?.[k], translations);
 
   // Handle pluralization
   const count = vars.count;
   if (typeof count === "number") {
     const pluralKey = `${key}.${count === 1 ? "one" : "other"}`;
-    template = translations[pluralKey] || template;
+    const pluralTemplate = pluralKey.split(".").reduce((obj, k) => obj?.[k], translations);
+    template = pluralTemplate || template;
   }
 
   if (!template) {
@@ -107,8 +110,11 @@ export function t(key, vars = {}, fallback = "") {
     template = fallback || key;
   }
 
+  // Ensure template is always a string before calling .replace()
+  const templateStr = String(template);
+
   // Interpolation
-  return template.replace(/\{(\w+)\}/g, (_, k) =>
+  return templateStr.replace(/\{(\w+)\}/g, (_, k) =>
     Object.prototype.hasOwnProperty.call(vars, k) ? vars[k] : `{${k}}`
   );
 }

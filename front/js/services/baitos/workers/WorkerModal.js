@@ -6,7 +6,7 @@ import Imagex from "../../../components/base/Imagex.js";
 export function openHireWorkerModal(worker) {
   const wrapper = createElement("div", { class: "hire-worker-modal" });
 
-  const imgSrc = resolveImagePath(EntityType.BAITO, PictureType.THUMB, worker.avatar);
+  const imgSrc = resolveImagePath(EntityType.BAITO, PictureType.THUMB, worker.profilePic);
   const image = Imagex({
     src: imgSrc,
     alt: `${worker.name} profile picture`,
@@ -15,9 +15,9 @@ export function openHireWorkerModal(worker) {
 
   const details = createElement("div", { class: "worker-details" }, [
     createElement("h3", { class: "worker-name" }, [worker.name]),
-    createElement("p", { class: "worker-phone" }, [`📞 ${worker.phone_number || "N/A"}`]),
-    createElement("p", { class: "worker-role" }, [`🎯 ${worker.preferred_roles || "Unspecified"}`]),
-    createElement("p", { class: "worker-location" }, [`📍 ${worker.address || "Unknown"}`]),
+    createElement("p", { class: "worker-phone" }, [`📞 ${worker.phone || "N/A"}`]),
+    createElement("p", { class: "worker-role" }, [`🎯 ${(worker.preferredRoles || []).join(", ") || "Unspecified"}`]),
+    createElement("p", { class: "worker-location" }, [`📍 ${worker.location || "Unknown"}`]),
     createElement("p", { class: "worker-bio" }, [`📝 ${worker.bio || "No bio provided."}`])
   ]);
 

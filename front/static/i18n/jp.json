@@ -21,7 +21,8 @@
     "showMore": "もっと見る",
     "showLess": "隠す",
     "close": "閉じる",
-    "open": "開く"
+    "open": "開く",
+    "advertisement": "広告"
   },
   "nav": {
     "farms": "農場",
@@ -91,6 +92,7 @@
   "recipes": {
     "recipes": "レシピ",
     "createNewRecipe": "新しいレシピを作成",
+    "filters": "フィルター",
     "filterByTags": "タグで絞り込む",
     "prepTime": "準備時間: {cookTime}",
     "viewRecipe": "レシピを表示",
