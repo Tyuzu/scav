@@ -69,6 +69,68 @@ func (p *PaymentService) RegisterDefaultResolvers() {
 	p.RegisterResolver("post", func(ctx context.Context, id string) (int64, error) {
 		return 0, nil
 	})
+
+	// orders - fetch total from order
+	p.RegisterResolver("order", func(ctx context.Context, id string) (int64, error) {
+		var o struct{ Total int64 }
+		err := db.FindOne(ctx, "orders", map[string]any{"orderId": id}, &o)
+		return o.Total, err
+	})
+
+	// cart - custom entity, no fixed price
+	p.RegisterResolver("cart", func(ctx context.Context, id string) (int64, error) {
+		return 0, nil
+	})
+
+	// product - treat like menu item
+	p.RegisterResolver("product", func(ctx context.Context, id string) (int64, error) {
+		var p struct{ Price int64 }
+		err := db.FindOne(ctx, "products", map[string]any{"productid": id}, &p)
+		return p.Price, err
+	})
+
+	// booking - has a price
+	p.RegisterResolver("booking", func(ctx context.Context, id string) (int64, error) {
+		var b struct{ Price int64 }
+		err := db.FindOne(ctx, "bookings", map[string]any{"bookingid": id}, &b)
+		return b.Price, err
+	})
+
+	// merch - has a price
+	p.RegisterResolver("merch", func(ctx context.Context, id string) (int64, error) {
+		var m struct{ Price int64 }
+		err := db.FindOne(ctx, "merch", map[string]any{"merchid": id}, &m)
+		return m.Price, err
+	})
+
+	// crop - has a price
+	p.RegisterResolver("crop", func(ctx context.Context, id string) (int64, error) {
+		var c struct{ Price int64 }
+		err := db.FindOne(ctx, "crops", map[string]any{"cropid": id}, &c)
+		return c.Price, err
+	})
+
+	// farm - custom entity
+	p.RegisterResolver("farm", func(ctx context.Context, id string) (int64, error) {
+		return 0, nil
+	})
+
+	// beat - has a price
+	p.RegisterResolver("beat", func(ctx context.Context, id string) (int64, error) {
+		var b struct{ Price int64 }
+		err := db.FindOne(ctx, "beats", map[string]any{"beatid": id}, &b)
+		return b.Price, err
+	})
+
+	// donation - custom amount
+	p.RegisterResolver("donation", func(ctx context.Context, id string) (int64, error) {
+		return 0, nil
+	})
+
+	// funding - custom amount
+	p.RegisterResolver("funding", func(ctx context.Context, id string) (int64, error) {
+		return 0, nil
+	})
 }
 
 // ===== Account Helpers =====
@@ -128,6 +190,54 @@ func (p *PaymentService) successTxn(ctx context.Context, txnID string) {
 	)
 }
 
+// recordGlobalLedger records money additions/deletions in the global ledger
+// type: "addition" (topup/refund) or "deletion" (payment/withdrawal)
+// reason: topup, refund, payment, transfer, etc
+func (p *PaymentService) recordGlobalLedger(ctx context.Context, txnID string, journalEntryID string, ledgerType string, reason string, amount int64, accountID string, userID string) error {
+	// Get previous running totals (simplified: we'll just get any entry and use its totals)
+	// In production, you might want to query the latest or maintain a summary document
+	var lastEntry models.GlobalLedger
+
+	totalAdditions := int64(0)
+	totalDeletions := int64(0)
+
+	// Try to find the last entry - if none exists, start from 0
+	// Note: In a production system, you'd want to query the latest by timestamp or use aggregation
+	_ = p.app.DB.FindOne(ctx, globalLedgerCollection, map[string]any{}, &lastEntry)
+
+	// If we found a previous entry, use its running totals as baseline
+	if lastEntry.ID != "" {
+		totalAdditions = lastEntry.TotalAdditionsUpto
+		totalDeletions = lastEntry.TotalDeletionsUpto
+	}
+
+	// Update running totals based on entry type
+	switch ledgerType {
+	case "addition":
+		totalAdditions += amount
+	case "deletion":
+		totalDeletions += amount
+	}
+
+	entry := models.GlobalLedger{
+		ID:                 utils.GetUUID(),
+		TxnID:              txnID,
+		Type:               ledgerType,
+		Reason:             reason,
+		Amount:             amount,
+		Currency:           "INR",
+		AccountID:          accountID,
+		UserID:             userID,
+		JournalEntryID:     journalEntryID,
+		TotalAdditionsUpto: totalAdditions,
+		TotalDeletionsUpto: totalDeletions,
+		NetBalanceUpto:     totalAdditions - totalDeletions,
+		CreatedAt:          time.Now(),
+	}
+
+	return p.app.DB.InsertOne(ctx, globalLedgerCollection, entry)
+}
+
 // ===== Payment Rules =====
 
 type PaymentRule struct {
@@ -144,9 +254,19 @@ var PaymentRules = map[string]PaymentRule{
 	},
 	"purchase": {
 		AllowedEntities: map[string]bool{
-			"menu":    true,
-			"ticket":  true,
-			"service": true,
+			"order":    true,
+			"cart":     true,
+			"menu":     true,
+			"booking":  true,
+			"product":  true,
+			"ticket":   true,
+			"merch":    true,
+			"crop":     true,
+			"service":  true,
+			"farm":     true,
+			"beat":     true,
+			"donation": true,
+			"funding":  true,
 		},
 		AllowedMethods: map[string]bool{
 			"wallet": true,

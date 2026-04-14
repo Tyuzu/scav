@@ -30,7 +30,8 @@ export async function openCartModal() {
     grouped.forEach(item => {
       const label = `${item.itemName} (${item.quantity} ${item.unit || "unit"})`;
       const entityInfo = item.entityName ? ` from ${item.entityName}` : "";
-      const price = `₹${(item.price * item.quantity).toFixed(2)}`;
+      const priceInRupees = (item.price || 0) / 100;
+      const price = `₹${(priceInRupees * item.quantity).toFixed(2)}`;
 
       const li = createElement("li", {
         style: "display: flex; justify-content: space-between; align-items: center; padding: 0.3rem 0;"
@@ -81,12 +82,12 @@ export async function openCartModal() {
 function groupCart(items) {
   const map = {};
   items.forEach(it => {
-    const key = it.itemId + (it.entityId || "");
+    const key = `${it.itemId || ""}__${it.entityId || ""}`;
     if (!map[key]) {
-map[key] = { ...it };
-} else {
-map[key].quantity += it.quantity;
-}
+      map[key] = { ...it };
+    } else {
+      map[key].quantity += it.quantity;
+    }
   });
   return Object.values(map);
 }

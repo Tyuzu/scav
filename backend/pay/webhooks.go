@@ -209,6 +209,7 @@ func validateWebhookPayload(payload *PaymentWebhookPayload) error {
 
 // logWebhookAttempt records webhook processing attempt
 func logWebhookAttempt(ctx context.Context, app *infra.Deps, payload *PaymentWebhookPayload, status string, reason string) {
+	_, _ = ctx, app
 	log.Printf("Webhook: %s - TxnID: %s, Status: %s, Reason: %s", status, payload.TransactionID, payload.Status, reason)
 	// TODO: Store in database for monitoring
 }

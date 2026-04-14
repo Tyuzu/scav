@@ -34,7 +34,7 @@ type Transaction struct {
 	Amount   int64  `bson:"amount" json:"amount"` // SMALLEST UNIT (paise)
 	Currency string `bson:"currency" json:"currency"`
 
-	Status string `bson:"state" json:"state"`
+	Status string `bson:"status" json:"status"`
 	// initiated, success, failed, reversed
 
 	IdempotencyKey string `bson:"external_ref,omitempty" json:"external_ref,omitempty"`
@@ -59,6 +59,33 @@ type JournalEntry struct {
 
 	Amount   int64  `bson:"amount" json:"amount"` // SMALLEST UNIT
 	Currency string `bson:"currency" json:"currency"`
+
+	CreatedAt time.Time `bson:"created_at" json:"created_at"`
+	Meta      Meta      `bson:"meta,omitempty" json:"meta,omitempty"`
+}
+
+// GlobalLedger tracks total money additions and deletions across the system.
+// This is used for auditing and reporting total money in circulation.
+type GlobalLedger struct {
+	ID       string `bson:"_id,omitempty" json:"id"`
+	TxnID    string `bson:"txn_id" json:"txn_id"`
+	Type     string `bson:"type" json:"type"`     // addition | deletion | transfer
+	Reason   string `bson:"reason" json:"reason"` // topup | refund | payment | transfer | correction
+	Amount   int64  `bson:"amount" json:"amount"` // SMALLEST UNIT, always positive
+	Currency string `bson:"currency" json:"currency"`
+
+	// For additions: which account received money (from external/system)
+	// For deletions: which account lost money (to external/system)
+	AccountID string `bson:"account_id" json:"account_id"`
+	UserID    string `bson:"userid,omitempty" json:"userid,omitempty"`
+
+	// Reference to the transaction or journal entry
+	JournalEntryID string `bson:"journal_entry_id,omitempty" json:"journal_entry_id,omitempty"`
+
+	// Running totals for quick reporting
+	TotalAdditionsUpto int64 `bson:"total_additions_upto" json:"total_additions_upto"` // cumulative additions
+	TotalDeletionsUpto int64 `bson:"total_deletions_upto" json:"total_deletions_upto"` // cumulative deletions
+	NetBalanceUpto     int64 `bson:"net_balance_upto" json:"net_balance_upto"`         // additions - deletions
 
 	CreatedAt time.Time `bson:"created_at" json:"created_at"`
 	Meta      Meta      `bson:"meta,omitempty" json:"meta,omitempty"`

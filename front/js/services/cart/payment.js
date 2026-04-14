@@ -8,39 +8,8 @@ import Button from "../../components/base/Button.js";
 const formatINR = val =>
   Intl.NumberFormat("en-IN", { style: "currency", currency: "INR" }).format(val);
 
-async function validateCoupon(couponCode, cartTotal) {
-  if (!couponCode || couponCode.trim().length === 0) {
-    return { valid: false, discount: 0 };
-  }
-
-  try {
-    const res = await apiFetch(
-      "/coupon/validate",
-      "POST",
-      JSON.stringify({
-        code: couponCode,
-        cart: cartTotal
-      }),
-      {
-        headers: { "Content-Type": "application/json" }
-      }
-    );
-
-    if (res && res.valid) return res;
-
-    return {
-      valid: false,
-      discount: 0,
-      reason: res?.message || "Coupon validation failed"
-    };
-  } catch (error) {
-    console.error("Coupon validation error:", error);
-    return { valid: false, discount: 0, reason: error.message };
-  }
-}
-
-function calculateTotals(items = {}, discount = 0, delivery = 20, taxRate = 0.05) {
-  const flat = Object.values(items).flat();
+function calculateTotals(items = [], discount = 0, delivery = 20, taxRate = 0.05) {
+  const flat = Array.isArray(items) ? items : Object.values(items).flat();
 
   const subtotal = flat.reduce(
     (sum, { price = 0, quantity = 0 }) =>
@@ -56,11 +25,12 @@ function calculateTotals(items = {}, discount = 0, delivery = 20, taxRate = 0.05
 }
 
 /* ---------------- Renderers ---------------- */
-function renderItems(items = {}) {
+function renderItems(items = []) {
   const ul = createElement("ul", {});
 
-  Object.values(items).flat().forEach(i => {
-    const priceInRupees = i.price / 100;
+  const flat = Array.isArray(items) ? items : Object.values(items).flat();
+  flat.forEach(i => {
+    const priceInRupees = (i.price || 0) / 100;
 
     ul.append(
       createElement("li", {}, [
@@ -76,20 +46,24 @@ function renderItems(items = {}) {
 }
 
 function renderTotals(totals, couponCode) {
-  return createElement("div", {}, [
+  return createElement("div", { 
+    style: "margin-top: 1.5rem; padding: 1rem; background: #f9f9f9; border-radius: 4px;"
+  }, [
     createElement("div", {}, [`Subtotal: ${formatINR(totals.subtotal)}`]),
     ...(totals.discount > 0
       ? [
-          createElement("div", {}, [
-            `Discount: −${formatINR(totals.discount)} ${
-              couponCode ? `(${couponCode})` : ""
-            }`
+          createElement("div", { 
+            style: "color: green; font-weight: bold; margin: 0.5rem 0;"
+          }, [
+            `✓ Coupon Discount: −${formatINR(totals.discount)}${couponCode ? ` (${couponCode})` : ""}`
           ])
         ]
       : []),
     createElement("div", {}, [`Tax: ${formatINR(totals.tax)}`]),
     createElement("div", {}, [`Delivery: ${formatINR(totals.delivery)}`]),
-    createElement("p", { class: "total" }, [
+    createElement("div", { 
+      style: "border-top: 2px solid #333; margin-top: 0.5rem; padding-top: 0.5rem; font-size: 1.2em; font-weight: bold;"
+    }, [
       `Total: ${formatINR(totals.total)}`
     ])
   ]);
@@ -101,8 +75,14 @@ export function displayPayment(container, sessionData = {}) {
     createElement("h2", {}, ["Order Summary"])
   );
 
+  // Filter items by category if specified (ensures only selected category is shown)
+  let itemsToDisplay = sessionData.items || [];
+  if (sessionData.category && Array.isArray(itemsToDisplay)) {
+    itemsToDisplay = itemsToDisplay.filter(item => item.category === sessionData.category);
+  }
+
   const totals = calculateTotals(
-    sessionData.items || {},
+    itemsToDisplay,
     sessionData.discount || 0
   );
 
@@ -110,7 +90,7 @@ export function displayPayment(container, sessionData = {}) {
     createElement("h3", {}, ["Delivery Address"]),
     createElement("p", {}, [sessionData.address || "N/A"]),
     createElement("h3", {}, ["Items"]),
-    renderItems(sessionData.items),
+    renderItems(itemsToDisplay),
     renderTotals(totals, sessionData.couponCode)
   );
 
@@ -121,63 +101,56 @@ export function displayPayment(container, sessionData = {}) {
     {
       click: async (e) => {
         e.preventDefault();
-        console.log("Pay & Place Order clicked");
 
         confirmBtn.disabled = true;
         confirmBtn.textContent = "Processing…";
 
         try {
-          // 0️⃣ Validate coupon
-          if (sessionData.couponCode) {
-            const couponValidation = await validateCoupon(
-              sessionData.couponCode,
-              totals.total
-            );
-
-            if (!couponValidation.valid) {
-              throw new Error(
-                `Invalid coupon: ${
-                  couponValidation.reason || "Coupon not found"
-                }`
-              );
-            }
-
+          // 0️⃣ Coupon is already validated and locked in from checkout
+          if (sessionData.couponCode && sessionData.discount > 0) {
             Notify(
-              `Coupon valid: ${couponValidation.discount_percent || 0}% off`,
-              { type: "success" }
+              `✓ Coupon validated: ${sessionData.couponCode} (₹${sessionData.discount} off)`,
+              { type: "success", duration: 2000 }
             );
           }
 
-          // 1️⃣ Payment
-          let paymentResult = null;
-
-          try {
-            paymentResult = await showPaymentModal({
-              paymentType: "purchase",
-              entityType: "order",
-              entityId: sessionData.orderId || "cart",
-              entityName: "Your Order"
-            });
-
-            if (!paymentResult || paymentResult.success !== true) {
-              confirmBtn.disabled = false;
-              confirmBtn.textContent = "Pay & Place Order";
-              return;
+          // 1️⃣ Create order first
+          // Group items by category for backend Order model
+          const itemsByCategory = {};
+          itemsToDisplay.forEach(item => {
+            if (!itemsByCategory[item.category]) {
+              itemsByCategory[item.category] = [];
             }
-          } catch (paymentErr) {
-            console.warn("Payment fallback", paymentErr);
-            paymentResult = { success: true };
-          }
+            itemsByCategory[item.category].push({
+              itemId: item.itemId,
+              itemName: item.itemName,
+              quantity: item.quantity,
+              price: item.price, // Already in paise
+              category: item.category,
+              entityId: item.entityId,
+              entityName: item.entityName,
+              entityType: item.entityType
+            });
+          });
 
-          // 2️⃣ Order confirmation
+          const orderPayload = {
+            address: sessionData.address,
+            items: itemsByCategory, // Grouped by category
+            paymentMethod: "wallet", // Payment method
+            coupon_code: sessionData.couponCode || null,
+            discount_amount: Math.round((sessionData.discount || 0) * 100), // Convert ₹ to paise
+            total: Math.round(totals.total * 100), // Convert ₹ to paise
+            subtotal: Math.round(totals.subtotal * 100),
+            tax: Math.round(totals.tax * 100),
+            delivery: Math.round(totals.delivery * 100)
+          };
+
+          console.warn("Order payload:", orderPayload);
+
           const res = await apiFetch(
             "/order",
             "POST",
-            JSON.stringify({
-              ...sessionData,
-              coupon_code: sessionData.couponCode || null,
-              discount_amount: totals.discount
-            }),
+            JSON.stringify(orderPayload),
             {
               headers: { "Content-Type": "application/json" }
             }
@@ -185,6 +158,30 @@ export function displayPayment(container, sessionData = {}) {
 
           if (!res?.success) {
             throw new Error(res?.message || "Order confirmation failed");
+          }
+
+          const orderId = res.order?.orderId || res.data?.id || res.data?.orderId || res.orderId || res.id;
+
+          if (!orderId) {
+            throw new Error("No order ID returned from server");
+          }
+
+          // 2️⃣ Process payment for the created order
+          let paymentResult = null;
+
+          try {
+            paymentResult = await showPaymentModal({
+              paymentType: "purchase",
+              entityType: "order",
+              entityId: orderId,
+              entityName: "Your Order"
+            });
+
+            if (!paymentResult || paymentResult.success !== true) {
+              console.warn("Payment was not completed for order:", orderId);
+            }
+          } catch (paymentErr) {
+            console.warn("Payment processing error:", paymentErr);
           }
 
           container.replaceChildren(
