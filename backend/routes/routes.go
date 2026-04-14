@@ -386,11 +386,15 @@ func RegisterFarmRoutes(router *httprouter.Router, app *infra.Deps, rateLimiter 
 	// 📦 Farm Orders
 	router.GET("/api/v1/orders/mine", authmidware(farms.GetMyFarmOrders(app)))
 	router.GET("/api/v1/orders/incoming", authmidware(farms.GetIncomingFarmOrders(app)))
-	router.POST("/api/v1/farmorders/:id/accept", rateLimiter.Limit(authmidware(farms.AcceptOrder(app))))
-	router.POST("/api/v1/farmorders/:id/reject", rateLimiter.Limit(authmidware(farms.RejectOrder(app))))
-	router.POST("/api/v1/farmorders/:id/deliver", rateLimiter.Limit(authmidware(farms.MarkOrderDelivered(app))))
-	router.POST("/api/v1/farmorders/:id/markpaid", rateLimiter.Limit(authmidware(farms.MarkOrderPaid(app))))
-	router.GET("/api/v1/farmorders/:id/receipt", authmidware(farms.DownloadReceipt(app)))
+	router.POST("/api/v1/farmorders/order/:id/accept", rateLimiter.Limit(authmidware(farms.AcceptOrder(app))))
+	router.POST("/api/v1/farmorders/order/:id/reject", rateLimiter.Limit(authmidware(farms.RejectOrder(app))))
+	router.POST("/api/v1/farmorders/order/:id/deliver", rateLimiter.Limit(authmidware(farms.MarkOrderDelivered(app))))
+	router.POST("/api/v1/farmorders/order/:id/markpaid", rateLimiter.Limit(authmidware(farms.MarkOrderPaid(app))))
+	router.GET("/api/v1/farmorders/order/:id/receipt", authmidware(farms.DownloadReceipt(app)))
+	// Bulk actions
+	router.POST("/api/v1/farmorders/bulk/accept", rateLimiter.Limit(authmidware(farms.BulkAcceptOrders(app))))
+	router.POST("/api/v1/farmorders/bulk/reject", rateLimiter.Limit(authmidware(farms.BulkRejectOrders(app))))
+	router.POST("/api/v1/farmorders/bulk/deliver", rateLimiter.Limit(authmidware(farms.BulkMarkOrdersDelivered(app))))
 
 	// 🌾 Crop catalogue & type browsing
 	router.GET("/api/v1/crops", farms.GetFilteredCrops(app))                 // Public

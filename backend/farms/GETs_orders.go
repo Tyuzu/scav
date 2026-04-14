@@ -84,12 +84,43 @@ func GetIncomingFarmOrders(app *infra.Deps) httprouter.Handle {
 			return
 		}
 
+		// 2. Build filter query from URL params
+		filter := bson.M{"farmid": bson.M{"$in": farmIDs}}
+		
+		// Filter by status
+		if status := r.URL.Query().Get("status"); status != "" {
+			filter["status"] = status
+		}
+		
+		// Filter by date range
+		if dateFrom := r.URL.Query().Get("dateFrom"); dateFrom != "" {
+			if t, err := time.Parse("2006-01-02", dateFrom); err == nil {
+				filter["createdat"] = bson.M{"$gte": t}
+			}
+		}
+		
+		if dateTo := r.URL.Query().Get("dateTo"); dateTo != "" {
+			if t, err := time.Parse("2006-01-02", dateTo); err == nil {
+				// Add one day to include all orders on that date
+				t = t.Add(24 * time.Hour)
+				if dateFrom := r.URL.Query().Get("dateFrom"); dateFrom != "" {
+					// If there's already a $gte, we need to use $lte
+					if existingDateFilter, ok := filter["createdat"].(bson.M); ok {
+						existingDateFilter["$lte"] = t
+						filter["createdat"] = existingDateFilter
+					}
+				} else {
+					filter["createdat"] = bson.M{"$lte": t}
+				}
+			}
+		}
+
 		// 2. Fetch orders for those farms
 		var orders []models.FarmOrder
 		if err := app.DB.FindMany(
 			ctx,
 			farmOrdersCollection,
-			bson.M{"farmid": bson.M{"$in": farmIDs}},
+			filter,
 			&orders,
 		); err != nil {
 			utils.RespondWithJSON(w, http.StatusInternalServerError, utils.M{
@@ -99,11 +130,27 @@ func GetIncomingFarmOrders(app *infra.Deps) httprouter.Handle {
 			return
 		}
 
-		// 3. Build frontend-friendly response
+		// 3. Build frontend-friendly response and apply client-side filters
 		displayOrders := make([]OrderDisplay, 0, len(orders))
+		cropFilter := r.URL.Query().Get("crop")
+		paymentFilter := r.URL.Query().Get("payment")
+
 		for _, o := range orders {
 			user := fetchUserByID(ctx, o.UserID, app)
 			crop := fetchCropByID(ctx, o.CropID, app)
+
+			// Client-side filtering for crop (since we filter by crop name)
+			if cropFilter != "" && crop.Name != cropFilter {
+				continue
+			}
+
+			// Client-side filtering for payment status
+			// Note: payment status is always "pending" in current implementation
+			// This is extensible for future payment tracking
+			paymentStatus := "pending"
+			if paymentFilter != "" && paymentStatus != paymentFilter {
+				continue
+			}
 
 			displayOrders = append(displayOrders, OrderDisplay{
 				ID:           o.OrderID,
@@ -115,7 +162,7 @@ func GetIncomingFarmOrders(app *infra.Deps) httprouter.Handle {
 				OrderDate:    o.CreatedAt.Format("2006-01-02"),
 				DeliveryDate: estimateDeliveryDate(o.CreatedAt),
 				Address:      user.Address,
-				Payment:      "pending",
+				Payment:      paymentStatus,
 				Status:       string(o.Status),
 			})
 		}

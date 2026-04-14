@@ -3,6 +3,7 @@ package farms
 import (
 	"context"
 	"encoding/json"
+	"fmt"
 	"log"
 	"net/http"
 	"time"
@@ -237,6 +238,188 @@ func MarkOrderPaid(app *infra.Deps) httprouter.Handle {
 	return func(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 		updateOrderStatus(w, r, ps.ByName("id"), "paid", app)
 	}
+}
+
+/* ---------------------------------------------------- */
+/* Bulk order status updates                            */
+/* ---------------------------------------------------- */
+
+type BulkOrdersRequest struct {
+	OrderIDs []string `json:"orderIds"`
+}
+
+type BulkOrdersResponse struct {
+	Success  bool            `json:"success"`
+	Message  string          `json:"message"`
+	Updated  int             `json:"updated"`
+	Failed   int             `json:"failed"`
+	Errors   []string        `json:"errors,omitempty"`
+}
+
+func BulkAcceptOrders(app *infra.Deps) httprouter.Handle {
+	return func(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
+		bulkUpdateOrders(w, r, "accepted", app)
+	}
+}
+
+func BulkRejectOrders(app *infra.Deps) httprouter.Handle {
+	return func(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
+		bulkUpdateOrders(w, r, "rejected", app)
+	}
+}
+
+func BulkMarkOrdersDelivered(app *infra.Deps) httprouter.Handle {
+	return func(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
+		bulkUpdateOrders(w, r, "delivered", app)
+	}
+}
+
+func bulkUpdateOrders(w http.ResponseWriter, r *http.Request, newStatus string, app *infra.Deps) {
+	ctx, cancel := context.WithTimeout(r.Context(), 30*time.Second)
+	defer cancel()
+
+	userID := utils.GetUserIDFromRequest(r)
+	if userID == "" {
+		http.Error(w, "Unauthorized", http.StatusUnauthorized)
+		return
+	}
+
+	var req BulkOrdersRequest
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		utils.RespondWithJSON(w, http.StatusBadRequest, utils.M{
+			"success": false,
+			"message": "Invalid request body",
+		})
+		return
+	}
+
+	if len(req.OrderIDs) == 0 {
+		utils.RespondWithJSON(w, http.StatusBadRequest, utils.M{
+			"success": false,
+			"message": "No order IDs provided",
+		})
+		return
+	}
+
+	// Fetch user's farms for authorization
+	var farms []models.Farm
+	if err := app.DB.FindMany(ctx, farmsCollection, bson.M{"createdBy": userID}, &farms); err != nil {
+		utils.RespondWithJSON(w, http.StatusInternalServerError, utils.M{
+			"success": false,
+			"message": "Failed to fetch farms",
+		})
+		return
+	}
+
+	farmIDs := make([]string, len(farms))
+	for i, f := range farms {
+		farmIDs[i] = f.FarmID
+	}
+
+	response := BulkOrdersResponse{Success: true}
+	var errors []string
+
+	for _, orderID := range req.OrderIDs {
+		// Fetch the order
+		var order models.FarmOrder
+		if err := app.DB.FindOne(ctx, farmOrdersCollection, bson.M{"orderid": orderID}, &order); err != nil {
+			response.Failed++
+			errors = append(errors, fmt.Sprintf("Order %s not found", orderID))
+			continue
+		}
+
+		// Verify farm ownership
+		authorized := false
+		for _, farmID := range farmIDs {
+			if order.FarmID == farmID {
+				authorized = true
+				break
+			}
+		}
+		if !authorized {
+			response.Failed++
+			errors = append(errors, fmt.Sprintf("Order %s unauthorized", orderID))
+			continue
+		}
+
+		// Validate status transition
+		validTransitions := map[string][]string{
+			"pending":   {"accepted", "rejected", "delivered"},
+			"accepted":  {"paid", "rejected", "delivered"},
+			"paid":      {"delivered"},
+			"rejected":  {},
+			"delivered": {},
+		}
+
+		allowed := false
+		for _, validStatus := range validTransitions[string(order.Status)] {
+			if validStatus == newStatus {
+				allowed = true
+				break
+			}
+		}
+
+		if !allowed {
+			response.Failed++
+			errors = append(errors, fmt.Sprintf("Order %s: invalid transition from %s to %s", orderID, order.Status, newStatus))
+			continue
+		}
+
+		// Update order status
+		if err := app.DB.UpdateOne(
+			ctx,
+			farmOrdersCollection,
+			bson.M{"orderid": orderID},
+			bson.M{"$set": bson.M{"status": newStatus, "updatedat": time.Now()}},
+		); err != nil {
+			response.Failed++
+			errors = append(errors, fmt.Sprintf("Order %s: update failed", orderID))
+			continue
+		}
+
+		response.Updated++
+
+		// Log audit action
+		auditAction := ""
+		switch newStatus {
+		case "accepted":
+			auditAction = models.AuditActionOrderAccept
+		case "rejected":
+			auditAction = models.AuditActionOrderReject
+		case "delivered":
+			auditAction = models.AuditActionOrderMarkDeliver
+		}
+
+		if auditAction != "" {
+			auditlog.LogAction(
+				ctx,
+				app,
+				r,
+				userID,
+				auditAction,
+				"farm_order",
+				orderID,
+				"success",
+				map[string]interface{}{
+					"oldStatus": order.Status,
+					"newStatus": newStatus,
+				},
+			)
+		}
+	}
+
+	if len(errors) > 0 {
+		response.Errors = errors
+	}
+
+	if response.Updated > 0 {
+		response.Message = fmt.Sprintf("Successfully updated %d order(s)", response.Updated)
+	} else {
+		response.Success = false
+		response.Message = "No orders were updated"
+	}
+
+	utils.RespondWithJSON(w, http.StatusOK, response)
 }
 
 /* ---------------------------------------------------- */

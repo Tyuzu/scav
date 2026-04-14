@@ -4,6 +4,14 @@ import { addToCart } from "../cart/addToCart.js";
 import { getState } from "../../state/state.js";
 
 export function renderProductActions(product, productType, productId) {
+  // Safety check - ensure we have required product data
+  if (!product?.productid && !productId) {
+    console.warn("renderProductActions: Missing product ID", product, productId);
+    return createElement("div", { class: "product-actions" }, [
+      createElement("p", { class: "error-text" }, ["Invalid product data"])
+    ]);
+  }
+
   let quantity = 1;
 
   const quantityValue = createElement("span", { class: "quantity-value" }, [String(quantity)]);
@@ -28,7 +36,7 @@ export function renderProductActions(product, productType, productId) {
 
   const quantityControl = createElement("div", { 
     class: "quantity-control",
-    id: `qty-${productId}`,
+    id: `qty-${productId || product.productid}`,
   }, [
     decrementBtn,
     quantityValue,
@@ -50,7 +58,7 @@ export function renderProductActions(product, productType, productId) {
 
   const addToCartBtn = Button(
     "Add to Cart",
-    `add-to-cart-${product.productid}`,
+    `add-to-cart-${product.productid || productId}`,
     { click: handleAdd },
     "primary-button"
   );

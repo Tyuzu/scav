@@ -31,6 +31,12 @@ func CreateTool(app *infra.Deps) httprouter.Handle {
 }
 
 func createItem(w http.ResponseWriter, r *http.Request, itemType string, app *infra.Deps) {
+	userID := utils.GetUserIDFromRequest(r)
+	if userID == "" {
+		http.Error(w, "Unauthorized", http.StatusUnauthorized)
+		return
+	}
+
 	item, err := parseProductJSON(r, itemType)
 	if err != nil {
 		http.Error(w, "Failed to parse body: "+err.Error(), http.StatusBadRequest)
@@ -38,6 +44,9 @@ func createItem(w http.ResponseWriter, r *http.Request, itemType string, app *in
 	}
 
 	item.ProductID = utils.GenerateRandomString(13)
+	item.UserID = userID
+	item.CreatedAt = time.Now()
+	item.UpdatedAt = time.Now()
 
 	ctx, cancel := context.WithTimeout(r.Context(), 5*time.Second)
 	defer cancel()
@@ -74,9 +83,30 @@ func updateItem(
 	itemType string,
 	app *infra.Deps,
 ) {
+	userID := utils.GetUserIDFromRequest(r)
+	if userID == "" {
+		http.Error(w, "Unauthorized", http.StatusUnauthorized)
+		return
+	}
+
 	id := ps.ByName("id")
 	if id == "" {
 		http.Error(w, "Missing id parameter", http.StatusBadRequest)
+		return
+	}
+
+	// SECURITY: Check if user is the creator
+	ctx, cancel := context.WithTimeout(r.Context(), 5*time.Second)
+	defer cancel()
+
+	var existingItem models.Product
+	if err := app.DB.FindOne(ctx, productsCollection, bson.M{"productid": id}, &existingItem); err != nil {
+		http.Error(w, "Product not found", http.StatusNotFound)
+		return
+	}
+
+	if existingItem.UserID != userID {
+		http.Error(w, "Forbidden: Only creator can update this product", http.StatusForbidden)
 		return
 	}
 
@@ -86,8 +116,10 @@ func updateItem(
 		return
 	}
 
-	ctx, cancel := context.WithTimeout(r.Context(), 5*time.Second)
-	defer cancel()
+	// Preserve original UserID and CreatedAt
+	item.UserID = existingItem.UserID
+	item.CreatedAt = existingItem.CreatedAt
+	item.UpdatedAt = time.Now()
 
 	update := bson.M{"$set": item}
 	if err := app.DB.UpdateOne(ctx, productsCollection, bson.M{"productid": id}, update); err != nil {
@@ -113,6 +145,12 @@ func DeleteTool(app *infra.Deps) httprouter.Handle {
 
 func deleteItem(app *infra.Deps) httprouter.Handle {
 	return func(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
+		userID := utils.GetUserIDFromRequest(r)
+		if userID == "" {
+			http.Error(w, "Unauthorized", http.StatusUnauthorized)
+			return
+		}
+
 		id := ps.ByName("id")
 		if id == "" {
 			http.Error(w, "Missing id parameter", http.StatusBadRequest)
@@ -121,6 +159,18 @@ func deleteItem(app *infra.Deps) httprouter.Handle {
 
 		ctx, cancel := context.WithTimeout(r.Context(), 5*time.Second)
 		defer cancel()
+
+		// SECURITY: Check if user is the creator
+		var item models.Product
+		if err := app.DB.FindOne(ctx, productsCollection, bson.M{"productid": id}, &item); err != nil {
+			http.Error(w, "Product not found", http.StatusNotFound)
+			return
+		}
+
+		if item.UserID != userID {
+			http.Error(w, "Forbidden: Only creator can delete this product", http.StatusForbidden)
+			return
+		}
 
 		if _, err := app.DB.DeleteOne(ctx, productsCollection, bson.M{"productid": id}); err != nil {
 			http.Error(w, "Failed to delete item", http.StatusInternalServerError)

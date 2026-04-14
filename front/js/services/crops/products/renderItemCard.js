@@ -53,6 +53,9 @@ export function renderItemCard(item, type, isLoggedIn, container, refresh) {
     });
   };
 
+  // Check if current user is the creator
+  const currentUserId = getState("user");
+  const isCreator = isLoggedIn && currentUserId && item.userid === currentUserId;
 
   // --- Image Gallery Section ---
   const gallerySection = createElement("div", { class: "gallery-section" });
@@ -62,11 +65,15 @@ export function renderItemCard(item, type, isLoggedIn, container, refresh) {
       resolveImagePath(EntityType.PRODUCT, PictureType.THUMB, name)
     );
     console.log(fullURLs);
-    gallerySection.appendChild(ImageGallery(fullURLs));
+    const gallery = ImageGallery(fullURLs);
+    // Prevent image gallery clicks from bubbling up to card click
+    gallery.addEventListener("click", (e) => {
+      e.stopPropagation();
+    });
+    gallerySection.appendChild(gallery);
   }
 
-
-  const card = createElement("div", { class: `${type}-card` }, [
+  const cardChildren = [
     gallerySection,
     createElement("h3", {}, [item.name]),
     createElement("p", {}, [`₹${item.price.toFixed(2)}`]),
@@ -74,18 +81,26 @@ export function renderItemCard(item, type, isLoggedIn, container, refresh) {
     createElement("label", {}, ["Quantity:"]),
     quantityControl,
     Button("Add to Cart", `add-to-cart-${item.productid}`, { click: handleAdd }, "buttonx"),
-    Button(
-      "Edit",
-      `edit-${type}-${item.productid}`,
-      {
-        click: (e) => {
-          e.stopPropagation();
-          renderItemForm(container, "edit", item, type, refresh);
+  ];
+
+  // Only show Edit button if user is the creator
+  if (isCreator) {
+    cardChildren.push(
+      Button(
+        "Edit",
+        `edit-${type}-${item.productid}`,
+        {
+          click: (e) => {
+            e.stopPropagation();
+            renderItemForm(container, "edit", item, type, refresh);
+          },
         },
-      },
-      "buttonx"
-    ),
-  ]);
+        "buttonx"
+      )
+    );
+  }
+
+  const card = createElement("div", { class: `${type}-card` }, cardChildren);
 
   card.addEventListener("click", () => {
     navigate(`/products/${type}/${item.productid}`);

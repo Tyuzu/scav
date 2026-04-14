@@ -1,9 +1,13 @@
 import { createElement } from "../../../components/createElement";
-import { fetchIncomingOrders } from "./orderUtils.js";
+import { fetchIncomingOrders, bulkAcceptOrders, bulkRejectOrders, bulkMarkOrdersDelivered } from "./orderUtils.js";
 import { renderFiltersSection } from "./renderFiltersSection.js";
 import { renderBulkActionsSection } from "./renderBulkActionsSection.js";
 import { renderOrderCard } from "./renderOrderCard.js";
 import { renderOrdersTable } from "./renderOrdersTable.js";
+
+// Store current filters state
+let currentFilters = {};
+let allOrders = [];
 
 export async function displayOrders(container) {
   container.replaceChildren();
@@ -17,25 +21,25 @@ export async function displayOrders(container) {
   const refresh = () => displayOrders(container);
 
   try {
-    const orders = await fetchIncomingOrders();
+    allOrders = await fetchIncomingOrders(currentFilters);
 
     // Render filters section
     const filtersSection = renderFiltersSection((filters) => {
-      // TODO: Apply filters to orders
-      console.log("Applying filters:", filters);
+      currentFilters = filters;
+      displayOrders(container);
     });
     section.appendChild(filtersSection);
 
     // Render bulk actions section
     const bulkActionsSection = renderBulkActionsSection(
-      () => handleBulkAccept(section),
-      () => handleBulkReject(section),
-      () => handleBulkMarkDelivered(section)
+      () => handleBulkAccept(section, refresh),
+      () => handleBulkReject(section, refresh),
+      () => handleBulkMarkDelivered(section, refresh)
     );
     section.appendChild(bulkActionsSection);
 
     // Render responsive layout (table or cards)
-    const layout = buildResponsiveOrdersLayout(orders, refresh);
+    const layout = buildResponsiveOrdersLayout(allOrders, refresh);
     section.appendChild(layout);
   } catch (err) {
     console.error("Failed to fetch incoming orders:", err);
@@ -61,23 +65,80 @@ function buildResponsiveOrdersLayout(orderList, refresh) {
 }
 
 // Handle bulk actions
-function handleBulkAccept(section) {
+async function handleBulkAccept(section, refresh) {
   const checkboxes = section.querySelectorAll(".select-order:checked");
   const selectedOrders = Array.from(checkboxes).map((cb) => cb.value);
-  console.log("Accepting orders:", selectedOrders);
-  // TODO: Implement bulk accept API call
+  
+  if (selectedOrders.length === 0) {
+    alert("Please select at least one order");
+    return;
+  }
+
+  try {
+    const result = await bulkAcceptOrders(selectedOrders);
+    if (result.success) {
+      alert(`Successfully accepted ${result.updated} order(s)`);
+      refresh();
+    } else {
+      alert(`Failed to accept orders: ${result.message}`);
+      if (result.errors.length > 0) {
+        console.error("Bulk accept errors:", result.errors);
+      }
+    }
+  } catch (err) {
+    console.error("Error accepting orders:", err);
+    alert("An error occurred while accepting orders");
+  }
 }
 
-function handleBulkReject(section) {
+async function handleBulkReject(section, refresh) {
   const checkboxes = section.querySelectorAll(".select-order:checked");
   const selectedOrders = Array.from(checkboxes).map((cb) => cb.value);
-  console.log("Rejecting orders:", selectedOrders);
-  // TODO: Implement bulk reject API call
+  
+  if (selectedOrders.length === 0) {
+    alert("Please select at least one order");
+    return;
+  }
+
+  try {
+    const result = await bulkRejectOrders(selectedOrders);
+    if (result.success) {
+      alert(`Successfully rejected ${result.updated} order(s)`);
+      refresh();
+    } else {
+      alert(`Failed to reject orders: ${result.message}`);
+      if (result.errors.length > 0) {
+        console.error("Bulk reject errors:", result.errors);
+      }
+    }
+  } catch (err) {
+    console.error("Error rejecting orders:", err);
+    alert("An error occurred while rejecting orders");
+  }
 }
 
-function handleBulkMarkDelivered(section) {
+async function handleBulkMarkDelivered(section, refresh) {
   const checkboxes = section.querySelectorAll(".select-order:checked");
   const selectedOrders = Array.from(checkboxes).map((cb) => cb.value);
-  console.log("Marking delivered:", selectedOrders);
-  // TODO: Implement bulk mark delivered API call
+  
+  if (selectedOrders.length === 0) {
+    alert("Please select at least one order");
+    return;
+  }
+
+  try {
+    const result = await bulkMarkOrdersDelivered(selectedOrders);
+    if (result.success) {
+      alert(`Successfully marked ${result.updated} order(s) as delivered`);
+      refresh();
+    } else {
+      alert(`Failed to mark orders as delivered: ${result.message}`);
+      if (result.errors.length > 0) {
+        console.error("Bulk mark delivered errors:", result.errors);
+      }
+    }
+  } catch (err) {
+    console.error("Error marking orders as delivered:", err);
+    alert("An error occurred while marking orders as delivered");
+  }
 }

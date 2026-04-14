@@ -4,8 +4,7 @@ import { renderProductGallery } from "./renderProductGallery.js";
 import { renderProductBasicInfo } from "./renderProductBasicInfo.js";
 import { renderProductActions } from "./renderProductActions.js";
 
-export function renderProduct(productOriginal, isLoggedIn, productType, productId, container) {
-  _=container;
+export function renderProduct(productOriginal, isLoggedIn, productType, productId, _container) {
   const product = normalizeProduct(productOriginal);
 
   const gallerySection = renderProductGallery(product);

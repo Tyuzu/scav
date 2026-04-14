@@ -135,7 +135,11 @@ return;
             await apiFetch(`/farm/${type}/${itemData.productid}`, "DELETE");
             onDone();
           } catch (err) {
-            alert("Delete failed");
+            if (err.status === 403) {
+              alert("You can only delete items you created");
+            } else {
+              alert("Delete failed");
+            }
             console.error(err);
           }
         }
@@ -193,7 +197,11 @@ throw new Error("Request failed");
 }
       onDone();
     } catch (err) {
-      alert(`${mode === "create" ? "Create" : "Update"} failed`);
+      if (err.status === 403) {
+        alert("You can only edit items you created");
+      } else {
+        alert(`${mode === "create" ? "Create" : "Update"} failed`);
+      }
       console.error(err);
     } finally {
       submitBtn.disabled = false;

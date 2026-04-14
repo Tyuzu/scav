@@ -122,6 +122,7 @@ type CropListing struct {
 
 type Product struct {
 	ProductID   string   `bson:"productid,omitempty" json:"productid"`
+	UserID      string   `bson:"userid" json:"userid"`
 	Name        string   `json:"name"`
 	Description string   `json:"description"`
 	Price       float64  `json:"price"`

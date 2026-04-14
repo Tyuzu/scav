@@ -2,8 +2,24 @@ import { apiFetch } from "../../api/api";
 
 export async function fetchProduct(productType, productId) {
   try {
-    const product = await apiFetch(`/products/${productType}/${productId}`);
-    return product;
+    const response = await apiFetch(`/products/${productType}/${productId}`);
+    
+    // Handle wrapped responses (with success/error fields)
+    if (response && typeof response === 'object') {
+      if (response.success === false) {
+        console.error(`API error: ${response.error}`, response);
+        return null;
+      }
+      // If response has a 'data' wrapper, unwrap it
+      if (response.data && !response.productid) {
+        return response.data;
+      }
+      // Otherwise return the response as-is (raw product)
+      return response;
+    }
+    
+    console.error("Invalid response format:", response);
+    return null;
   } catch (err) {
     console.error(`Failed to fetch product ${productId}:`, err);
     return null;
@@ -11,6 +27,11 @@ export async function fetchProduct(productType, productId) {
 }
 
 export function normalizeProduct(product) {
+  if (!product || typeof product !== 'object') {
+    console.error("normalizeProduct: Invalid product input", product);
+    throw new Error("Invalid product data");
+  }
+
   return {
     productid: product.productid || product.id,
     name: product.name || "",
@@ -25,17 +46,42 @@ export function normalizeProduct(product) {
 }
 
 export function getProductAvailability(product) {
-  const now = new Date();
-  const availableFrom = product.availableFrom ? new Date(product.availableFrom) : null;
-  const availableTo = product.availableTo ? new Date(product.availableTo) : null;
+  try {
+    const now = new Date();
+    
+    // Parse availableFrom - skip if it's the zero-value date
+    let availableFrom = null;
+    if (product?.availableFrom && product.availableFrom !== "0001-01-01T00:00:00Z") {
+      availableFrom = new Date(product.availableFrom);
+      if (isNaN(availableFrom.getTime())) {
+        availableFrom = null;
+      }
+    }
+    
+    // Parse availableTo - skip if it's the zero-value date
+    let availableTo = null;
+    if (product?.availableTo && product.availableTo !== "0001-01-01T00:00:00Z") {
+      availableTo = new Date(product.availableTo);
+      if (isNaN(availableTo.getTime())) {
+        availableTo = null;
+      }
+    }
 
-  const isAvailable = 
-    (!availableFrom || now >= availableFrom) && 
-    (!availableTo || now <= availableTo);
+    const isAvailable = 
+      (!availableFrom || now >= availableFrom) && 
+      (!availableTo || now <= availableTo);
 
-  return {
-    isAvailable,
-    availableFrom,
-    availableTo,
-  };
+    return {
+      isAvailable,
+      availableFrom,
+      availableTo,
+    };
+  } catch (err) {
+    console.error("Error parsing product availability:", err, product);
+    return {
+      isAvailable: true,
+      availableFrom: null,
+      availableTo: null,
+    };
+  }
 }
