@@ -67,10 +67,11 @@ type Event struct {
 	External         bool        `json:"external" bson:"external"`
 	ExternalLink     string      `json:"externallink" bson:"externallink"`
 	// New fields for alignment (CRITICAL FIX)
-	ContactInfo *EventContactInfo `json:"contactInfo" bson:"contact_info"`
-	News        []NewsItem        `json:"news" bson:"news"`
-	Polls       []Poll            `json:"polls" bson:"polls"`
-	LostFound   []LostFoundItem   `json:"lostfound" bson:"lost_found"`
+	ContactInfo  *EventContactInfo `json:"contactInfo" bson:"contact_info"`
+	News         []NewsItem        `json:"news" bson:"news"`
+	Polls        []Poll            `json:"polls" bson:"polls"`
+	LostFound    []LostFoundItem   `json:"lostfound" bson:"lost_found"`
+	HiredVendors []VendorHiring    `json:"hired_vendors,omitempty" bson:"hired_vendors,omitempty"`
 	// Computed fields for frontend filters
 	Prices   []float64 `json:"prices,omitempty" bson:"-"`
 	Currency string    `json:"currency,omitempty" bson:"-"`

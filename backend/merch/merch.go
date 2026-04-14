@@ -48,19 +48,28 @@ func CreateMerch(app *infra.Deps) httprouter.Handle {
 
 		// SECURITY: Verify user is the owner of the entity
 		collection := ""
+		idField := ""
+		ownerField := ""
+
 		switch entityType {
 		case "event":
 			collection = "events"
+			idField = "eventid"
+			ownerField = "creatorid"
 		case "farm":
 			collection = "farms"
+			idField = "farmid"
+			ownerField = "createdBy"
 		case "artist":
 			collection = "artists"
+			idField = "artistid"
+			ownerField = "creatorid"
 		}
 
 		if collection != "" {
 			var ownerEntity bson.M
 			err := app.DB.FindOne(r.Context(), collection, bson.M{
-				"eventid": eventID,
+				idField: eventID,
 			}, &ownerEntity)
 
 			if err != nil {
@@ -69,13 +78,13 @@ func CreateMerch(app *infra.Deps) httprouter.Handle {
 			}
 
 			// Check ownership based on entity type
-			createdBy, ok := ownerEntity["createdBy"].(string)
+			owner, ok := ownerEntity[ownerField].(string)
 			if !ok {
 				respond(w, 403, map[string]any{"success": false, "error": "cannot verify ownership"})
 				return
 			}
 
-			if createdBy != userID {
+			if owner != userID {
 				respond(w, 403, map[string]any{"success": false, "error": "forbidden: only entity owner can create merch"})
 				return
 			}
@@ -150,19 +159,28 @@ func EditMerch(app *infra.Deps) httprouter.Handle {
 
 		// SECURITY: Verify user is the owner of the entity
 		collection := ""
+		idField := ""
+		ownerField := ""
+
 		switch entityType {
 		case "event":
 			collection = "events"
+			idField = "eventid"
+			ownerField = "creatorid"
 		case "farm":
 			collection = "farms"
+			idField = "farmid"
+			ownerField = "createdBy"
 		case "artist":
 			collection = "artists"
+			idField = "artistid"
+			ownerField = "creatorid"
 		}
 
 		if collection != "" {
 			var ownerEntity bson.M
 			err := app.DB.FindOne(r.Context(), collection, bson.M{
-				"eventid": eventID,
+				idField: eventID,
 			}, &ownerEntity)
 
 			if err != nil {
@@ -170,8 +188,8 @@ func EditMerch(app *infra.Deps) httprouter.Handle {
 				return
 			}
 
-			createdBy, ok := ownerEntity["createdBy"].(string)
-			if !ok || createdBy != userID {
+			owner, ok := ownerEntity[ownerField].(string)
+			if !ok || owner != userID {
 				respond(w, 403, map[string]any{"success": false, "error": "forbidden: only entity owner can edit merch"})
 				return
 			}
@@ -247,19 +265,28 @@ func DeleteMerch(app *infra.Deps) httprouter.Handle {
 
 		// SECURITY: Verify user is the owner of the entity
 		collection := ""
+		idField := ""
+		ownerField := ""
+
 		switch entityType {
 		case "event":
 			collection = "events"
+			idField = "eventid"
+			ownerField = "creatorid"
 		case "farm":
 			collection = "farms"
+			idField = "farmid"
+			ownerField = "createdBy"
 		case "artist":
 			collection = "artists"
+			idField = "artistid"
+			ownerField = "creatorid"
 		}
 
 		if collection != "" {
 			var ownerEntity bson.M
 			err := app.DB.FindOne(r.Context(), collection, bson.M{
-				"eventid": eventID,
+				idField: eventID,
 			}, &ownerEntity)
 
 			if err != nil {
@@ -267,8 +294,8 @@ func DeleteMerch(app *infra.Deps) httprouter.Handle {
 				return
 			}
 
-			createdBy, ok := ownerEntity["createdBy"].(string)
-			if !ok || createdBy != userID {
+			owner, ok := ownerEntity[ownerField].(string)
+			if !ok || owner != userID {
 				respond(w, 403, map[string]any{"success": false, "error": "forbidden: only entity owner can delete merch"})
 				return
 			}

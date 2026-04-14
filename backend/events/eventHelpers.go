@@ -22,6 +22,9 @@ func toSafeEvent(e models.Event) models.Event {
 	if e.Tags == nil {
 		e.Tags = []string{}
 	}
+	if e.HiredVendors == nil {
+		e.HiredVendors = []models.VendorHiring{}
+	}
 
 	// sanitize zero dates
 	if !e.Date.IsZero() {

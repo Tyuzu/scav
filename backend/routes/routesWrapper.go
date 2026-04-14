@@ -47,6 +47,7 @@ func RoutesWrapper(router *httprouter.Router, app *infra.Deps, rateLimiter *rate
 	AddSuggestionsRoutes(router, app, rateLimiter)
 	AddTicketRoutes(router, app, rateLimiter)
 	AddUtilityRoutes(router, app, rateLimiter)
+	AddVendorRoutes(router, app, rateLimiter)
 	AddVliveRoutes(router, app, rateLimiter)
 	AddMiscRoutes(router, app, rateLimiter)
 }

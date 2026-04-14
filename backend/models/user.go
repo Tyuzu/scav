@@ -33,6 +33,20 @@ type User struct {
 	RefreshUA      string            `bson:"refresh_ua,omitempty"`
 	RefreshIP      string            `bson:"refresh_ip,omitempty"`
 	RefreshPrev    string            `bson:"refresh_prev,omitempty"`
+	// Vendor fields
+	IsVendor      bool           `json:"is_vendor" bson:"is_vendor"`
+	VendorProfile *VendorProfile `json:"vendor_profile,omitempty" bson:"vendor_profile,omitempty"`
+}
+
+// VendorProfile contains vendor-specific information for a user
+type VendorProfile struct {
+	VendorID    string   `json:"vendorid" bson:"vendorid"`
+	Category    string   `json:"category" bson:"category"`
+	Description string   `json:"description,omitempty" bson:"description,omitempty"`
+	Rating      float64  `json:"rating" bson:"rating"`
+	RatingCount int      `json:"rating_count" bson:"rating_count"`
+	Portfolio   []string `json:"portfolio,omitempty" bson:"portfolio,omitempty"`
+	Verified    bool     `json:"verified" bson:"verified"`
 }
 
 // UserProfileResponse defines the structure for the user profile response

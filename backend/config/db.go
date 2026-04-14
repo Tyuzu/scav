@@ -28,6 +28,7 @@ type DB struct {
 	FollowingsCollection        string
 	FarmOrdersCollection        string
 	HashtagCollection           string
+	HiringCollection            string
 	IdempotencyCollection       string
 	ItineraryCollection         string
 	JournalCollection           string
@@ -59,6 +60,7 @@ type DB struct {
 	TransactionCollection       string
 	UserDataCollection          string
 	UserCollection              string
+	VendorCollection            string
 	AlbumsCollection            string
 	PlaylistsCollection         string
 	GlobalLedgerCollection      string
@@ -92,6 +94,7 @@ var Collections = DB{
 	FollowingsCollection:        "followings",
 	FarmOrdersCollection:        "forders",
 	HashtagCollection:           "hashtags",
+	HiringCollection:            "hirings",
 	IdempotencyCollection:       "idempotency",
 	ItineraryCollection:         "itinerary",
 	JournalCollection:           "journals",
@@ -123,6 +126,7 @@ var Collections = DB{
 	TransactionCollection:       "transactions",
 	UserDataCollection:          "userdata",
 	UserCollection:              "users",
+	VendorCollection:            "vendors",
 	AlbumsCollection:            "albums",
 	PlaylistsCollection:         "playlists",
 	GlobalLedgerCollection:      "globalledger",

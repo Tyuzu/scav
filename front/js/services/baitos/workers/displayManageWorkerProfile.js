@@ -8,6 +8,7 @@ import Imagex from "../../../components/base/Imagex.js";
 import { updateImageWithCrop } from "../../../utils/bannerEditor.js";
 import { displayCreateOrEditBaitoProfile } from "../create/createBaitoProfile.js";
 import Notify from "../../../components/ui/Notify.mjs";
+import { createTabs } from "../../../components/ui/createTabs.js";
 
 export async function displayManageWorkerProfile(contentContainer, isLoggedIn, workerId) {
     const container = createElement("div", { id: "manage-worker-profile-page", class: "manage-worker-profile-page" });
@@ -37,121 +38,113 @@ export async function displayManageWorkerProfile(contentContainer, isLoggedIn, w
     ]);
 
     // ===== TABS =====
-    const tabs = ["Overview", "Details", "Documents", "Bookings", "Settings"];
-    const tabNav = createElement("div", { class: "tab-nav" });
-    const tabButtons = {};
-    const tabContents = {};
-
-    tabs.forEach(tab => {
-        const btn = createElement("button", { class: "tab-btn", "data-tab": tab }, [tab]);
-        tabButtons[tab] = btn;
-        tabNav.appendChild(btn);
-    });
-
-    // ===== OVERVIEW TAB =====
-    tabContents["Overview"] = createSectionCard("Profile Summary", [
-        renderDetail("👤", "Name", worker.name),
-        renderDetail("📞", "Phone", worker.phone),
-        renderDetail("📍", "Location", worker.location),
-        renderDetail("🎯", "Specialties", worker.preferredRoles),
-        renderDetail("📝", "Bio", worker.bio ? worker.bio.substring(0, 100) + "..." : "No bio"),
-        createElement("div", { class: "action-buttons" }, [
-            Button("✏️ Edit", "", { click: () => editProfile() }, "secondary"),
-            Button("🖼️ Update Photo", "", { click: () => updatePhoto() }, "secondary")
-        ])
-    ]);
-
-    // ===== DETAILS TAB =====
-    tabContents["Details"] = createElement("div", { class: "tab-content" }, [
-        createSectionCard("Contact Information", [
-            renderDetail("📞", "Phone", worker.phone),
-            renderDetail("✉️", "Email", worker.email),
-            renderDetail("📍", "Location", worker.location)
-        ]),
-        createSectionCard("Professional", [
-            renderDetail("⭐", "Experience", worker.experience),
-            renderDetail("🛠️", "Skills", worker.skills),
-            renderDetail("🌐", "Languages", worker.languages),
-            renderDetail("💰", "Expected Wage", worker.expectedWage ? `${worker.expectedWage} ¥/hr` : "Not set"),
-            renderDetail("💼", "Availability", worker.availability)
-        ]),
-        worker.bio && createSectionCard("About", [
-            createElement("p", { class: "bio-text" }, [worker.bio])
-        ])
-    ].filter(Boolean));
-
-    // ===== DOCUMENTS TAB =====
-    const docsTab = createElement("div", { class: "tab-content" });
-    if (worker.documents?.length) {
-        docsTab.appendChild(
-            createSectionCard("Your Documents", [
-                createElement("ul", { class: "document-list" }, worker.documents.map((doc, i) =>
-                    createElement("li", {}, [
-                        createElement("a", {
-                            href: resolveImagePath(EntityType.WORKER, PictureType.DOCUMENT, doc),
-                            target: "_blank"
-                        }, [`📄 Document ${i + 1}`])
+    const tabsConfig = [
+        {
+            id: "overview",
+            title: "Overview",
+            render: (container) => {
+                container.replaceChildren(createSectionCard("Profile Summary", [
+                    renderDetail("👤", "Name", worker.name),
+                    renderDetail("📞", "Phone", worker.phone),
+                    renderDetail("📍", "Location", worker.location),
+                    renderDetail("🎯", "Specialties", worker.preferredRoles),
+                    renderDetail("📝", "Bio", worker.bio ? worker.bio.substring(0, 100) + "..." : "No bio"),
+                    createElement("div", { class: "action-buttons" }, [
+                        Button("✏️ Edit", "", { click: () => editProfile() }, "secondary"),
+                        Button("🖼️ Update Photo", "", { click: () => updatePhoto() }, "secondary")
                     ])
-                )),
-                Button("📤 Upload Documents", "", { click: () => uploadDocuments() }, "secondary")
-            ])
-        );
-    } else {
-        docsTab.appendChild(
-            createSectionCard("Documents", [
-                createElement("p", { class: "empty-state" }, ["No documents uploaded yet"]),
-                Button("📤 Upload Documents", "", { click: () => uploadDocuments() }, "primary")
-            ])
-        );
-    }
-    tabContents["Documents"] = docsTab;
-
-    // ===== BOOKINGS TAB =====
-    const bookingsTab = createElement("div", { class: "tab-content" });
-    tabContents["Bookings"] = bookingsTab;
-    loadWorkerBookings(worker.baitoUserId, bookingsTab);
-
-    // ===== SETTINGS TAB =====
-    tabContents["Settings"] = createSectionCard("Manage Profile", [
-        createElement("div", { class: "settings-section" }, [
-            createElement("h4", {}, ["Profile Management"]),
-            Button("✏️ Edit Full Profile", "", { click: () => editProfile() }, "secondary"),
-            Button("📸 Update Photo", "", { click: () => updatePhoto() }, "secondary"),
-            Button("🖼️ Manage Gallery", "", { click: () => manageGallery() }, "secondary")
-        ]),
-        createElement("div", { class: "settings-section danger" }, [
-            createElement("h4", {}, ["Danger Zone"]),
-            Button("🗑️ Delete Profile", "", {
-                click: async () => {
-                    if (!window.confirm("Are you sure? This cannot be undone.")) {
-                        return;
-                    }
-                    try {
-                        Notify("Deleting profile...", { type: "info" });
-                        await apiFetch(`/baitos/worker/${worker.baitoUserId}`, "DELETE");
-                        Notify("Profile deleted.", { type: "success" });
-                        navigate("/baitos/hire");
-                    } catch (err) {
-                        Notify("Failed to delete: " + (err.message || "Unknown error"), { type: "error" });
-                    }
+                ]));
+            }
+        },
+        {
+            id: "details",
+            title: "Details",
+            render: (container) => {
+                container.replaceChildren(
+                    createSectionCard("Contact Information", [
+                        renderDetail("📞", "Phone", worker.phone),
+                        renderDetail("✉️", "Email", worker.email),
+                        renderDetail("📍", "Location", worker.location)
+                    ]),
+                    createSectionCard("Professional", [
+                        renderDetail("⭐", "Experience", worker.experience),
+                        renderDetail("🛠️", "Skills", worker.skills),
+                        renderDetail("🌐", "Languages", worker.languages),
+                        renderDetail("💰", "Expected Wage", worker.expectedWage ? `${worker.expectedWage} ¥/hr` : "Not set"),
+                        renderDetail("💼", "Availability", worker.availability)
+                    ]),
+                    worker.bio && createSectionCard("About", [
+                        createElement("p", { class: "bio-text" }, [worker.bio])
+                    ])
+                );
+            }
+        },
+        {
+            id: "documents",
+            title: "Documents",
+            render: (container) => {
+                if (worker.documents?.length) {
+                    container.replaceChildren(
+                        createSectionCard("Your Documents", [
+                            createElement("ul", { class: "document-list" }, worker.documents.map((doc, i) =>
+                                createElement("li", {}, [
+                                    createElement("a", {
+                                        href: resolveImagePath(EntityType.WORKER, PictureType.DOCUMENT, doc),
+                                        target: "_blank"
+                                    }, [`📄 Document ${i + 1}`])
+                                ])
+                            )),
+                            Button("📤 Upload Documents", "", { click: () => uploadDocuments() }, "secondary")
+                        ])
+                    );
+                } else {
+                    container.replaceChildren(
+                        createSectionCard("Documents", [
+                            createElement("p", { class: "empty-state" }, ["No documents uploaded yet"]),
+                            Button("📤 Upload Documents", "", { click: () => uploadDocuments() }, "primary")
+                        ])
+                    );
                 }
-            }, "danger")
-        ])
-    ]);
-
-    // ===== TAB SWITCHING =====
-    const tabContentContainer = createElement("div", { class: "tab-contents" });
-
-    function switchTab(tabName) {
-        Object.keys(tabButtons).forEach(t => {
-            tabButtons[t].classList.toggle("active", t === tabName);
-        });
-        tabContentContainer.replaceChildren(tabContents[tabName]);
-    }
-
-    Object.entries(tabButtons).forEach(([tabName, btn]) => {
-        btn.addEventListener("click", () => switchTab(tabName));
-    });
+            }
+        },
+        {
+            id: "bookings",
+            title: "Bookings",
+            render: (container) => loadWorkerBookings(worker.baitoUserId, container)
+        },
+        {
+            id: "settings",
+            title: "Settings",
+            render: (container) => {
+                container.replaceChildren(createSectionCard("Manage Profile", [
+                    createElement("div", { class: "settings-section" }, [
+                        createElement("h4", {}, ["Profile Management"]),
+                        Button("✏️ Edit Full Profile", "", { click: () => editProfile() }, "secondary"),
+                        Button("📸 Update Photo", "", { click: () => updatePhoto() }, "secondary"),
+                        Button("🖼️ Manage Gallery", "", { click: () => manageGallery() }, "secondary")
+                    ]),
+                    createElement("div", { class: "settings-section danger" }, [
+                        createElement("h4", {}, ["Danger Zone"]),
+                        Button("🗑️ Delete Profile", "", {
+                            click: async () => {
+                                if (!window.confirm("Are you sure? This cannot be undone.")) {
+                                    return;
+                                }
+                                try {
+                                    Notify("Deleting profile...", { type: "info" });
+                                    await apiFetch(`/baitos/worker/${worker.baitoUserId}`, "DELETE");
+                                    Notify("Profile deleted.", { type: "success" });
+                                    navigate("/baitos/hire");
+                                } catch (err) {
+                                    Notify("Failed to delete: " + (err.message || "Unknown error"), { type: "error" });
+                                }
+                            }
+                        }, "danger")
+                    ])
+                ]));
+            }
+        }
+    ];
 
     // ===== ACTION HANDLERS =====
     function editProfile() {
@@ -195,10 +188,9 @@ export async function displayManageWorkerProfile(contentContainer, isLoggedIn, w
         });
     }
 
-    // Set initial tab
-    switchTab("Overview");
+    const tabsContainer = createTabs(tabsConfig, `worker-profile-${worker.baitoUserId}`, "overview");
 
-    main.replaceChildren(header, tabNav, tabContentContainer);
+    main.replaceChildren(header, tabsContainer);
     layout.appendChild(main);
     container.replaceChildren(layout);
 }
@@ -257,20 +249,22 @@ async function loadWorkerBookings(workerId, container) {
         const past = bookings.filter(b => new Date(`${b.date}T${b.start}`) < new Date());
 
         container.replaceChildren(
-            upcoming.length > 0 && createSectionCard("Upcoming", [
-                createElement("ul", { class: "booking-list" }, upcoming.map(b =>
-                    createElement("li", { class: `booking-item status-${b.status}` }, [
-                        `${b.date} @ ${b.start} - ${b.start || "TBD"} (${b.status})`
-                    ])
-                ))
-            ]),
-            past.length > 0 && createSectionCard("Past Bookings", [
-                createElement("ul", { class: "booking-list past" }, past.map(b =>
-                    createElement("li", { class: `booking-item status-${b.status}` }, [
-                        `${b.date} @ ${b.start} (${b.status})`
-                    ])
-                ))
-            ])
+            ...[
+                upcoming.length > 0 && createSectionCard("Upcoming", [
+                    createElement("ul", { class: "booking-list" }, upcoming.map(b =>
+                        createElement("li", { class: `booking-item status-${b.status}` }, [
+                            `${b.date} @ ${b.start} - ${b.start || "TBD"} (${b.status})`
+                        ])
+                    ))
+                ]),
+                past.length > 0 && createSectionCard("Past Bookings", [
+                    createElement("ul", { class: "booking-list past" }, past.map(b =>
+                        createElement("li", { class: `booking-item status-${b.status}` }, [
+                            `${b.date} @ ${b.start} (${b.status})`
+                        ])
+                    ))
+                ])
+            ].filter(Boolean)
         );
     // eslint-disable-next-line no-unused-vars
     } catch (err) {

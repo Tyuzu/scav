@@ -7,8 +7,21 @@ import Datex from "../../components/base/Datex.js";
 
 async function fetchEventData(eventId) {
     const eventData = await apiFetch(`/events/event/${eventId}`);
-    if (!eventData || !Array.isArray(eventData.merch)) {
-        throw new Error("Invalid event data received.");
+    
+    // Check if there was an API error
+    if (eventData?.success === false) {
+        throw new Error(`Failed to load event: ${eventData.error}`);
+    }
+    
+    // Check if response is invalid
+    if (!eventData) {
+        throw new Error("No event data received from server.");
+    }
+    
+    // Check if merch array exists and is an array
+    if (!Array.isArray(eventData.merch)) {
+        console.warn("Event data structure:", eventData);
+        throw new Error("Invalid event data received - missing merch array.");
     }
     return eventData;
 }

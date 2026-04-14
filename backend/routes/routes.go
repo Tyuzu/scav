@@ -46,6 +46,7 @@ import (
 	"naevis/tickets"
 	"naevis/userdata"
 	"naevis/utils"
+	"naevis/vendors"
 	"naevis/vlive"
 	"net/http"
 
@@ -963,4 +964,20 @@ func AddDiscordRoutes(router *httprouter.Router, hubs *discord.HubManager, app *
 		auth(discord.CreateMessageHTTP(app)),
 	)
 
+}
+
+// Vendor Routes
+func AddVendorRoutes(router *httprouter.Router, app *infra.Deps, rateLimiter *ratelim.RateLimiter) {
+	authmidware := middleware.Authenticate(app)
+
+	// Vendor management - registration and profile
+	router.POST("/api/v1/vendors", rateLimiter.Limit(authmidware(vendors.RegisterVendorHandler(app))))
+	router.GET("/api/v1/vendors", rateLimiter.Limit(vendors.GetVendorsHandler(app)))
+	router.GET("/api/v1/vendors/vendor/:vendorID", rateLimiter.Limit(vendors.GetVendorHandler(app)))
+	router.PATCH("/api/v1/vendors/vendor/:vendorID", rateLimiter.Limit(authmidware(vendors.UpdateVendorHandler(app))))
+
+	// Event vendor hiring
+	router.POST("/api/v1/vendors/events/:eventID/hire", rateLimiter.Limit(authmidware(vendors.HireVendorHandler(app))))
+	router.GET("/api/v1/vendors/events/:eventID", rateLimiter.Limit(vendors.GetEventVendorsHandler(app)))
+	router.DELETE("/api/v1/vendors/events/:eventID/vendor/:vendorID", rateLimiter.Limit(authmidware(vendors.RemoveVendorHandler(app))))
 }
