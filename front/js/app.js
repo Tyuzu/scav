@@ -176,8 +176,7 @@ return;
     });
 
     observer.observe({ 
-      entryTypes: ["navigation", "resource", "paint", "largest-contentful-paint"],
-      buffered: true
+      entryTypes: ["navigation", "resource", "paint", "largest-contentful-paint"]
     });
   } catch (e) {
     console.warn("Performance monitoring unavailable:", e);

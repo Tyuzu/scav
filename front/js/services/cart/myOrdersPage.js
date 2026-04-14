@@ -1,6 +1,8 @@
 import { createElement } from "../../components/createElement.js";
 import { apiFetch } from "../../api/api.js";
 
+const PAGE_SIZE = 5;
+
 export async function displayMyOrders(container, isLoggedIn) {
   container.replaceChildren();
 
@@ -11,12 +13,21 @@ export async function displayMyOrders(container, isLoggedIn) {
     return;
   }
 
-  const section = createElement("section", { class: "user-orders-page" }, [
-    createElement("h2", {}, ["My Orders"]),
-    buildUserOrderFilters(),
-  ]);
+  const state = {
+    orders: [],
+    filters: {
+      status: "",
+      date: "",
+    },
+    currentPage: 1,
+    expandedOrders: new Set(),
+  };
 
-  container.append(section);
+  const render = () => {
+    container.replaceChildren(buildOrdersPage(state, render));
+  };
+
+  render();
 
   try {
     const res = await apiFetch("/order/mine", "GET");
@@ -25,129 +36,384 @@ export async function displayMyOrders(container, isLoggedIn) {
       throw new Error("Invalid orders response");
     }
 
-    section.append(buildResponsiveOrdersLayout(res.orders));
+    state.orders = normalizeOrders(res.orders);
+    state.currentPage = 1;
+    render();
   } catch (err) {
     console.error("Failed to fetch user orders:", err);
-    section.append(
-      createElement("p", {}, ["Failed to load orders. Please try again later."])
+    container.replaceChildren(
+      createElement("section", { class: "user-orders-page" }, [
+        createElement("h2", {}, ["My Orders"]),
+        createElement("p", {}, ["Failed to load orders. Please try again later."]),
+      ])
     );
   }
+}
+
+/* ───────────────── Page ───────────────── */
+
+function buildOrdersPage(state, rerender) {
+  const filteredOrders = getFilteredOrders(state.orders, state.filters);
+  const totalPages = Math.max(1, Math.ceil(filteredOrders.length / PAGE_SIZE));
+  if (state.currentPage > totalPages) {
+    state.currentPage = totalPages;
+  }
+
+  const pagedOrders = filteredOrders.slice(
+    (state.currentPage - 1) * PAGE_SIZE,
+    state.currentPage * PAGE_SIZE
+  );
+
+  const isMobile = window.innerWidth <= 768;
+
+  const sectionChildren = [
+    createElement("h2", {}, ["My Orders"]),
+    buildUserOrderFilters(state, rerender),
+    buildOrdersSummary(filteredOrders.length, state.orders.length, state.currentPage, totalPages),
+  ];
+
+  if (isMobile) {
+    sectionChildren.push(buildMobileOrdersList(pagedOrders, state, rerender));
+  } else {
+    sectionChildren.push(buildDesktopOrdersTable(pagedOrders, state, rerender));
+  }
+
+  sectionChildren.push(buildPaginationControls(state, filteredOrders.length, totalPages, rerender));
+
+  return createElement("section", { class: "user-orders-page" }, sectionChildren);
 }
 
 /* ───────────────── Filters ───────────────── */
-function buildUserOrderFilters() {
+
+function buildUserOrderFilters(state, rerender) {
   return createElement("div", { class: "filters" }, [
-    buildLabeledSelect("Status", [
-      { value: "", label: "All" },
-      { value: "pending", label: "Pending" },
-      { value: "confirmed", label: "Confirmed" },
-      { value: "shipped", label: "Shipped" },
-      { value: "delivered", label: "Delivered" },
-    ]),
+    buildLabeledSelect(
+      "Status",
+      [
+        { value: "", label: "All" },
+        { value: "pending", label: "Pending" },
+        { value: "confirmed", label: "Confirmed" },
+        { value: "shipped", label: "Shipped" },
+        { value: "delivered", label: "Delivered" },
+      ],
+      state.filters.status,
+      value => {
+        state.filters.status = value;
+        state.currentPage = 1;
+        rerender();
+      }
+    ),
     createElement("label", {}, [
       "Date:",
-      createElement("input", { type: "date" }),
+      createElement("input", {
+        type: "date",
+        value: state.filters.date,
+        onchange: e => {
+          state.filters.date = e.target.value;
+          state.currentPage = 1;
+          rerender();
+        },
+      }),
     ]),
-    createElement("button", { type: "button" }, ["Filter"]),
+    createElement(
+      "button",
+      {
+        type: "button",
+        onclick: () => {
+          state.currentPage = 1;
+          rerender();
+        },
+      },
+      ["Filter"]
+    ),
+    createElement(
+      "button",
+      {
+        type: "button",
+        onclick: () => {
+          state.filters.status = "";
+          state.filters.date = "";
+          state.currentPage = 1;
+          rerender();
+        },
+      },
+      ["Reset"]
+    ),
   ]);
 }
 
-/* ───────────────── Layout Switch ───────────────── */
-function buildResponsiveOrdersLayout(orders) {
-  const isMobile = window.innerWidth <= 768;
+function buildOrdersSummary(filteredCount, totalCount, currentPage, totalPages) {
+  return createElement("p", { class: "orders-summary" }, [
+    `Showing ${filteredCount} of ${totalCount} order(s) · Page ${currentPage} of ${totalPages}`,
+  ]);
+}
 
-  if (isMobile) {
-    return createElement(
-      "div",
-      { class: "orders-cards" },
-      orders.length
-        ? orders.map(buildOrderCard)
-        : [createElement("p", {}, ["No orders found."])]
-    );
+/* ───────────────── Filtering / Sorting ───────────────── */
+
+function normalizeOrders(orders) {
+  return [...orders].sort((a, b) => {
+    const aTime = new Date(a.createdAt || 0).getTime();
+    const bTime = new Date(b.createdAt || 0).getTime();
+    return bTime - aTime;
+  });
+}
+
+function getFilteredOrders(orders, filters) {
+  const status = (filters.status || "").trim().toLowerCase();
+  const date = (filters.date || "").trim();
+
+  return orders.filter(order => {
+    const orderStatus = (order.status || "").trim().toLowerCase();
+    const orderDate = toLocalDateKey(order.createdAt);
+
+    if (status && orderStatus !== status) {
+      return false;
+    }
+    if (date && orderDate !== date) {
+      return false;
+    }
+
+    return true;
+  });
+}
+
+function toLocalDateKey(dateStr) {
+  if (!dateStr) {
+    return "";
+  }
+  const d = new Date(dateStr);
+  if (Number.isNaN(d.getTime())) {
+    return "";
   }
 
-  return buildUserOrdersTable(orders);
+  const y = d.getFullYear();
+  const m = String(d.getMonth() + 1).padStart(2, "0");
+  const day = String(d.getDate()).padStart(2, "0");
+  return `${y}-${m}-${day}`;
 }
 
 /* ───────────────── Desktop Table ───────────────── */
-function buildUserOrdersTable(orders) {
+
+function buildDesktopOrdersTable(orders, state, rerender) {
   return createElement("table", { class: "orders-table" }, [
     createElement("thead", {}, [
       createElement("tr", {}, [
-        "Order ID",
-        "Farm",
-        "Item",
-        "Qty",
-        "Date",
-        "Price",
-        "Status",
-        "Actions",
-      ].map(h => createElement("th", {}, [h]))),
+        ["", "Order ID", "Date", "Total", "Status", "Actions"].map(h =>
+          createElement("th", {}, [h])
+        ),
+      ]),
     ]),
     createElement(
       "tbody",
       {},
       orders.length
-        ? orders.map(buildUserOrderRow)
+        ? orders.flatMap(order => buildExpandableOrderRows(order, state, rerender))
         : [
-            createElement("tr", {}, [
-              createElement("td", { colspan: 8 }, ["No orders found."]),
-            ]),
-          ]
+          createElement("tr", {}, [
+            createElement("td", { colspan: 6 }, ["No orders found."]),
+          ]),
+        ]
     ),
   ]);
 }
 
-function buildUserOrderRow(order) {
-  const item = order.items?.crops?.[0] || {};
-  const qty = item.quantity || 0;
-  const unit = item.unit || "";
-  const price = order.total || item.price || 0;
+function buildExpandableOrderRows(order, state, rerender) {
+  const expanded = state.expandedOrders.has(order.orderId);
+  const products = getOrderProducts(order);
 
-  return createElement("tr", {}, [
-    createElement("td", {}, [order.orderid]),
-    createElement("td", {}, [item.entityName || "Unknown"]),
-    createElement("td", {}, [item.itemName || "N/A"]),
-    createElement("td", {}, [`${qty} ${unit}`]),
+  const summaryRow = createElement("tr", { class: "order-summary-row" }, [
+    createElement("td", {}, [
+      createElement(
+        "button",
+        {
+          type: "button",
+          onclick: () => {
+            toggleExpanded(state, order.orderId);
+            rerender();
+          },
+        },
+        [expanded ? "−" : "+"]
+      ),
+    ]),
+    createElement("td", {}, [order.orderId || "N/A"]),
     createElement("td", {}, [formatDate(order.createdAt)]),
-    createElement("td", {}, [formatINR(price)]),
+    createElement("td", {}, [formatINR(order.total || 0)]),
     createElement("td", {}, [capitalize(order.status)]),
     createElement("td", {}, [
-      createElement("button", {
-        onclick: () => downloadReceipt(order),
-      }, ["Receipt"]),
+      createElement(
+        "button",
+        {
+          type: "button",
+          onclick: () => downloadReceipt(order),
+        },
+        ["Receipt"]
+      ),
     ]),
+  ]);
+
+  const detailRow = createElement("tr", { class: "order-detail-row" }, [
+    createElement("td", { colspan: 6 }, [
+      expanded
+        ? buildOrderItemsTable(products)
+        : createElement("div", {}, []),
+    ]),
+  ]);
+
+  return [summaryRow, detailRow];
+}
+
+function buildOrderItemsTable(products) {
+  return createElement("table", { class: "order-items-table" }, [
+    createElement("thead", {}, [
+      createElement("tr", {}, [
+        ["Farm", "Item", "Qty", "Item Price"].map(h =>
+          createElement("th", {}, [h])
+        ),
+      ]),
+    ]),
+    createElement(
+      "tbody",
+      {},
+      products.length
+        ? products.map(item =>
+          createElement("tr", {}, [
+            createElement("td", {}, [item.entityName || "Unknown"]),
+            createElement("td", {}, [item.itemName || "N/A"]),
+            createElement("td", {}, [String(item.quantity || 0)]),
+            createElement("td", {}, [formatINR(item.price || 0)]),
+          ])
+        )
+        : [
+          createElement("tr", {}, [
+            createElement("td", { colspan: 4 }, ["No items found."]),
+          ]),
+        ]
+    ),
   ]);
 }
 
 /* ───────────────── Mobile Cards ───────────────── */
-function buildOrderCard(order) {
-  const item = order.items?.crops?.[0] || {};
-  const qty = item.quantity || 0;
-  const unit = item.unit || "";
-  const price = order.total || item.price || 0;
+
+function buildMobileOrdersList(orders, state, rerender) {
+  return createElement(
+    "div",
+    { class: "orders-cards" },
+    orders.length
+      ? orders.map(order => buildExpandableOrderCard(order, state, rerender))
+      : [createElement("p", {}, ["No orders found."])]
+  );
+}
+
+function buildExpandableOrderCard(order, state, rerender) {
+  const expanded = state.expandedOrders.has(order.orderId);
+  const products = getOrderProducts(order);
 
   return createElement("div", { class: "order-card" }, [
-    createElement("p", {}, [`Order ID: ${order.orderid}`]),
-    createElement("p", {}, [`Farm: ${item.entityName || "Unknown"}`]),
-    createElement("p", {}, [`Item: ${item.itemName || "N/A"}`]),
-    createElement("p", {}, [`Qty: ${qty} ${unit}`]),
+    createElement("div", { class: "order-card-header" }, [
+      createElement("p", {}, [`Order ID: ${order.orderId || "N/A"}`]),
+      createElement(
+        "button",
+        {
+          type: "button",
+          onclick: () => {
+            toggleExpanded(state, order.orderId);
+            rerender();
+          },
+        },
+        [expanded ? "Collapse" : "Expand"]
+      ),
+    ]),
     createElement("p", {}, [`Date: ${formatDate(order.createdAt)}`]),
-    createElement("p", {}, [`Total: ${formatINR(price)}`]),
     createElement("p", {}, [`Status: ${capitalize(order.status)}`]),
-    createElement("button", {
-      onclick: () => downloadReceipt(order),
-    }, ["Receipt"]),
+    createElement("p", {}, [`Total: ${formatINR(order.total || 0)}`]),
+    expanded
+      ? createElement(
+        "div",
+        { class: "order-card-items" },
+        products.length
+          ? products.map(item =>
+            createElement("div", { class: "order-card-item" }, [
+              createElement("p", {}, [`Farm: ${item.entityName || "Unknown"}`]),
+              createElement("p", {}, [`Item: ${item.itemName || "N/A"}`]),
+              createElement("p", {}, [`Qty: ${item.quantity || 0}`]),
+              createElement("p", {}, [`Item Price: ${formatINR(item.price || 0)}`]),
+            ])
+          )
+          : [createElement("p", {}, ["No items found."])]
+      )
+      : createElement("div", {}, []),
+    createElement(
+      "button",
+      {
+        type: "button",
+        onclick: () => downloadReceipt(order),
+      },
+      ["Receipt"]
+    ),
+  ]);
+}
+
+function toggleExpanded(state, orderId) {
+  if (state.expandedOrders.has(orderId)) {
+    state.expandedOrders.delete(orderId);
+  } else {
+    state.expandedOrders.add(orderId);
+  }
+}
+
+function getOrderProducts(order) {
+  return Array.isArray(order?.items?.products) ? order.items.products : [];
+}
+
+/* ───────────────── Pagination ───────────────── */
+
+function buildPaginationControls(state, totalOrders, totalPages, rerender) {
+  return createElement("div", { class: "pagination" }, [
+    createElement(
+      "button",
+      {
+        type: "button",
+        disabled: state.currentPage <= 1,
+        onclick: () => {
+          if (state.currentPage > 1) {
+            state.currentPage -= 1;
+            rerender();
+          }
+        },
+      },
+      ["Prev"]
+    ),
+    createElement("span", {}, [
+      `Page ${state.currentPage} of ${totalPages} · ${totalOrders} order(s)`,
+    ]),
+    createElement(
+      "button",
+      {
+        type: "button",
+        disabled: state.currentPage >= totalPages,
+        onclick: () => {
+          if (state.currentPage < totalPages) {
+            state.currentPage += 1;
+            rerender();
+          }
+        },
+      },
+      ["Next"]
+    ),
   ]);
 }
 
 /* ───────────────── Utilities ───────────────── */
-function buildLabeledSelect(labelText, options) {
+
+function buildLabeledSelect(labelText, options, value, onChange) {
   return createElement("label", {}, [
     `${labelText}:`,
     createElement(
       "select",
-      {},
+      {
+        value,
+        onchange: e => onChange(e.target.value),
+      },
       options.map(o =>
         createElement("option", { value: o.value }, [o.label])
       )
@@ -161,16 +427,17 @@ function capitalize(text = "") {
 
 function formatDate(dateStr) {
   if (!dateStr) {
-return "N/A";
-}
+    return "N/A";
+  }
+
   const d = new Date(dateStr);
-  return isNaN(d)
+  return Number.isNaN(d.getTime())
     ? "N/A"
     : d.toLocaleDateString("en-IN", {
-        year: "numeric",
-        month: "short",
-        day: "numeric",
-      });
+      year: "numeric",
+      month: "short",
+      day: "numeric",
+    });
 }
 
 function formatINR(val = 0) {
@@ -181,6 +448,7 @@ function formatINR(val = 0) {
 }
 
 /* ───────────────── Actions ───────────────── */
+
 function downloadReceipt(order) {
   const blob = new Blob([JSON.stringify(order, null, 2)], {
     type: "application/json",
@@ -188,7 +456,7 @@ function downloadReceipt(order) {
 
   const link = createElement("a", {
     href: URL.createObjectURL(blob),
-    download: `receipt_${order.orderid}.json`,
+    download: `receipt_${order.orderId || "order"}.json`,
   });
 
   document.body.append(link);
@@ -199,225 +467,3 @@ function downloadReceipt(order) {
     link.remove();
   }, 1000);
 }
-
-// import { createElement } from "../../components/createElement";
-// import { apiFetch } from "../../api/api";
-
-// export async function displayMyOrders(container, isLoggedIn) {
-//   container.replaceChildren();
-
-//   if (!isLoggedIn) {
-//     container.appendChild(
-//       createElement("p", {}, ["You must be logged in to view your orders."])
-//     );
-//     return;
-//   }
-
-//   const section = createElement("section", { class: "user-orders-page" }, [
-//     createElement("h2", {}, ["My Orders"]),
-//     buildUserOrderFilters(),
-//   ]);
-
-//   container.appendChild(section);
-
-//   try {
-//     const response = await apiFetch("/orders/mine");
-
-//     if (!response.success || !Array.isArray(response.orders)) {
-//       throw new Error("Invalid response");
-//     }
-
-//     const layout = buildResponsiveOrdersLayout(response.orders);
-//     section.appendChild(layout);
-//   } catch (err) {
-//     console.error("Failed to fetch user orders:", err);
-//     section.appendChild(
-//       createElement("p", {}, ["Failed to load orders. Please try again later."])
-//     );
-//   }
-// }
-
-// // ---------------------- Filters ----------------------
-// function buildUserOrderFilters() {
-//   return createElement("div", { class: "filters" }, [
-//     buildLabeledSelect("Status", [
-//       { value: "", label: "All" },
-//       { value: "pending", label: "Pending" },
-//       { value: "confirmed", label: "Confirmed" },
-//       { value: "shipped", label: "Shipped" },
-//       { value: "delivered", label: "Delivered" },
-//     ]),
-//     createElement("label", {}, [
-//       "Date:",
-//       createElement("input", { type: "date" }),
-//     ]),
-//     createElement("button", { type: "button" }, ["Filter"]),
-//   ]);
-// }
-
-// // ---------------------- Responsive Layout ----------------------
-// function buildResponsiveOrdersLayout(orders) {
-//   const isMobile = window.innerWidth <= 768;
-
-//   if (isMobile) {
-//     return createElement("div", { class: "orders-cards" },
-//       orders.length === 0
-//         ? [createElement("p", {}, ["No orders found."])]
-//         : orders.map(buildOrderCard)
-//     );
-//   }
-
-//   return buildUserOrdersTable(orders);
-// }
-
-// // ---------------------- Desktop Table ----------------------
-// function buildUserOrdersTable(orders) {
-//   return createElement("table", { class: "orders-table" }, [
-//     createElement("thead", {}, [
-//       createElement("tr", {}, [
-//         "Order ID",
-//         "Farm Name",
-//         "Crop",
-//         "Qty",
-//         "Order Date",
-//         "Price",
-//         "Status",
-//         "Actions",
-//       ].map((header) => createElement("th", {}, [header]))),
-//     ]),
-//     createElement(
-//       "tbody",
-//       {},
-//       orders.length === 0
-//         ? [createElement("tr", {}, [
-//             createElement("td", { colspan: 8 }, ["No orders found."]),
-//           ])]
-//         : orders.map(buildUserOrderRow)
-//     ),
-//   ]);
-// }
-
-// function buildUserOrderRow(order) {
-//   const cropItem = order.items?.crops?.[0] || {};
-//   const farmName = cropItem.entityName || "Unknown Farm";
-//   const cropName = cropItem.itemName || "N/A";
-//   const qty = cropItem.quantity || order.quantity || 0;
-//   const unit = cropItem.unit || "";
-//   const price = order.priceAtPurchase || cropItem.price || 0;
-//   const orderDate = formatDate(order.createdAt);
-//   const status = capitalize(order.status);
-
-//   return createElement("tr", {}, [
-//     createElement("td", {}, [order.orderid]),
-//     createElement("td", {}, [farmName]),
-//     createElement("td", {}, [cropName]),
-//     createElement("td", {}, [`${qty} ${unit}`]),
-//     createElement("td", {}, [orderDate]),
-//     createElement("td", {}, [formatINR(price)]),
-//     createElement("td", {}, [status]),
-//     createElement("td", {}, [
-//       createElement("button", { onclick: () => markAsPaid(order.orderid) }, ["Mark Paid"]),
-//       createElement("button", {
-//         onclick: () => contactFarmer(cropItem.entityName, cropItem.entityId),
-//       }, ["Contact"]),
-//       createElement("button", { onclick: () => downloadReceipt(order) }, ["Receipt"]),
-//     ]),
-//   ]);
-// }
-
-// // ---------------------- Mobile Card ----------------------
-// function buildOrderCard(order) {
-//   const cropItem = order.items?.crops?.[0] || {};
-//   const farmName = cropItem.entityName || "Unknown Farm";
-//   const cropName = cropItem.itemName || "N/A";
-//   const qty = cropItem.quantity || order.quantity || 0;
-//   const unit = cropItem.unit || "";
-//   const price = order.priceAtPurchase || cropItem.price || 0;
-//   const orderDate = formatDate(order.createdAt);
-//   const status = capitalize(order.status);
-
-//   return createElement("div", { class: "order-card" }, [
-//     createElement("p", {}, [`Order ID: ${order.orderid}`]),
-//     createElement("p", {}, [`Farm: ${farmName}`]),
-//     createElement("p", {}, [`Crop: ${cropName}`]),
-//     createElement("p", {}, [`Qty: ${qty} ${unit}`]),
-//     createElement("p", {}, [`Order Date: ${orderDate}`]),
-//     createElement("p", {}, [`Price: ${formatINR(price)}`]),
-//     createElement("p", {}, [`Status: ${status}`]),
-//     createElement("div", { class: "order-actions" }, [
-//       createElement("button", { onclick: () => markAsPaid(order.orderid) }, ["Mark Paid"]),
-//       createElement("button", {
-//         onclick: () => contactFarmer(cropItem.entityName, cropItem.entityId),
-//       }, ["Contact"]),
-//       createElement("button", { onclick: () => downloadReceipt(order) }, ["Receipt"]),
-//     ]),
-//   ]);
-// }
-
-// // ---------------------- Utilities ----------------------
-// function buildLabeledSelect(labelText, options, attrs = {}) {
-//   return createElement("label", {}, [
-//     labelText + ":",
-//     createElement(
-//       "select",
-//       attrs,
-//       options.map(({ value, label }) =>
-//         createElement("option", { value }, [label])
-//       )
-//     ),
-//   ]);
-// }
-
-// function capitalize(text) {
-//   return typeof text === "string"
-//     ? text.charAt(0).toUpperCase() + text.slice(1)
-//     : "";
-// }
-
-// function formatDate(dateStr) {
-//   try {
-//     const d = new Date(dateStr);
-//     return d.toLocaleDateString("en-IN", {
-//       year: "numeric",
-//       month: "short",
-//       day: "numeric",
-//     });
-//   } catch {
-//     return dateStr || "N/A";
-//   }
-// }
-
-// function formatINR(val) {
-//   return Intl.NumberFormat("en-IN", {
-//     style: "currency",
-//     currency: "INR",
-//   }).format(val || 0);
-// }
-
-// // ---------------------- Action Handlers ----------------------
-// function markAsPaid(orderId) {
-//   console.log("Marking order as paid:", orderId);
-//   // apiFetch(`/farmorders/${orderId}/mark-paid`, "POST")
-// }
-
-// function contactFarmer(farmName, farmId) {
-//   console.log("Contacting farmer:", farmName, farmId);
-//   alert(`Contact ${farmName || "Farmer"} via farm ID: ${farmId}`);
-// }
-
-// function downloadReceipt(order) {
-//   console.log("Downloading receipt for:", order.orderid);
-//   const blob = new Blob([JSON.stringify(order, null, 2)], {
-//     type: "application/json",
-//   });
-//   const link = createElement("a", {
-//     href: URL.createObjectURL(blob),
-//     download: `receipt_${order.orderid}.json`,
-//   });
-//   document.body.appendChild(link);
-//   link.click();
-//   setTimeout(() => {
-//     URL.revokeObjectURL(link.href);
-//     link.remove();
-//   }, 1000);
-// }

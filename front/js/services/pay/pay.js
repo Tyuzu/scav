@@ -217,6 +217,9 @@ async function showPaymentModal({
 
   const rules = PAYMENT_RULES[paymentType];
 
+  // Declare modalRef early so click handler can reference it
+  let modalRef;
+
   const confirmBtn = Button(
     "Confirm Payment",
     "",
