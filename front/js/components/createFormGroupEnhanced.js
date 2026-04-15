@@ -1,57 +1,12 @@
+/**
+ * Enhanced Form Group with Built-in Validation
+ * Drop-in replacement for createFormGroup with validation and error display
+ */
+
 import { createElement } from "./createElement.js";
 import { validateField } from "../validation/validators.js";
 
-/**
- * REFACTORED: This now includes validation support built-in. 
- * This maintains backward compatibility while adding powerful validation features.
- * 
- * To add validation to any form, simply add a 'validator' property:
- * 
- * createFormGroup({
- *   id: "email",
- *   label: "Email",
- *   type: "email",
- *   validator: validators.email  // NEW - optional validation
- * })
- * 
- * See /validation/FORM_VALIDATION_GUIDE.md for complete documentation
- */
-
-/**
- * Create a form group with optional validation support
- * Use this for all new forms - it includes validation and error display
- * 
- * @param {Object} config - Configuration object
- * @param {string} config.type - Input type (text, email, number, file, select, etc.)
- * @param {string} config.id - Element ID and field identifier
- * @param {string} config.name - Form field name
- * @param {string} config.label - Display label
- * @param {string} config.value - Initial value
- * @param {string} config.placeholder - Placeholder text
- * @param {boolean} config.required - HTML required attribute
- * @param {string} config.accept - File accept filter
- * @param {Array} config.options - Options for select/multiselect
- * @param {boolean} config.multiple - Multiple selection/files
- * @param {Function} config.validator - Validation function (NEW)
- * @param {string} config.validationTrigger - When to validate: "blur", "change", "both" (NEW)
- * @param {Object} config.additionalProps - Extra HTML attributes
- * @param {Array} config.additionalNodes - Extra DOM elements
- * @returns {HTMLElement} Form group element with validation support
- * 
- * @example
- * // Simple usage (backward compatible)
- * createFormGroup({ id: "name", label: "Name", type: "text" })
- * 
- * // With validation (NEW)
- * createFormGroup({
- *   id: "email",
- *   label: "Email",
- *   type: "email",
- *   validator: validators.email,
- *   validationTrigger: "blur"
- * })
- */
-export function createFormGroup({
+export function createFormGroupWithValidation({
   type = "text",
   id = "",
   name = "",
@@ -63,28 +18,26 @@ export function createFormGroup({
   options = [],
   multiple = false,
   validator = null,
-  validationTrigger = "blur",
+  validationTrigger = "blur", // "blur", "change", or "both"
   additionalProps = {},
-  additionalNodes = []
+  additionalNodes = [],
+  onValidationChange = null, // Callback when validation state changes
 }) {
   const group = createElement("div", { class: "form-group" });
-
-  if (label) {
-    const labelAttrs = {};
-    if (id) {
-      labelAttrs.for = id;
-    }
-    const requiredSpan = required ? createElement("span", { class: "form-required" }, ["*"]) : null;
-    const labelElement = createElement("label", labelAttrs, [label]);
-    if (requiredSpan) {
-      labelElement.appendChild(requiredSpan);
-    }
-    group.appendChild(labelElement);
-  }
-
   const inputName = name || id || "";
   let inputElement;
 
+  // Create label
+  if (label) {
+    const labelAttrs = {};
+    if (id) labelAttrs.for = id;
+    const requiredSpan = required ? createElement("span", { class: "form-required" }, ["*"]) : null;
+    const labelElement = createElement("label", labelAttrs, [label]);
+    if (requiredSpan) labelElement.appendChild(requiredSpan);
+    group.appendChild(labelElement);
+  }
+
+  // Create input element based on type
   switch (type) {
     case "textarea":
       inputElement = createElement("textarea", {
@@ -148,7 +101,7 @@ export function createFormGroup({
         id: id || "",
         name: inputName || "",
         placeholder: placeholder || "",
-        value: (value !== null && value !== "") ? Number(value) : ""
+        value: (value != null && value !== "") ? Number(value) : ""
       });
       break;
 
@@ -170,7 +123,7 @@ export function createFormGroup({
         id: id || undefined,
         name: inputName || undefined,
         placeholder: placeholder || undefined,
-        value: (value !== null) ? String(value) : ""
+        value: (value != null) ? String(value) : ""
       });
       if (accept) {
         inputElement.accept = accept;
@@ -181,10 +134,12 @@ export function createFormGroup({
       break;
   }
 
+  // Apply required attribute
   if (required) {
     inputElement.required = true;
   }
 
+  // Apply additional properties
   Object.entries(additionalProps).forEach(([key, val]) => {
     try {
       if (key in inputElement) {
@@ -197,49 +152,85 @@ export function createFormGroup({
     }
   });
 
-  group.appendChild(inputElement);
+  // Create error message element
+  const errorElement = createElement("div", {
+    class: "form-error",
+    style: "display: none; color: #d32f2f; font-size: 0.875rem; margin-top: 0.25rem;"
+  });
 
-  // NEW: Add validation support if validator is provided
+  // Create hidden input to track validation state
+  const validationStateInput = document.createElement("input");
+  validationStateInput.type = "hidden";
+  validationStateInput.className = "form-validation-state";
+  validationStateInput.value = "valid";
+
+  // Validation function
+  const validateInput = () => {
+    if (!validator) return true;
+
+    const fieldValue = type === "file" ? inputElement : inputElement.value;
+    const error = validateField(fieldValue, validator);
+
+    if (error) {
+      errorElement.textContent = error;
+      errorElement.style.display = "block";
+      inputElement.classList.add("form-input-error");
+      validationStateInput.value = "invalid";
+    } else {
+      errorElement.textContent = "";
+      errorElement.style.display = "none";
+      inputElement.classList.remove("form-input-error");
+      validationStateInput.value = "valid";
+    }
+
+    if (onValidationChange) {
+      onValidationChange(!error);
+    }
+
+    return !error;
+  };
+
+  // Attach validation listeners
   if (validator) {
-    const errorElement = createElement("div", {
-      class: "form-error",
-      style: "display: none; color: #d32f2f; font-size: 0.875rem; margin-top: 0.25rem;"
-    });
-
-    const validateInput = () => {
-      const fieldValue = type === "file" ? inputElement : inputElement.value;
-      const error = validateField(fieldValue, validator);
-
-      if (error) {
-        errorElement.textContent = error;
-        errorElement.style.display = "block";
-        inputElement.classList.add("form-input-error");
-      } else {
-        errorElement.textContent = "";
-        errorElement.style.display = "none";
-        inputElement.classList.remove("form-input-error");
+    const validateOn = () => {
+      // Debounce for better UX
+      if (inputElement._validateTimeout) {
+        clearTimeout(inputElement._validateTimeout);
       }
+      inputElement._validateTimeout = setTimeout(validateInput, 300);
     };
 
-    // Attach validation listeners
     if (validationTrigger === "blur" || validationTrigger === "both") {
       inputElement.addEventListener("blur", validateInput);
     }
 
     if (validationTrigger === "change" || validationTrigger === "both") {
-      inputElement.addEventListener("change", validateInput);
-      inputElement.addEventListener("input", validateInput);
+      inputElement.addEventListener("change", validateOn);
+      inputElement.addEventListener("input", validateOn);
     }
-
-    // Expose validation method
-    inputElement.validate = validateInput;
-    group.appendChild(errorElement);
   }
 
-  // Append any additional nodes like character counters
+  // Expose validation method
+  inputElement.validate = validateInput;
+  inputElement.isValid = () => validationStateInput.value === "valid";
+  inputElement.getError = () => errorElement.textContent;
+
+  // Append elements
+  group.appendChild(inputElement);
+  group.appendChild(errorElement);
+  group.appendChild(validationStateInput);
+
+  // Append additional nodes
   if (Array.isArray(additionalNodes)) {
     additionalNodes.forEach(node => group.appendChild(node));
   }
 
   return group;
+}
+
+/**
+ * Backward compatible wrapper - use enhanced version by default
+ */
+export function createFormGroup(config) {
+  return createFormGroupWithValidation(config);
 }
