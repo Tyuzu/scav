@@ -32,6 +32,7 @@ import (
 	"naevis/musicon"
 	"naevis/newchat"
 	"naevis/notices"
+	"naevis/notifications"
 	"naevis/places"
 	"naevis/posts"
 	"naevis/products"
@@ -40,6 +41,7 @@ import (
 	"naevis/recipes"
 	"naevis/reports"
 	"naevis/reviews"
+	"naevis/search"
 	"naevis/settings"
 	"naevis/stripe"
 	"naevis/suggestions"
@@ -262,6 +264,39 @@ func AddNoticesRoutes(router *httprouter.Router, app *infra.Deps, rateLimiter *r
 	// UPDATE + DELETE
 	router.PUT("/api/v1/notices/:entitytype/:entityid/:noticeid", rateLimiter.Limit(authmidware(notices.UpdateNotice(app))))
 	router.DELETE("/api/v1/notices/:entitytype/:entityid/:noticeid", rateLimiter.Limit(authmidware(notices.DeleteNotice(app))))
+}
+
+// Notifications routes
+func AddNotificationsRoutes(router *httprouter.Router, app *infra.Deps, rateLimiter *ratelim.RateLimiter) {
+	authmidware := middleware.Authenticate(app)
+
+	// Create notification
+	router.POST("/api/v1/notifs", rateLimiter.Limit(authmidware(notifications.CreateNotification(app))))
+
+	// Bulk create notifications
+	router.POST("/api/v1/notifs/bulk", rateLimiter.Limit(authmidware(notifications.BulkCreateNotifications(app))))
+
+	// Get user notifications
+	router.GET("/api/v1/notifs/user/:userid", notifications.GetUserNotifications(app))
+
+	// Get unread count
+	router.GET("/api/v1/notifs/user/:userid/unread", notifications.GetUnreadCount(app))
+
+	// Mark notification as read
+	router.PUT("/api/v1/notifs/notif/:notificationid/read", rateLimiter.Limit(authmidware(notifications.MarkAsRead(app))))
+
+	// Mark all as read
+	router.PUT("/api/v1/notifs/user/:userid/read-all", rateLimiter.Limit(authmidware(notifications.MarkAllAsRead(app))))
+
+	// Delete notification
+	router.DELETE("/api/v1/notifs/notif/:notificationid", rateLimiter.Limit(authmidware(notifications.DeleteNotification(app))))
+
+	// Clear all notifications
+	router.DELETE("/api/v1/notifs/user/:userid", rateLimiter.Limit(authmidware(notifications.ClearAllNotifications(app))))
+
+	// Notification preferences
+	router.GET("/api/v1/notifs/user/:userid/preferences", authmidware(notifications.GetPreferences(app)))
+	router.PUT("/api/v1/notifs/user/:userid/preferences", rateLimiter.Limit(authmidware(notifications.UpdatePreferences(app))))
 }
 
 func AddCommentsRoutes(router *httprouter.Router, app *infra.Deps, rateLimiter *ratelim.RateLimiter) {
@@ -980,4 +1015,13 @@ func AddVendorRoutes(router *httprouter.Router, app *infra.Deps, rateLimiter *ra
 	router.POST("/api/v1/vendors/events/:eventID/hire", rateLimiter.Limit(authmidware(vendors.HireVendorHandler(app))))
 	router.GET("/api/v1/vendors/events/:eventID", rateLimiter.Limit(vendors.GetEventVendorsHandler(app)))
 	router.DELETE("/api/v1/vendors/events/:eventID/vendor/:vendorID", rateLimiter.Limit(authmidware(vendors.RemoveVendorHandler(app))))
+}
+
+// Search Routes - Public endpoints for search functionality
+func AddSearchRoutes(router *httprouter.Router, app *infra.Deps, rateLimiter *ratelim.RateLimiter) {
+	// Autocomplete suggestions - public, rate-limited
+	router.GET("/api/v1/ac", rateLimiter.Limit(search.SearchAutocomplete(app)))
+
+	// Search by entity type - public, rate-limited
+	router.GET("/api/v1/search/:tabId", rateLimiter.Limit(search.SearchByType(app)))
 }

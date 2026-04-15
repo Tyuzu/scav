@@ -115,14 +115,24 @@ fetchSearchResults(currentTab, searchQuery, activeTabContainer);
 async function handleAutocomplete(event) {
     const query = event.target.value.trim();
     const autocompleteList = document.getElementById("autocomplete-list");
+    if (!autocompleteList) {
+        console.warn("Autocomplete list element not found");
+        return;
+    }
     autocompleteList.textContent = "";
     if (!query) {
-return;
-}
+        return;
+    }
 
     try {
         const response = await fetch(`${SEARCH_URL}/ac?prefix=${encodeURIComponent(query)}`);
-        const suggestions = await response.json();
+        let suggestions = await response.json();
+        
+        // Handle null response by converting to empty array
+        if (suggestions === null || !Array.isArray(suggestions)) {
+            suggestions = [];
+        }
+        
         suggestions.forEach(suggestion => {
             const li = createElement("li", { class: "autocomplete-item" }, [suggestion]);
             li.addEventListener("click", () => {
