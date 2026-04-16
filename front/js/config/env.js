@@ -10,12 +10,12 @@ const ENV = {
     BANNERDROP_URL: "http://localhost:6925",
   },
   staging: {
-    MAIN_URL: "https://staging-api.farmium.com",
-    BANNERDROP_URL: "https://staging-bannerdrop.farmium.com",
+    MAIN_URL: "https://gallium.onrender.com",
+    BANNERDROP_URL: "https://bannerdrop.onrender.com",
   },
   production: {
-    MAIN_URL: "https://api.farmium.com",
-    BANNERDROP_URL: "https://cdn.farmium.com",
+    MAIN_URL: "https://gallium.onrender.com",
+    BANNERDROP_URL: "https://bannerdrop.onrender.com",
   },
 };
 

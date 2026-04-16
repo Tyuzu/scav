@@ -280,14 +280,14 @@ function clearAllListeners() {
   deepListeners.clear();
 }
 
-// --- Store initialization ---
-function initStore() {
-  const saved = localStorage.getItem("user");
-  if (saved) {
-    state.user = JSON.parse(saved);
-    scheduleNotify("user", state.user);
-  }
-}
+// // --- Store initialization ---
+// function initStore() {
+//   const saved = localStorage.getItem("user");
+//   if (saved) {
+//     state.user = JSON.parse(saved);
+//     scheduleNotify("user", state.user);
+//   }
+// }
 
 // --- Route Cache ---
 function getRouteModule(path) {
