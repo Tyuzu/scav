@@ -11,7 +11,7 @@ export default defineConfig({
     // proxy: {
     //   // Proxy /api/v1/* → http://localhost:4000/api/v1/*
     // }
-    allowedHosts: ['.trycloudflare.com'] 
+    // allowedHosts: ['.trycloudflare.com'] 
   },
   rollupOptions: {
     treeshake: {
