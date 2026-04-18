@@ -9,20 +9,156 @@ import { uploadFile } from "../media/api/mediaApi.js";
 // import { createPlayerFooter, playSong, setSongQueue, setCurrentIndex } from "./player.js";
 
 // ------------------------ Open Song Modal ------------------------
-function openSongModal({ mode, song = {}, artistID, container, isCreator }) {
+// function openSongModal({ mode, song = {}, artistID, _container, _isCreator }) {
+//     const isEdit = mode === "edit";
+//     const form = createSongForm(song);
+
+//     const closeModal = () => {
+//         form.closest(".modal")?.remove();
+//         document.body.style.overflow = "";
+//     };
+
+//     Modal({
+//         title: isEdit ? `Edit Song: ${song.title}` : "Upload New Song",
+//         content: form,
+//         onClose: closeModal
+//     });
+
+//     const audioInput = form.querySelector('input[name="audio"]');
+//     const durationInput = form.querySelector('input[name="duration"]');
+//     const titleInput = form.querySelector('input[name="title"]');
+//     const submitBtn = form.querySelector('button[type="submit"]');
+
+//     let durationLoaded = Boolean(durationInput.value);
+
+//     submitBtn.disabled = !durationLoaded;
+
+//     // ------------------ AUDIO METADATA HANDLING ------------------
+//     audioInput.addEventListener("change", () => {
+//         const file = audioInput.files[0];
+
+//         durationLoaded = false;
+//         submitBtn.disabled = true;
+//         durationInput.value = "";
+
+//         if (!file) {
+// return;
+// }
+
+//         if (!titleInput.value) {
+//             titleInput.value = file.name.replace(/\.[^/.]+$/, "");
+//         }
+
+//         const audioEl = document.createElement("audio");
+//         audioEl.preload = "metadata";
+//         audioEl.src = URL.createObjectURL(file);
+
+//         audioEl.addEventListener("loadedmetadata", () => {
+//             URL.revokeObjectURL(audioEl.src);
+
+//             const totalSeconds = Math.floor(audioEl.duration);
+//             if (!totalSeconds || Number.isNaN(totalSeconds)) {
+// return;
+// }
+
+//             const mins = Math.floor(totalSeconds / 60);
+//             const secs = (totalSeconds % 60).toString().padStart(2, "0");
+
+//             durationInput.value = `${mins}:${secs}`;
+//             durationLoaded = true;
+//             submitBtn.disabled = false;
+//         });
+//     });
+
+//     // ------------------ FORM SUBMIT ------------------
+//     form.addEventListener("submit", async e => {
+//         e.preventDefault();
+
+//         if (!durationLoaded) {
+//             Notify("Audio duration not loaded yet", "error");
+//             return;
+//         }
+
+//         try {
+//             const uploadedFiles = {};
+
+//             const audioFile = audioInput.files[0];
+//             if (audioFile) {
+//                 const res = await uploadFile({
+//                     id: `audio-${Date.now()}`,
+//                     file: audioFile,
+//                     fileType: "audio",
+//                     mediaEntity: "song"
+//                 });
+//                 uploadedFiles.audio = res.filename || res.key;
+//                 uploadedFiles.audioextn = res.extn;
+//             }
+
+//             const posterInput = form.querySelector('input[name="poster"]');
+//             const posterFile = posterInput.files[0];
+//             if (posterFile) {
+//                 const res = await uploadFile({
+//                     id: `poster-${Date.now()}`,
+//                     file: posterFile,
+//                     fileType: "poster",
+//                     mediaEntity: "song"
+//                 });
+//                 uploadedFiles.poster = res.filename || res.key;
+//                 uploadedFiles.posterextn = res.extn;
+//             }
+
+//             const payload = {
+//                 title: titleInput.value.trim(),
+//                 genre: form.querySelector('input[name="genre"]').value.trim(),
+//                 duration: durationInput.value.trim(),
+//                 description: form.querySelector('input[name="description"]').value.trim() || ""
+//             };
+
+//             if (uploadedFiles.audio) {
+//                 payload.audio = uploadedFiles.audio;
+//                 payload.audioextn = uploadedFiles.audioextn || ".m4a";
+//             }
+
+//             if (uploadedFiles.poster) {
+//                 payload.poster = uploadedFiles.poster;
+//                 payload.posterextn = uploadedFiles.posterextn || ".png";
+//             }
+
+//             const url = isEdit
+//                 ? `/artists/${artistID}/songs/${encodeURIComponent(song.songid)}/edit`
+//                 : `/artists/${artistID}/songs`;
+
+//             const method = isEdit ? "PUT" : "POST";
+
+//             await apiFetch(url, method, JSON.stringify(payload), {
+//                 headers: { "Content-Type": "application/json" }
+//             });
+
+//             closeModal();
+//             Notify("Song saved successfully", "success");
+//         } catch (err) {
+//             console.error(err);
+//             Notify(`Upload failed: ${err.message}`, "error");
+//         }
+//     });
+// }
+
+function openSongModal({ mode, song = {}, artistID, _container, _isCreator }) {
     const isEdit = mode === "edit";
     const form = createSongForm(song);
 
-    const closeModal = () => {
-        form.closest(".modal")?.remove();
-        document.body.style.overflow = "";
-    };
-
-    Modal({
+    const modalInstance = Modal({
         title: isEdit ? `Edit Song: ${song.title}` : "Upload New Song",
         content: form,
-        onClose: closeModal
+        onClose: () => {
+            // optional external cleanup if needed
+        },
+        autofocusSelector: 'input[name="title"]'
     });
+
+    const closeModal = () => {
+        modalInstance?.close();
+    };
 
     const audioInput = form.querySelector('input[name="audio"]');
     const durationInput = form.querySelector('input[name="duration"]');
@@ -30,20 +166,19 @@ function openSongModal({ mode, song = {}, artistID, container, isCreator }) {
     const submitBtn = form.querySelector('button[type="submit"]');
 
     let durationLoaded = Boolean(durationInput.value);
-
     submitBtn.disabled = !durationLoaded;
 
-    // ------------------ AUDIO METADATA HANDLING ------------------
+    // -------- AUDIO METADATA --------
     audioInput.addEventListener("change", () => {
-        const file = audioInput.files[0];
+        const file = audioInput.files?.[0];
 
         durationLoaded = false;
         submitBtn.disabled = true;
         durationInput.value = "";
 
         if (!file) {
-return;
-}
+            return;
+        }
 
         if (!titleInput.value) {
             titleInput.value = file.name.replace(/\.[^/.]+$/, "");
@@ -58,8 +193,8 @@ return;
 
             const totalSeconds = Math.floor(audioEl.duration);
             if (!totalSeconds || Number.isNaN(totalSeconds)) {
-return;
-}
+                return;
+            }
 
             const mins = Math.floor(totalSeconds / 60);
             const secs = (totalSeconds % 60).toString().padStart(2, "0");
@@ -70,8 +205,8 @@ return;
         });
     });
 
-    // ------------------ FORM SUBMIT ------------------
-    form.addEventListener("submit", async e => {
+    // -------- FORM SUBMIT --------
+    form.addEventListener("submit", async (e) => {
         e.preventDefault();
 
         if (!durationLoaded) {
@@ -82,7 +217,7 @@ return;
         try {
             const uploadedFiles = {};
 
-            const audioFile = audioInput.files[0];
+            const audioFile = audioInput.files?.[0];
             if (audioFile) {
                 const res = await uploadFile({
                     id: `audio-${Date.now()}`,
@@ -95,7 +230,8 @@ return;
             }
 
             const posterInput = form.querySelector('input[name="poster"]');
-            const posterFile = posterInput.files[0];
+            const posterFile = posterInput.files?.[0];
+
             if (posterFile) {
                 const res = await uploadFile({
                     id: `poster-${Date.now()}`,
@@ -109,9 +245,9 @@ return;
 
             const payload = {
                 title: titleInput.value.trim(),
-                genre: form.querySelector('input[name="genre"]').value.trim(),
+                genre: form.querySelector('[name="genre"]').value.trim(),
                 duration: durationInput.value.trim(),
-                description: form.querySelector('input[name="description"]').value.trim() || ""
+                description: form.querySelector('[name="description"]').value.trim() || ""
             };
 
             if (uploadedFiles.audio) {
@@ -136,13 +272,13 @@ return;
 
             closeModal();
             Notify("Song saved successfully", "success");
+
         } catch (err) {
             console.error(err);
             Notify(`Upload failed: ${err.message}`, "error");
         }
     });
 }
-
 
 // ------------------------ Song Form ------------------------
 function createSongForm(song = {}) {
@@ -171,8 +307,8 @@ function setupFilePreview(input, preview, type) {
     input.addEventListener("change", () => {
         const file = input.files[0];
         if (!file) {
- preview.style.display = "none"; return; 
-}
+            preview.style.display = "none"; return;
+        }
 
         const url = URL.createObjectURL(file);
         if (type === "audio" && file.type.startsWith("audio/")) {

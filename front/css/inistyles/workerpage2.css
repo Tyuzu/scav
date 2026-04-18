@@ -18,7 +18,7 @@
   position: relative;
 } */
 
-.worker-photo {
+.worker-photo, .worker-profile-photo {
   position: relative;
   width: 120px;
   height: 120px;
