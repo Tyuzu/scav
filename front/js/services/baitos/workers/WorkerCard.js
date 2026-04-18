@@ -15,7 +15,7 @@ export function HireWorkerCard(worker) {
   const photo = createElement("div", { class: "worker-photo" });
 
   const profileImg = Imagex( {
-    src: resolveImagePath(EntityType.WORKER, PictureType.THUMB, worker.profilePic),
+    src: resolveImagePath(EntityType.WORKER, PictureType.THUMB, worker.avatar),
     classes: "profile-thumbnail",
     loading: "lazy",
     alt: `${worker.name || "Worker"}'s profile photo`

@@ -6,7 +6,7 @@ import Imagex from "../../../components/base/Imagex.js";
 export function openHireWorkerModal(worker) {
   const wrapper = createElement("div", { class: "hire-worker-modal" });
 
-  const imgSrc = resolveImagePath(EntityType.BAITO, PictureType.THUMB, worker.profilePic);
+  const imgSrc = resolveImagePath(EntityType.BAITO, PictureType.THUMB, worker.avatar);
   const image = Imagex({
     src: imgSrc,
     alt: `${worker.name} profile picture`,

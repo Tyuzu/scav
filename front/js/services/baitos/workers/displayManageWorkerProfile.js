@@ -156,7 +156,7 @@ export async function displayManageWorkerProfile(contentContainer, isLoggedIn, w
         updateImageWithCrop({
             entityType: EntityType.WORKER,
             imageType: "photo",
-            stateKey: "profilePic",
+            stateKey: "avatar",
             stateEntityKey: "worker",
             previewElementId: "worker-avatar-img",
             pictureType: PictureType.PHOTO,
@@ -201,7 +201,7 @@ function createEditableWorkerPhoto(worker) {
     const container = createElement("div", { class: "editable-photo-wrapper" });
     const img = Imagex({
         id: "worker-avatar-img",
-        src: resolveImagePath(EntityType.WORKER, PictureType.PHOTO, worker.profilePic),
+        src: resolveImagePath(EntityType.WORKER, PictureType.PHOTO, worker.avatar),
         alt: worker.name,
         classes: "worker-profile-photo"
     });

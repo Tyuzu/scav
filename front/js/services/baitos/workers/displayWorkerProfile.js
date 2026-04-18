@@ -18,6 +18,7 @@ export async function displayWorkerProfile(contentContainer, isLoggedIn, workerI
   let worker = null;
   try {
     worker = await apiFetch(`/baitos/worker/${workerId}`);
+  // eslint-disable-next-line no-unused-vars
   } catch (e) {
     container.replaceChildren(
       createElement("p", { class: "error-msg" }, ["⚠️ Failed to load worker profile."])
@@ -66,7 +67,9 @@ export async function displayWorkerProfile(contentContainer, isLoggedIn, workerI
   const bookingSection = createSectionCard("Schedule", [bookingContainer]);
 
   main.replaceChildren(header, ...detailCards);
-  if (documentsSection) main.appendChild(documentsSection);
+  if (documentsSection) {
+    main.appendChild(documentsSection);
+}
   main.appendChild(bookingSection);
 
   // ===== SIDEBAR =====
@@ -114,7 +117,7 @@ function createNextAvailability(slots) {
   ]);
 }
 
-function renderHireAction(isLoggedIn, bookingContainer, worker) {
+function renderHireAction(isLoggedIn, bookingContainer, _worker) {
   if (!isLoggedIn) {
     return createElement("p", { class: "login-msg" }, ["🔒 Login to book"]);
   }
@@ -132,7 +135,9 @@ function createSectionCard(title, children) {
 }
 
 function renderDetail(icon, label, value) {
-  if (!value) return null;
+  if (!value) {
+    return null;
+  }
   return createElement("div", { class: "detail-row" }, [
     icon + " ",
     `${label}: `,
@@ -142,14 +147,16 @@ function renderDetail(icon, label, value) {
 
 function createWorkerPhoto(worker) {
   return Imagex({
-    src: resolveImagePath(EntityType.WORKER, PictureType.PHOTO, worker.profilePic),
+    src: resolveImagePath(EntityType.WORKER, PictureType.PHOTO, worker.avatar),
     alt: worker.name,
     classes: "worker-profile-photo"
   });
 }
 
 function createDocumentsSection(worker) {
-  if (!worker.documents?.length) return null;
+  if (!worker.documents?.length) {
+    return null;
+  }
 
   return createSectionCard("Documents", [
     createElement("ul", { class: "document-list" }, worker.documents.map((doc, i) =>
