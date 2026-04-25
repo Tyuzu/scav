@@ -9,25 +9,26 @@ import { advertEmbed } from "../ads/adspace.js";
 /* ---------------------------------- */
 
 export const formatDate = (date = new Date()) =>
-  date.toLocaleDateString(undefined, {
-    weekday: "short",
-    month: "short",
-    day: "numeric",
-    year: "numeric"
-  });
+    date.toLocaleDateString(undefined, {
+        weekday: "short",
+        month: "short",
+        day: "numeric",
+        year: "numeric"
+    });
 
 const safeGetLocal = (key, fallback = false) => {
-  try {
-    return localStorage.getItem(key) === "true" ?? fallback;
-  } catch {
-    return fallback;
-  }
+    try {
+        const val = localStorage.getItem(key);
+        return val === null ? fallback : val === "true";
+    } catch {
+        return fallback;
+    }
 };
 
 const safeSetLocal = (key, value) => {
-  try {
-    localStorage.setItem(key, String(value));
-  } catch { }
+    try {
+        localStorage.setItem(key, String(value));
+    } catch {}
 };
 
 /* ---------------------------------- */
@@ -35,15 +36,15 @@ const safeSetLocal = (key, value) => {
 /* ---------------------------------- */
 
 export function createWeatherInfoWidget({
-  temperature = "28.6°C",
-  location = "NYC",
-  icon = "🌤️"
+    temperature = "28.6°C",
+    location = "NYC",
+    icon = "🌤️"
 } = {}) {
-  return createElement("section", { class: "info-widget" }, [
-    createElement("div", { class: "weather" }, [`${icon} ${temperature}`]),
-    createElement("div", { class: "location" }, [location]),
-    createElement("div", { class: "date" }, [formatDate()])
-  ]);
+    return createElement("section", { class: "info-widget" }, [
+        createElement("div", { class: "weather" }, [`${icon} ${temperature}`]),
+        createElement("div", { class: "location" }, [location]),
+        createElement("div", { class: "date" }, [formatDate()])
+    ]);
 }
 
 /* ---------------------------------- */
@@ -51,37 +52,32 @@ export function createWeatherInfoWidget({
 /* ---------------------------------- */
 
 export function createSearchBar() {
-  return createElement("section", { class: "search-bar" }, [
-    createElement("input", {
-      class: "search-input",
-      type: "search",
-      placeholder: "Search places, events, artists...",
-      "aria-label": "Search",
-      name: "search",
-      autocomplete: "off"
-    })
-  ]);
+    return createElement("section", { class: "search-bar" }, [
+        createElement("input", {
+            class: "search-input",
+            type: "search",
+            placeholder: "Search places, events, artists...",
+            "aria-label": "Search",
+            name: "search",
+            autocomplete: "off"
+        })
+    ]);
 }
 
 export function inputField({
-  type = "text",
-  id,
-  placeholder,
-  autocomplete,
-  required = true
-}) {
-  const attrs = {
-    type,
+    type = "text",
     id,
     placeholder,
-    required
-  };
-
-  if (autocomplete) {
-    attrs.autocomplete = autocomplete;
-  }
-
-  return createElement("input", attrs);
+    autocomplete,
+    required = true
+}) {
+    return createElement("input", {
+        type,
+        id,
+        placeholder,
+        required,
+        ...(autocomplete && { autocomplete })
+    });
 }
 
 /* ---------------------------------- */
@@ -89,183 +85,175 @@ export function inputField({
 /* ---------------------------------- */
 
 export function createNavWrapper() {
-  const NAV_ITEMS = [
-    ["📍", "Places", "/places"],
-    ["🌾", "Grocery", "/grocery"],
-    ["🎫", "Events", "/events"],
-    ["💼", "Baito", "/baitos"],
-    ["🧑‍💼", "Hire", "/baitos/hire"],
-    ["📢", "Social", "/social"],
-    ["📝", "Posts", "/posts"],
-    ["🛍️", "Shop", "/products"],
-    ["🍳", "Recipes", "/recipes"],
-    ["🧭", "Itinerary", "/itinerary"],
-    ["🎨", "Artists", "/artists"]
-  ];
+    const NAV_ITEMS = [
+        ["📍", "Places", "/places"],
+        ["🌾", "Grocery", "/grocery"],
+        ["🎫", "Events", "/events"],
+        ["💼", "Baito", "/baitos"],
+        ["🧑‍💼", "Hire", "/baitos/hire"],
+        ["📢", "Social", "/social"],
+        ["📝", "Posts", "/posts"],
+        ["🛍️", "Shop", "/products"],
+        ["🍳", "Recipes", "/recipes"],
+        ["🧭", "Itinerary", "/itinerary"],
+        ["🎨", "Artists", "/artists"]
+    ];
 
-  const MAX_VISIBLE = 6;
+    const MAX_VISIBLE = 6;
 
-  const createNavIcon = ([emoji, label, href]) => {
-    const icon = createElement(
-      "div",
-      {
-        class: "nav-icon",
-        role: "button",
-        tabindex: "0",
-        "aria-label": label
-      },
-      [
-        createElement("span", {}, [emoji]),
-        createElement("span", {}, [label])
-      ]
-    );
+    const createNavIcon = ([emoji, label, href]) => {
+        const el = createElement(
+            "div",
+            {
+                class: "nav-icon",
+                role: "button",
+                tabindex: "0",
+                "aria-label": label
+            },
+            [
+                createElement("span", {}, [emoji]),
+                createElement("span", {}, [label])
+            ]
+        );
 
-    const activate = () => navigate(href);
+        const activate = () => navigate(href);
 
-    icon.addEventListener("click", activate);
-    icon.addEventListener("keydown", e => {
-      if (e.key === "Enter" || e.key === " ") {
-activate();
-}
+        el.addEventListener("click", activate);
+        el.addEventListener("keydown", e => {
+            if (e.key === "Enter" || e.key === " ") {
+              activate();
+            }
+        });
+
+        return el;
+    };
+
+    const collapsedGrid = createElement("div", { class: "nav-grid" });
+    const expandedGrid = createElement("div", { class: "nav-grid expanded-nav" });
+
+    NAV_ITEMS.forEach((item, i) => {
+        const icon = createNavIcon(item);
+        (i < MAX_VISIBLE ? collapsedGrid : expandedGrid).appendChild(icon);
     });
 
-    return icon;
-  };
-
-  const collapsedGrid = createElement("div", { class: "nav-grid" }, []);
-  const expandedGrid = createElement("div", {
-    class: "nav-grid expanded-nav"
-  }, []);
-
-  NAV_ITEMS.forEach((item, index) => {
-    const icon = createNavIcon(item);
-    (index < MAX_VISIBLE ? collapsedGrid : expandedGrid).appendChild(icon);
-  });
-
-  let isExpanded = safeGetLocal("navExpanded", false);
-  expandedGrid.classList.toggle("is-visible", isExpanded);
-
-  const toggleNav = createElement(
-    "button",
-    {
-      class: "toggle-nav",
-      "aria-expanded": String(isExpanded),
-      type: "button"
-    },
-    [isExpanded ? "Less" : "More"]
-  );
-
-  toggleNav.addEventListener("click", () => {
-    isExpanded = !isExpanded;
+    let isExpanded = safeGetLocal("navExpanded", false);
     expandedGrid.classList.toggle("is-visible", isExpanded);
-    toggleNav.textContent = isExpanded ? "Less" : "More";
-    toggleNav.setAttribute("aria-expanded", String(isExpanded));
-    safeSetLocal("navExpanded", isExpanded);
-  });
 
-  return createElement("section", { class: "navbox", role: "navigation" }, [
-    collapsedGrid,
-    expandedGrid,
-    toggleNav
-  ]);
+    const toggleBtn = createElement(
+        "button",
+        {
+            class: "toggle-nav",
+            "aria-expanded": String(isExpanded),
+            type: "button"
+        },
+        [isExpanded ? "Less" : "More"]
+    );
+
+    toggleBtn.addEventListener("click", () => {
+        isExpanded = !isExpanded;
+        expandedGrid.classList.toggle("is-visible", isExpanded);
+        toggleBtn.textContent = isExpanded ? "Less" : "More";
+        toggleBtn.setAttribute("aria-expanded", String(isExpanded));
+        safeSetLocal("navExpanded", isExpanded);
+    });
+
+    return createElement("section", { class: "navbox", role: "navigation" }, [
+        collapsedGrid,
+        expandedGrid,
+        toggleBtn
+    ]);
 }
 
 /* ---------------------------------- */
-/* Auth Forms */
+/* Auth Forms (Optimized Rendering) */
 /* ---------------------------------- */
 
 export function createAuthForms() {
-  const wrapper = createElement("div", { class: "auth-forms-wrapper" }, []);
+    const wrapper = createElement("div", { class: "auth-forms-wrapper" });
 
-  const createForm = ({ id, title, fields, handler }) => {
-    const form = createElement(
-      "form",
-      { id, class: "create-section auth-form" },
-      [
-        createElement("h3", {}, [title]),
-        ...fields,
-        createElement("button", { type: "submit" }, [title])
-      ]
-    );
+    const buildForm = ({ id, title, fields, handler }) => {
+        const form = createElement(
+            "form",
+            { id, class: "create-section auth-form" },
+            [
+                createElement("h3", {}, [title]),
+                ...fields,
+                createElement("button", { type: "submit" }, [title])
+            ]
+        );
 
-    form.addEventListener("submit", handler);
-    return form;
-  };
+        form.addEventListener("submit", handler);
+        return form;
+    };
 
-  function render() {
-    wrapper.replaceChildren();
-
-    const token = getState("token");
-    const username = getState("username");
-
-    if (token) {
-      wrapper.append(
+    const renderLoggedIn = (username) =>
         createElement("div", { class: "logged-info" }, [
-          "You are logged in as ",
-          username || "user"
-        ])
-      );
-      return;
+            "You are logged in as ",
+            username || "user"
+        ]);
+
+    const renderForms = () =>
+        createElement("div", { class: "auth-forms" }, [
+            buildForm({
+                id: "login-form",
+                title: "Login",
+                handler: login,
+                fields: [
+                    inputField({
+                        type: "text",
+                        id: "login-username",
+                        placeholder: "Username",
+                        autocomplete: "username"
+                    }),
+                    inputField({
+                        type: "password",
+                        id: "login-password",
+                        placeholder: "Password",
+                        autocomplete: "current-password"
+                    })
+                ]
+            }),
+            buildForm({
+                id: "signup-form",
+                title: "Signup",
+                handler: signup,
+                fields: [
+                    inputField({
+                        type: "text",
+                        id: "signup-username",
+                        placeholder: "Username",
+                        autocomplete: "username"
+                    }),
+                    inputField({
+                        type: "email",
+                        id: "signup-email",
+                        placeholder: "Email",
+                        autocomplete: "email"
+                    }),
+                    inputField({
+                        type: "password",
+                        id: "signup-password",
+                        placeholder: "Password",
+                        autocomplete: "new-password"
+                    })
+                ]
+            })
+        ]);
+
+    function render() {
+        const token = getState("token");
+        const username = getState("username");
+
+        wrapper.replaceChildren(
+            token ? renderLoggedIn(username) : renderForms()
+        );
     }
 
-    const loginForm = createForm({
-      id: "login-form",
-      title: "Login",
-      handler: login,
-      fields: [
-        inputField({
-          type: "text",
-          id: "login-username",
-          placeholder: "Username",
-          autocomplete: "username"
-        }),
-        inputField({
-          type: "password",
-          id: "login-password",
-          placeholder: "Password",
-          autocomplete: "current-password"
-        })
-      ]
-    });
+    // Only subscribe once
+    subscribeDeep("token", render);
 
-    const signupForm = createForm({
-      id: "signup-form",
-      title: "Signup",
-      handler: signup,
-      fields: [
-        inputField({
-          type: "text",
-          id: "signup-username",
-          placeholder: "Username",
-          autocomplete: "username"
-        }),
-        inputField({
-          type: "email",
-          id: "signup-email",
-          placeholder: "Email",
-          autocomplete: "email"
-        }),
-        inputField({
-          type: "password",
-          id: "signup-password",
-          placeholder: "Password",
-          autocomplete: "new-password"
-        })
-      ]
-    });
-
-    wrapper.append(
-      createElement("div", { class: "auth-forms" }, [
-        loginForm,
-        signupForm
-      ])
-    );
-  }
-
-  subscribeDeep("token", render);
-  render();
-
-  return wrapper;
+    render();
+    return wrapper;
 }
 
 /* ---------------------------------- */
@@ -273,7 +261,7 @@ export function createAuthForms() {
 /* ---------------------------------- */
 
 export function adspace(position = "") {
-  return createElement("section", { class: `advert advert-${position}` }, [
-    advertEmbed("home", position)
-  ]);
+    return createElement("section", { class: `advert advert-${position}` }, [
+        advertEmbed("home", position)
+    ]);
 }
