@@ -25,13 +25,24 @@ const REFRESH_LOCK_TTL = 10_000; // 10s
    MULTI TAB
 ========================= */
 
-const TAB_ID = crypto.randomUUID();
+const TAB_ID =
+  (typeof crypto !== "undefined" && crypto.randomUUID)
+    ? crypto.randomUUID()
+    : generateUUID();
 const REFRESH_LOCK_KEY = "__refresh_lock__";
 const AUTH_CHANNEL = new BroadcastChannel("auth_channel");
 
 /* =========================
    HELPERS
 ========================= */
+
+export function generateUUID() {
+  return "xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx".replace(/[xy]/g, c => {
+    const r = Math.random() * 16 | 0;
+    const v = c === "x" ? r : (r & 0x3 | 0x8);
+    return v.toString(16);
+  });
+}
 
 function parseJwt(token) {
     try {

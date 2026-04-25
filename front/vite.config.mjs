@@ -8,9 +8,9 @@ export default defineConfig({
     outDir: 'dist',
   },
   server: {
-    // proxy: {
-    //   // Proxy /api/v1/* → http://localhost:4000/api/v1/*
-    // }
+   // proxy: {
+      // Proxy /api/v1/* → http://localhost:4000/api/v1/*
+   // }
     // allowedHosts: ['.trycloudflare.com'] 
   },
   rollupOptions: {

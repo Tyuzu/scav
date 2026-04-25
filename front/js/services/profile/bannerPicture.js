@@ -1,7 +1,6 @@
 import { getState, setState } from "../../state/state.js";
 import { updateImageWithCrop } from "../../utils/bannerEditor.js";
 import { resolveImagePath, EntityType, PictureType } from "../../utils/imagePaths.js";
-import { createElement } from "../../components/createElement.js";
 import { handleError } from "../../utils/utils.js";
 import Notify from "../../components/ui/Notify.mjs";
 import Bannerx from "../../components/base/Bannerx.js";
@@ -18,15 +17,15 @@ export async function updateBanner() {
       entityType: EntityType.USER,
       imageType: "banner",
       stateKey: "banner",
-      stateEntityKey: "user",
+      stateEntityKey: "banner",
       previewElementId: "banner-picture-preview",
       pictureType: PictureType.BANNER,
       entityId: profile.userid
     });
 
     if (!response?.banner) {
-throw new Error("No banner returned from server.");
-}
+      throw new Error("No banner returned from server.");
+    }
 
     const currentProfile = getState("userProfile") || {};
     setState({ userProfile: { ...currentProfile, banner: response.banner } }, true);
@@ -35,8 +34,8 @@ throw new Error("No banner returned from server.");
 
     const preview = document.getElementById("banner-picture-preview");
     if (preview) {
-preview.src = resolveImagePath(EntityType.USER, PictureType.BANNER, response.banner) + `?t=${Date.now()}`;
-}
+      preview.src = resolveImagePath(EntityType.USER, PictureType.BANNER, response.banner) + `?t=${Date.now()}`;
+    }
 
     return true;
   } catch (err) {

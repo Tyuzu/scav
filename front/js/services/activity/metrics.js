@@ -1,6 +1,5 @@
 // src/utils/activityLogger.js
-import { API_URL } from "../../api/api.js";
-import Notify from "../../components/ui/Notify.mjs";
+import { API_URL, generateUUID } from "../../api/api.js";
 
 const ENDPOINT = "/scitylana/event";
 const STORAGE_KEY = "__analytics_queue__";
@@ -14,7 +13,7 @@ const SESSION_ID = (() => {
   const key = "__session_id__";
   let id = sessionStorage.getItem(key);
   if (!id) {
-    id = crypto.randomUUID();
+    id = generateUUID();
     sessionStorage.setItem(key, id);
   }
   return id;
@@ -24,7 +23,7 @@ const USER_ID = (() => {
   const key = "__user_id__";
   let id = localStorage.getItem(key);
   if (!id) {
-    id = crypto.randomUUID();
+    id = generateUUID();
     localStorage.setItem(key, id);
   }
   return id;

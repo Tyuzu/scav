@@ -105,13 +105,12 @@ ul.insertBefore(draggingEl, placeholder);
 const createNav = () => {
     const defaultNavItems = [
         // { href: "/dash", label: "Dash" },
-        { href: "/farms", label: "Farms" },
+        // { href: "/farms", label: "Farms" },
         // { href: "/crops", label: "Crops" },
         // { href: "/tools", label: "Tools" },
-        { href: "/products", label: "Products" },
-        // { href: "/recipes", label: "Recipes" },
         { href: "/grocery", label: "Grocery" },
         { href: "/recipes", label: "Recipes" },
+        { href: "/products", label: "Products" },
         { href: "/places", label: "Places" },
         { href: "/itinerary", label: "Itinerary" },
         { href: "/events", label: "Events" },

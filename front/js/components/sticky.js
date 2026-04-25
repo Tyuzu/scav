@@ -9,7 +9,7 @@ import { createIconButton } from "../utils/svgIconButton.js";
 // import { openCartModal } from "../services/cart/cartModal.js";
 
 // --- Update container children based on login state
-function updateNav(container, divs) {
+function updateNav(container, _divs) {
   const isLoggedIn = !!getState("token"); // use token for reactive auth
 
   container.innerHTML = "";
@@ -38,18 +38,18 @@ function updateNav(container, divs) {
     }));
     
     container.appendChild(createIconButton({
-      classSuffix: "stop",
-      svgMarkup: notifSVG,
-      onClick: openNotificationsModal,
-      label: ""
-    }));
-    
-    container.appendChild(createIconButton({
       classSuffix: "edit",
       svgMarkup: cartSVG,
       onClick: () => navigate("/cart"),
       label: ""
     }));
+ 
+    container.appendChild(createIconButton({
+      classSuffix: "stop",
+      svgMarkup: notifSVG,
+      onClick: openNotificationsModal,
+      label: ""
+    }));   
 
 
     // container.appendChild(createIconButton({

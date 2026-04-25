@@ -27,22 +27,22 @@ export const {
 // --- Allowed and persisted keys ---
 const allowedKeys = new Set([
   "token", "user", "username", "userProfile", "socket", "role", "environment",
-  "lang", "lastPath", "currentRoute", "routeCache", "routeState", "currentChatId", "isLoading"
+  "lang", "lastPath", "currentRoute", "routeCache", "routeState", "currentChatId", "isLoading", "userId"
 ]);
 
-const PERSISTED_KEYS = ["token", "userProfile", "user", "username"];
+const PERSISTED_KEYS = ["token", "userProfile", "user", "username", "role"];
 
 // --- Event system ---
 const globalEvents = {};
 function publish(eventName, data) {
   if (globalEvents[eventName]) {
-globalEvents[eventName].forEach(cb => cb(data));
-}
+    globalEvents[eventName].forEach(cb => cb(data));
+  }
 }
 function globalSubscribe(eventName, callback) {
   if (!globalEvents[eventName]) {
-globalEvents[eventName] = [];
-}
+    globalEvents[eventName] = [];
+  }
   globalEvents[eventName].push(callback);
 }
 
@@ -76,10 +76,10 @@ function scheduleNotify(key, value) {
         // top-level notifications
         const fns = listeners.get(key);
         if (fns) {
-for (const fn of fns) {
-fn(value);
-}
-}
+          for (const fn of fns) {
+            fn(value);
+          }
+        }
         publish(`${key}Changed`, value);
         publish("stateChange", { [key]: value });
 
@@ -88,8 +88,8 @@ fn(value);
           if (path === key || path.startsWith(key + ".")) {
             const val = getValueByPath(path);
             for (const fn of fns) {
-fn(val);
-}
+              fn(val);
+            }
           }
         }
       }
@@ -126,15 +126,15 @@ function createReactiveObject(obj, path = []) {
     set(target, prop, value) {
       const oldValue = target[prop];
       if (oldValue === value) {
-return true;
-} // Skip if value unchanged
-      
+        return true;
+      } // Skip if value unchanged
+
       target[prop] = value;
       const fullPath = path.concat(prop).join(".");
       scheduleNotify(fullPath, value);
       if (path.length > 0) {
-scheduleNotify(path[0], target);
-}
+        scheduleNotify(path[0], target);
+      }
       return true;
     },
     deleteProperty(target, prop) {
@@ -142,8 +142,8 @@ scheduleNotify(path[0], target);
       const fullPath = path.concat(prop).join(".");
       scheduleNotify(fullPath);
       if (path.length > 0) {
-scheduleNotify(path[0], target);
-}
+        scheduleNotify(path[0], target);
+      }
       return true;
     }
   });
@@ -171,8 +171,8 @@ const state = reactive(rawState);
 // --- Core state functions ---
 function getState(key) {
   if (!allowedKeys.has(key)) {
-throw new Error(`Invalid state key: ${key}`);
-}
+    throw new Error(`Invalid state key: ${key}`);
+  }
   return state[key];
 }
 
@@ -181,8 +181,8 @@ function setState(keyOrObj, persist = false, value = undefined) {
   if (typeof keyOrObj === "object" && keyOrObj !== null) {
     for (const [key, val] of Object.entries(keyOrObj)) {
       if (!allowedKeys.has(key)) {
-throw new Error(`Invalid state key: ${key}`);
-}
+        throw new Error(`Invalid state key: ${key}`);
+      }
       if (key === "routeCache" || key === "routeState") {
         console.warn(`⚠️ Skipping overwrite of ${key}`);
         continue;
@@ -194,16 +194,14 @@ throw new Error(`Invalid state key: ${key}`);
         sessionStorage.setItem(key, str);
         localStorage.setItem(key, str);
       }
-
-      scheduleNotify(key, val);
     }
     return;
   }
 
   const key = keyOrObj;
   if (!allowedKeys.has(key)) {
-throw new Error(`Invalid state key: ${key}`);
-}
+    throw new Error(`Invalid state key: ${key}`);
+  }
   if (key === "routeCache" || key === "routeState") {
     console.warn(`⚠️ Skipping overwrite of ${key}`);
     return;
@@ -224,20 +222,20 @@ throw new Error(`Invalid state key: ${key}`);
 // --- Subscriptions with automatic cleanup ---
 function subscribe(key, fn) {
   if (!allowedKeys.has(key)) {
-throw new Error(`Cannot subscribe to invalid key: ${key}`);
-}
+    throw new Error(`Cannot subscribe to invalid key: ${key}`);
+  }
   if (!listeners.has(key)) {
-listeners.set(key, new Set());
-}
+    listeners.set(key, new Set());
+  }
   listeners.get(key).add(fn);
-  
+
   // Return unsubscribe function for automatic cleanup
   return () => {
     listeners.get(key)?.delete(fn);
     // Clean up empty listener sets
     if (listeners.get(key)?.size === 0) {
-listeners.delete(key);
-}
+      listeners.delete(key);
+    }
   };
 }
 
@@ -245,24 +243,24 @@ function unsubscribe(key, fn) {
   listeners.get(key)?.delete(fn);
   // Clean up empty listener sets
   if (listeners.get(key)?.size === 0) {
-listeners.delete(key);
-}
+    listeners.delete(key);
+  }
 }
 
 // --- Deep path subscriptions with automatic cleanup ---
 function subscribeDeep(path, fn) {
   if (!deepListeners.has(path)) {
-deepListeners.set(path, new Set());
-}
+    deepListeners.set(path, new Set());
+  }
   deepListeners.get(path).add(fn);
-  
+
   // Return unsubscribe function for automatic cleanup
   return () => {
     deepListeners.get(path)?.delete(fn);
     // Clean up empty listener sets
     if (deepListeners.get(path)?.size === 0) {
-deepListeners.delete(path);
-}
+      deepListeners.delete(path);
+    }
   };
 }
 
@@ -270,8 +268,8 @@ function unsubscribeDeep(path, fn) {
   deepListeners.get(path)?.delete(fn);
   // Clean up empty listener sets
   if (deepListeners.get(path)?.size === 0) {
-deepListeners.delete(path);
-}
+    deepListeners.delete(path);
+  }
 }
 
 // --- Clear all listeners (useful for testing or cleanup) ---
@@ -288,40 +286,76 @@ function clearAllListeners() {
 //     scheduleNotify("user", state.user);
 //   }
 // }
+/* =========================
+   ROUTE CACHE
+========================= */
 
-// --- Route Cache ---
 function getRouteModule(path) {
- return state.routeCache.get(path); 
-}
-function setRouteModule(path, module) {
- state.routeCache.set(path, module); 
-}
-function hasRouteModule(path) {
- return state.routeCache.has(path); 
-}
-function clearRouteCache() {
- state.routeCache.clear(); state.routeState.clear(); 
+  return state.routeCache.get(path);
 }
 
-// --- Per-Route State ---
+function setRouteModule(path, module) {
+  state.routeCache.set(path, module);
+  scheduleNotify("routeCache", state.routeCache);
+}
+
+function hasRouteModule(path) {
+  return state.routeCache.has(path);
+}
+
+function clearRouteCache() {
+  state.routeCache.clear();
+  state.routeState.clear();
+
+  scheduleNotify("routeCache", state.routeCache);
+  scheduleNotify("routeState", state.routeState);
+}
+
+/* =========================
+   PER-ROUTE STATE
+========================= */
+
 function getRouteState(path) {
   let route = state.routeState.get(path);
+
   if (!route) {
     route = Object.create(null);
     state.routeState.set(path, route);
+
+    // notify creation
+    scheduleNotify("routeState", state.routeState);
   }
+
   return route;
 }
+
 function setRouteState(path, value) {
- state.routeState.set(path, value); 
+  const prev = state.routeState.get(path);
+
+  if (prev === value) {
+    return;
+
+  }
+
+  state.routeState.set(path, value);
+
+  scheduleNotify("routeState", state.routeState);
 }
 
-// --- Clear State ---
+/* =========================
+   CLEAR STATE
+========================= */
+
 function clearState(preserveKeys = []) {
   const preserved = {};
+
+  // capture persisted values safely
   for (const key of preserveKeys) {
     if (PERSISTED_KEYS.includes(key)) {
-      preserved[key] = sessionStorage.getItem(key);
+      const val = sessionStorage.getItem(key) ?? localStorage.getItem(key);
+      if (val !== null) {
+        preserved[key] = val;
+      }
     }
   }
 
@@ -329,59 +363,93 @@ function clearState(preserveKeys = []) {
   localStorage.clear();
 
   for (const key of allowedKeys) {
-    if (preserveKeys.includes(key) || key === "role") {
-continue;
-}
+    if (preserveKeys.includes(key)) {
+      continue;
+
+    }
+
     if (key === "routeCache" || key === "routeState") {
       state[key].clear?.();
-    } else {
+
+      // ensure observers update
+      scheduleNotify(key, state[key]);
+      continue;
+    }
+
+    if (state[key] !== null) {
       state[key] = null;
       scheduleNotify(key, null);
     }
   }
 
+  // restore preserved values
   for (const [key, value] of Object.entries(preserved)) {
     sessionStorage.setItem(key, value);
     localStorage.setItem(key, value);
+
+    try {
+      state[key] = JSON.parse(value);
+    } catch {
+      state[key] = value;
+    }
+
+    scheduleNotify(key, state[key]);
   }
 
-  // ✅ Ensure Maps always reinitialized safely
+  // enforce Map integrity
   if (!(state.routeCache instanceof Map)) {
-state.routeCache = new Map();
-}
+    state.routeCache = new Map();
+    scheduleNotify("routeCache", state.routeCache);
+  }
+
   if (!(state.routeState instanceof Map)) {
-state.routeState = new Map();
-}
+    state.routeState = new Map();
+    scheduleNotify("routeState", state.routeState);
+  }
 }
 
-// --- Scroll State ---
+/* =========================
+   SCROLL STATE
+========================= */
+
 function saveScroll(container, scrollState) {
- scrollState.scrollY = container?.scrollTop || 0; 
+  if (!scrollState) {
+    return;
+
+  }
+  scrollState.scrollY = container?.scrollTop ?? 0;
 }
+
 function restoreScroll(container, scrollState) {
- if (scrollState?.scrollY) {
-container.scrollTop = scrollState.scrollY;
-} 
+  if (!container || !scrollState) {
+    return;
+
+  }
+
+  // allow 0 (valid scroll position)
+  if ("scrollY" in scrollState) {
+    container.scrollTop = scrollState.scrollY;
+  }
 }
 
 // --- Role helpers ---
 function hasRole(...roles) {
   const current = state.userProfile?.role;
   if (!current) {
-return false;
-}
+    return false;
+  }
   return roles.some(r => (Array.isArray(current) ? current : [current]).includes(r));
 }
 function isAdmin() {
- return hasRole("admin"); 
+  return hasRole("admin");
 }
 
 // --- Snapshot & Actions ---
 function getGlobalSnapshot() {
- return Object.freeze({ ...state }); 
+  return Object.freeze({ ...state });
 }
 function setLoading(val) {
- setState("isLoading", val); 
+  setState("isLoading", val);
 }
 
 
