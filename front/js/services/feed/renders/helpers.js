@@ -4,7 +4,7 @@ import { createElement } from "../../../components/createElement.js";
 import { resolveImagePath, EntityType, PictureType } from "../../../utils/imagePaths.js";
 import Notify from "../../../components/ui/Notify.mjs";
 import Imagex from "../../../components/base/Imagex.js";
-import { toggleAction } from "../../beats/toggleFollows.js";
+// import { toggleAction } from "../../beats/toggleFollows.js";
 import Datex from "../../../components/base/Datex.js";
 
 // Helper to turn an SVG string into a Node
@@ -60,16 +60,16 @@ export function createPostHeader(post) {
 /**
  * Subscribe to a feed post
  */
-function SubscribeToFeedPost(followBtn, postId) {
-    toggleAction({
-        entityId: postId,
-        entityType: "feedpost",
-        button: followBtn,
-        apiPath: "/subscribes/",
-        labels: { on: "Unsubscribe", off: "Subscribe" },
-        actionName: "subscribed"
-    });
-}
+// function SubscribeToFeedPost(followBtn, postId) {
+//     toggleAction({
+//         entityId: postId,
+//         entityType: "feedpost",
+//         button: followBtn,
+//         apiPath: "/subscribes/",
+//         labels: { on: "Unsubscribe", off: "Subscribe" },
+//         actionName: "subscribed"
+//     });
+// }
 
 // Batch fetch: POST /likes/:entitytype/batch/users
 export async function fetchUserMetaLikesBatch(entityType, entityIds = []) {

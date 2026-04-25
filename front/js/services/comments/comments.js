@@ -10,30 +10,49 @@ import Datex from "../../components/base/Datex.js";
 import { reportPost } from "../reporting/reporting.js";
 
 /* =========================
-   INTERNAL STATE
+   CONFIG
+========================= */
+
+const PAGE_SIZE = 10;
+
+/* =========================
+   STATE
 ========================= */
 
 const commentState = new Map();
+const userCache = new Map();
 
 /* =========================
-   SORT MAPPING
+   HELPERS
 ========================= */
+
+function makeKey(entityType, entityId) {
+    return JSON.stringify([entityType, entityId]);
+}
 
 function mapSort(val) {
-    if (val === "newest") {
-return "new";
-}
-    if (val === "oldest") {
-return "old";
-}
-    return "new";
+    return val === "oldest" ? "old" : "new";
 }
 
-/* =========================
-   API
-========================= */
+async function getUsersMeta(ids) {
+    const missing = ids.filter(id => !userCache.has(id));
+    if (missing.length) {
+        try {
+            const data = await fetchUserMeta(missing);
+            Object.entries(data).forEach(([id, u]) => userCache.set(id, u));
+        } catch (e) {
+            console.error("User meta fetch failed", e);
+        }
+    }
 
-async function fetchComments(entityType, entityId, page = 1, sort = "newest") {
+    return Object.fromEntries(ids.map(id => [id, userCache.get(id) || {}]));
+}
+
+async function fetchComments(entityType, entityId, page, sort) {
+    console.warn("entityType: ",entityType);
+    console.warn("entityId: ", entityId);
+    console.warn("page: ", page);
+    console.warn("sort: ", sort);
     try {
         const res = await apiFetch(
             `/comments/${entityType}/${entityId}?sort=${mapSort(sort)}&page=${page}`
@@ -45,49 +64,44 @@ async function fetchComments(entityType, entityId, page = 1, sort = "newest") {
     }
 }
 
+function showError(container, msg) {
+    container.appendChild(
+        createElement("p", { class: "comment-error" }, [msg])
+    );
+}
 
 /* =========================
-   RENDER SINGLE COMMENT
+   RENDER
 ========================= */
 
 function renderComment(comment, entityType, entityId) {
     const user = comment.user || {};
-    const avatarSrc = resolveImagePath(
-        EntityType.USER,
-        PictureType.THUMB,
-        comment.createdBy
-    );
 
-    const avatar = Imagex({
-        src: avatarSrc,
+    const avatarLeft = Imagex({
+        src: resolveImagePath(EntityType.USER, PictureType.THUMB, comment.createdBy),
         alt: `${user.username || "Unknown"} avatar`,
         classes: "comment-avatar",
         style: "cursor:pointer;"
     });
 
-    avatar.addEventListener("click", () => {
+    avatarLeft.addEventListener("click", () => {
         if (user.username) {
-navigate(`/user/${user.username}`);
-}
+            navigate(`/user/${user.username}`);
+        }
     });
 
-    const usernameEl = createElement(
-        "span",
-        {
-            class: "comment-username",
-            style: "cursor:pointer;"
-        },
-        [user.username || "Unknown"]
-    );
+    const usernameEl = createElement("span", {
+        class: "comment-username",
+        style: "cursor:pointer;"
+    }, [user.username || "Unknown"]);
 
     usernameEl.addEventListener("click", () => {
         if (user.username) {
-navigate(`/user/${user.username}`);
-}
+            navigate(`/user/${user.username}`);
+        }
     });
 
     const header = createElement("div", { class: "comment-header" }, [
-        avatar,
         usernameEl,
         createElement("span", { class: "comment-timestamp" }, [
             comment.createdAt ? Datex(comment.createdAt) : ""
@@ -99,65 +113,78 @@ navigate(`/user/${user.username}`);
     ]);
 
     const actions = createElement("div", { class: "comment-actions" }, [
-        Button(
-            "Reply",
-            `reply-${comment.commentid}`,
-            { click: () => console.warn("Reply to:", comment.commentid) },
-            "comment-reply buttonx"
-        ),
-        Button(
-            "Report",
-            `report-${comment.commentid}`,
-            {
-                click: () => {
-                    reportPost(comment.commentid, "comment", entityType, entityId);
-                }
-            },
-            "comment-report buttonx"
-        )
+        Button("Reply", "", {
+            click: () => console.warn("Reply:", comment.commentid)
+        }, "comment-reply buttonx"),
+        Button("Report", "", {
+            click: () => reportPost(comment.commentid, "comment", entityType, entityId)
+        }, "comment-report buttonx")
     ]);
 
     return createElement("div", { class: "comment" }, [
-        createElement("div", { class: "comment-left" }, [avatar]),
+        createElement("div", { class: "comment-left" }, [avatarLeft]),
         createElement("div", { class: "comment-right" }, [header, body, actions])
     ]);
 }
 
-/* =========================
-   RENDER COMMENTS LIST
-========================= */
+async function appendComments(state, comments, toTop = false) {
+    const ids = [...new Set(comments.map(c => c.createdBy))];
+    const usersMeta = await getUsersMeta(ids);
 
-async function renderComments(key) {
-    const state = commentState.get(key);
-    if (!state) {
-return;
-}
+    const fragment = document.createDocumentFragment();
 
-    state.list.replaceChildren();
-
-    if (!state.comments.length) {
-return;
-}
-
-    const userIds = [...new Set(state.comments.map(c => c.createdBy))];
-    const usersMeta = await fetchUserMeta(userIds);
-
-    state.comments.forEach(c => {
+    comments.forEach(c => {
         const user = usersMeta[c.createdBy] || {};
-        state.list.appendChild(renderComment({ ...c, user }, state.entityType, state.entityId));
+        const node = renderComment({ ...c, user }, state.entityType, state.entityId);
+        fragment.appendChild(node);
     });
 
-    if (state.hasMore) {
-        const loadMoreBtn = Button(
-            "Load More",
-            "",
-            { click: () => fetchMoreComments(key) },
-            "load-more-comments buttonx"
+    if (toTop) {
+        state.list.prepend(fragment);
+    } else {
+        state.list.appendChild(fragment);
+    }
+}
+
+/* =========================
+   LOAD
+========================= */
+
+async function loadComments(key, reset = false) {
+    const state = commentState.get(key);
+    if (!state || state.loading) {
+        return;
+    }
+
+    state.loading = true;
+
+    try {
+        if (reset) {
+            state.page = 1;
+            state.hasMore = true;
+            state.list.replaceChildren();
+        }
+
+        const data = await fetchComments(
+            state.entityType,
+            state.entityId,
+            state.page,
+            state.sort
         );
 
-        state.list.appendChild(
-            createElement("div", { class: "comment-load-more" }, [loadMoreBtn])
-        );
+        state.hasMore = data.length === PAGE_SIZE;
+
+        if (!data.length && reset) {
+            showError(state.list, "No comments yet.");
+            return;
+        }
+
+        await appendComments(state, data);
+
+    } catch {
+        showError(state.list, "Failed to load comments.");
+    } finally {
+        state.loading = false;
     }
 }
 
@@ -167,55 +194,36 @@ return;
 
 async function fetchMoreComments(key) {
     const state = commentState.get(key);
-    if (!state || !state.hasMore) {
-return;
-}
-
-    const nextPage = state.page + 1;
-    const newComments = await fetchComments(
-        state.entityType,
-        state.entityId,
-        nextPage,
-        state.sort
-    );
-
-    if (!newComments.length) {
-        state.hasMore = false;
-    } else {
-        state.comments.push(...newComments);
-        state.page = nextPage;
+    if (!state || !state.hasMore || state.loading) {
+        return;
     }
 
-    renderComments(key);
-}
+    state.loading = true;
 
-/* =========================
-   LOAD / RESET
-========================= */
+    try {
+        state.page += 1;
 
-async function loadComments(key, reset = false) {
-    const state = commentState.get(key);
-    if (!state) {
-return;
-}
+        const data = await fetchComments(
+            state.entityType,
+            state.entityId,
+            state.page,
+            state.sort
+        );
 
-    if (reset) {
-        state.comments = [];
-        state.page = 1;
-        state.hasMore = true;
+        if (!data.length) {
+            state.hasMore = false;
+            return;
+        }
+
+        state.hasMore = data.length === PAGE_SIZE;
+
+        await appendComments(state, data);
+
+    } catch {
+        showError(state.list, "Failed to load more comments.");
+    } finally {
+        state.loading = false;
     }
-
-    const fresh = await fetchComments(
-        state.entityType,
-        state.entityId,
-        state.page,
-        state.sort
-    );
-
-    state.comments = fresh;
-    state.hasMore = fresh.length > 0;
-
-    renderComments(key);
 }
 
 /* =========================
@@ -224,15 +232,16 @@ return;
 
 async function handleSubmit(e, key) {
     e.preventDefault();
+
     const state = commentState.get(key);
     if (!state || !state.currentUser) {
-return;
-}
+        return;
+    }
 
     const content = state.input.value.trim();
     if (!content) {
-return;
-}
+        return;
+    }
 
     try {
         const newComment = await apiFetch(
@@ -241,29 +250,28 @@ return;
             { content }
         );
 
-        const usersMeta = await fetchUserMeta([newComment.createdBy]);
+        const usersMeta = await getUsersMeta([newComment.createdBy]);
         const user = usersMeta[newComment.createdBy] || {};
 
-        state.comments.unshift({ ...newComment, user });
         state.input.value = "";
-        await renderComments(key);
-    } catch (err) {
-        console.error("Failed to post comment", err);
+
+        await appendComments(state, [{ ...newComment, user }], true);
+
+    } catch {
+        showError(state.list, "Failed to post comment.");
     }
 }
-
 
 /* =========================
    PUBLIC API
 ========================= */
 
 export function createCommentsSection(entityType, entityId, currentUser) {
-    const key = `${entityType}:${entityId}`;
+    const key = makeKey(entityType, entityId);
 
     const container = createElement("div", {
-        class: "comments-section",
-        dataset: { entityType, entityId }
-    }, []);
+        class: "comments-section"
+    });
 
     const list = createElement("div", { class: "comments-list" });
 
@@ -272,34 +280,37 @@ export function createCommentsSection(entityType, entityId, currentUser) {
         createElement("option", { value: "oldest" }, ["Oldest"])
     ]);
 
+    const loadMoreBtn = Button(
+        "Load More",
+        "",
+        { click: () => fetchMoreComments(key) },
+        "load-more-comments buttonx"
+    );
+
     const form = createElement("form", { class: "comment-form" }, [
         createElement("textarea", {
             class: "comment-input",
-            placeholder: currentUser
-                ? "Write a comment..."
-                : "Login to comment",
+            placeholder: currentUser ? "Write a comment..." : "Login to comment",
             disabled: !currentUser
         }),
-        createElement(
-            "button",
-            { type: "submit", disabled: !currentUser },
-            ["Post"]
-        )
+        createElement("button", {
+            type: "submit",
+            disabled: !currentUser
+        }, ["Post"])
     ]);
 
-    container.append(sort, form, list);
+    container.append(sort, form, list, loadMoreBtn);
 
     const state = {
         entityType,
         entityId,
         currentUser,
-        comments: [],
         list,
-        form,
         input: form.querySelector("textarea"),
         sort: "newest",
         page: 1,
-        hasMore: true
+        hasMore: true,
+        loading: false
     };
 
     commentState.set(key, state);
@@ -311,14 +322,23 @@ export function createCommentsSection(entityType, entityId, currentUser) {
     sort.addEventListener(
         "change",
         debounce(e => {
-            const state = commentState.get(key);
-            if (!state) {
-return;
-}
-            state.sort = e.target.value;
+            const s = commentState.get(key);
+            if (!s) {
+                return;
+            }
+            s.sort = e.target.value;
             loadComments(key, true);
-        }, 300)
+        }, 250)
     );
 
     return container;
+}
+
+/* =========================
+   CLEANUP (optional)
+========================= */
+
+export function destroyCommentsSection(entityType, entityId) {
+    const key = makeKey(entityType, entityId);
+    commentState.delete(key);
 }

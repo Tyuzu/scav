@@ -5,7 +5,7 @@ import { apiFetch } from "../../api/api.js";
 export async function toggleLike(entityType, entityId) {
     try {
         const path = `/likes/${entityType}/like/${entityId}`;
-        const response = await apiFetch(path, "POST");
+        const response = await apiFetch(path, "PUT");
 
         // Expecting: { liked: boolean, count: number }
         if (response && typeof response.liked === "boolean" && typeof response.count === "number") {

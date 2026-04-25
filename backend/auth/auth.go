@@ -97,19 +97,32 @@ func createAccessToken(claims *models.Claims) (string, error) {
 }
 
 func setRefreshCookie(w http.ResponseWriter, token string) {
-	sameSite, secure := refreshCookieAttrs()
-
 	http.SetCookie(w, &http.Cookie{
 		Name:     "refresh_token",
 		Value:    token,
 		Path:     "/",
 		HttpOnly: true,
-		Secure:   secure,
-		SameSite: sameSite,
+		SameSite: http.SameSiteLaxMode,
+		Secure:   false,
 		Expires:  time.Now().Add(RefreshTokenTTL),
 		MaxAge:   int(RefreshTokenTTL.Seconds()),
 	})
 }
+
+// func setRefreshCookie(w http.ResponseWriter, token string) {
+// 	sameSite, secure := refreshCookieAttrs()
+
+// 	http.SetCookie(w, &http.Cookie{
+// 		Name:     "refresh_token",
+// 		Value:    token,
+// 		Path:     "/",
+// 		HttpOnly: true,
+// 		Secure:   secure,
+// 		SameSite: sameSite,
+// 		Expires:  time.Now().Add(RefreshTokenTTL),
+// 		MaxAge:   int(RefreshTokenTTL.Seconds()),
+// 	})
+// }
 
 func clearRefreshCookie(w http.ResponseWriter) {
 	sameSite, secure := refreshCookieAttrs()

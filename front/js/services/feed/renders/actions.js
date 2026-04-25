@@ -40,23 +40,22 @@ export async function createActions(metadata, isCreator, postElement) {
 
     // COMMENT BUTTON
     const commentLabel = createElement("span", {}, [comments]);
-    const commentButton = createElement("button", { class: "comment" }, [svgToNode(commentSVG),commentLabel]);
+    const commentButton = createElement("button", { class: "comment" }, [svgToNode(commentSVG), commentLabel]);
     commentButton.addEventListener("click", () => {
         if (!postElement.commentSectionVisible) {
-            const commentsEl = createCommentsSection(postId, [], "feed", user?.id);
-            console.log(user?.id);
+            const commentsEl = createCommentsSection("post", postId, user);
             postElement.appendChild(commentsEl);
             postElement.commentSectionVisible = true;
         }
     });
     actionsContainer.appendChild(commentButton);
 
-const embedURL = `${MAIN_URL}/embed/${postId}`;
+    const embedURL = `${MAIN_URL}/embed/${postId}`;
     const shareButton = createElement("button", {
         class: "comment", events: {
             click: () => {
- navigator.clipboard.writeText(embedURL) 
-}
+                navigator.clipboard.writeText(embedURL)
+            }
         }
     }, [svgToNode(shareSVG)]);
 

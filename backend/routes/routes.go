@@ -172,7 +172,7 @@ func AddBaitoRoutes(router *httprouter.Router, app *infra.Deps, rateLimiter *rat
 func AddBeatRoutes(router *httprouter.Router, app *infra.Deps, rateLimiter *ratelim.RateLimiter) {
 	authmidware := middleware.Authenticate(app)
 	// User must be logged in to like/unlike
-	router.POST("/api/v1/likes/:entitytype/like/:entityid", rateLimiter.Limit(authmidware(beats.ToggleLike(app))))
+	router.PUT("/api/v1/likes/:entitytype/like/:entityid", rateLimiter.Limit(authmidware(beats.ToggleLike(app))))
 
 	// Get users who liked a post/beat
 	router.GET("/api/v1/likes/:entitytype/users/:entityid", rateLimiter.Limit(authmidware(beats.GetLikers(app))))

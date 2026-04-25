@@ -46,8 +46,8 @@ class HTTPClient {
         const cached = requestCache.get(url, method);
         if (cached) {
           if (options.debug) {
-console.log(`[HTTPClient] Cache HIT: ${method} ${url}`);
-}
+            console.warn(`[HTTPClient] Cache HIT: ${method} ${url}`);
+          }
           return cached;
         }
       }
@@ -56,8 +56,8 @@ console.log(`[HTTPClient] Cache HIT: ${method} ${url}`);
       const inFlight = requestDedup.getInFlight(url, method);
       if (inFlight && method === "GET") {
         if (options.debug) {
-console.log(`[HTTPClient] Dedup HIT: ${method} ${url}`);
-}
+          console.warn(`[HTTPClient] Dedup HIT: ${method} ${url}`);
+        }
         return inFlight;
       }
 
@@ -113,6 +113,7 @@ console.log(`[HTTPClient] Dedup HIT: ${method} ${url}`);
           if (text) {
             try {
               data = JSON.parse(text);
+              // eslint-disable-next-line no-unused-vars
             } catch (e) {
               throw new Error("Invalid JSON response");
             }
@@ -209,14 +210,14 @@ console.log(`[HTTPClient] Dedup HIT: ${method} ${url}`);
       });
 
       if (!res.ok) {
-return false;
-}
+        return false;
+      }
 
       const data = await res.json();
       const token = data?.data?.token;
       if (!token) {
-return false;
-}
+        return false;
+      }
 
       setState({ token }, true);
       return true;
