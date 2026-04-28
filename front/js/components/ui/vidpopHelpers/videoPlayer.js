@@ -22,10 +22,6 @@ async function generateVideoPlayer(mediaSrc, poster, qualities, subtitles, video
   if (qualities.length !== 0) {
     const storedQuality = localStorage.getItem("videoQuality") || "144p";
     const defaultQuality = qualities.find(q => q.label === storedQuality) || qualities[0];
-
-    console.log("Available Qualities:", qualities);
-    console.log("Selected Quality:", storedQuality);
-
     video.src = defaultQuality.src;
     video.setAttribute("data-quality", defaultQuality.label);
 
@@ -107,9 +103,6 @@ async function generateVideoPlayer(mediaSrc, poster, qualities, subtitles, video
       if (!selectedQuality || selectedQuality.src === video.src) {
 return;
 }
-
-      console.log("Switching to quality:", selectedQuality.label);
-
       // Save preference
       localStorage.setItem("videoQuality", selectedQuality.label);
 

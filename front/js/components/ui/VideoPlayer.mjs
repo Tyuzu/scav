@@ -34,18 +34,22 @@ return `${baseSrc}-360.mp4`;
 
 // ---- Create Video Element ----
 const createVideoElement = (src, resolutions, poster) => {
+  console.warn(src, resolutions, poster);
   const video = document.createElement("video");
   video.setAttribute("class", "video-player");
   video.preload = "metadata";
   video.setAttribute("playsinline", "");
 
   const baseSrc = src.replace(/\.(mp4|webm)$/, "");
+  console.warn(basesrc);
   const defaultSrc = resolutions?.length
     ? determineInitialSource(baseSrc, resolutions)
     : src;
 
   video.src = defaultSrc;
   video.poster = poster || `${baseSrc}.png`;
+  console.warn(basesrc);
+  console.warn(video.poster);
   return video;
 };
 

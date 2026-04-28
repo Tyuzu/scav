@@ -117,6 +117,7 @@
 ========================= */
 
 .toggle-nav {
+  margin-top: 1rem;
   padding: 10px;
   font-weight: 600;
   cursor: pointer;
@@ -129,7 +130,6 @@
 
 .expanded-nav {
   display: none;
-  margin-bottom: 1rem;
 }
 
 .expanded-nav.is-visible {

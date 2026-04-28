@@ -140,6 +140,8 @@ async function renderPage() {
 }
 
 export { navigate, renderPage, loadContent };
+
+
 //  */
 // async function loadContent(url) {
 //   const header = document.getElementById("pageheader");
