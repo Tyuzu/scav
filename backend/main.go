@@ -92,9 +92,16 @@ func main() {
 		ReadHeaderTimeout: 2 * time.Second,
 	}
 
+	// go func() {
+	// 	log.Printf("API server listening on %s", cfg.HTTPPort)
+	// 	if err := server.ListenAndServe(); err != nil && err != http.ErrServerClosed {
+	// 		log.Fatalf("ListenAndServe error: %v", err)
+	// 	}
+	// }()
+
 	go func() {
 		log.Printf("API server listening on %s", cfg.HTTPPort)
-		if err := server.ListenAndServe(); err != nil && err != http.ErrServerClosed {
+		if err := server.ListenAndServeTLS("cert.pem", "key.pem"); err != nil && err != http.ErrServerClosed {
 			log.Fatalf("ListenAndServe error: %v", err)
 		}
 	}()

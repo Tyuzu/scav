@@ -6,8 +6,8 @@
 
 const ENV = {
   dev: {
-    MAIN_URL: "http://192.168.234.236:4000",
-    BANNERDROP_URL: "http://192.168.234.236:6925",
+    MAIN_URL: "https://192.168.234.236:4000",
+    BANNERDROP_URL: "https://192.168.234.236:6925",
   },
   staging: {
     MAIN_URL: "https://gallium.onrender.com",

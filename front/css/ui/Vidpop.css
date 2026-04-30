@@ -20,7 +20,7 @@
   /* Default position */
   left: 50%;
   transform: translateX(-50%);
-  font-family: "Breezesans", 'Courier New', Courier, monospace;
+  font-family: 'Courier New', Courier, monospace;
   color: #fff;
   background: rgba(0, 0, 0, 0.6);
   padding: 5px 10px;
