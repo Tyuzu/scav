@@ -1,4 +1,5 @@
 import { defineConfig } from 'vite';
+import mkcert from 'vite-plugin-mkcert'
 
 export default defineConfig({
   root: '.',
@@ -8,11 +9,19 @@ export default defineConfig({
     outDir: 'dist',
   },
   server: {
-   // proxy: {
-      // Proxy /api/v1/* → http://localhost:4000/api/v1/*
-   // }
+    https: true, // Required to enable the HTTPS server
+    // proxy: {
+    // Proxy /api/v1/* → http://localhost:4000/api/v1/*
+    // }
     // allowedHosts: ['.trycloudflare.com'] 
+    '/api/v1': {
+      target: 'https://192.168.234.236:4000',
+      //      changeOrigin: true,
+      //      rewrite: (path) => path.replace(/^\/v1/, ''),
+      secure: false, // Set to true if target uses valid SSL
+    },
   },
+  plugins: [mkcert()],
   rollupOptions: {
     treeshake: {
       moduleSideEffects: false,

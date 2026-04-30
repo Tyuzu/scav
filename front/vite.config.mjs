@@ -1,5 +1,6 @@
 import { defineConfig, loadEnv, splitVendorChunkPlugin } from 'vite';
 import { visualizer } from 'rollup-plugin-visualizer';
+import mkcert from 'vite-plugin-mkcert'
 
 export default defineConfig(({ mode }) => {
   const env = loadEnv(mode, process.cwd(), '');
@@ -9,6 +10,7 @@ export default defineConfig(({ mode }) => {
     root: '.',
 
     plugins: [
+      mkcert(),
       splitVendorChunkPlugin(),
       isProd && visualizer({ open: true }),
     ].filter(Boolean),
@@ -106,6 +108,13 @@ export default defineConfig(({ mode }) => {
 
     server: {
       allowedHosts: ['.trycloudflare.com', 'localhost'],
+      https: true, // Required to enable the HTTPS server
+      '/api/v1': {
+        target: 'https://192.168.234.236:4000',
+        //      changeOrigin: true,
+        //      rewrite: (path) => path.replace(/^\/v1/, ''),
+        secure: false, // Set to true if target uses valid SSL
+      },
     },
 
     define: {
