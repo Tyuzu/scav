@@ -1,11 +1,12 @@
 import { createElement } from "../../components/createElement.js";
 import Button from "../../components/base/Button.js";
-import { apiFetch, bannerFetch } from "../../api/api.js";
+import { apiFetch } from "../../api/api.js";
 import { getState } from "../../state/state.js";
 import { EntityType, PictureType, resolveImagePath } from "../../utils/imagePaths.js";
 import Galleryx from "../../components/base/Galleryx.js";
 import Notify from "../../components/ui/Notify.mjs";
 import { ImageGallery } from "../../components/ui/IMageGallery.mjs";
+import { uploadImage } from "../../utils/bannerEditor.js";
 
 import {
   getFavorites,
@@ -26,28 +27,52 @@ import {
 /* =========================
    GALLERY VIEW
 ========================= */
-
-export function showGallery(recipe, isCreator, contentContainer = null) {
+export function showGallery(recipe, isCreator) {
   return Galleryx({
     isCreator,
     existingImages: recipe.images || [],
     galleryEntityType: EntityType.RECIPE,
-    contentContainer,
+
     onSubmit: async (formData) => {
-      return await bannerFetch(
-        `/api/v1/gallery/recipe/${recipe.recipeid}/images`,
-        "PUT",
-        formData
-      );
+      const uploads = [];
+
+      if (formData instanceof FormData) {
+        for (const [key, value] of formData.entries()) {
+          if (value instanceof Blob) {
+            uploads.push(
+              uploadImage({
+                entityType: EntityType.RECIPE,
+                entityId: recipe.recipeid,
+                stateKey: key,
+                payload: value
+              })
+            );
+          }
+        }
+      }
+
+      if (Array.isArray(formData)) {
+        for (const item of formData) {
+          uploads.push(
+            uploadImage({
+              entityType: EntityType.RECIPE,
+              entityId: recipe.recipeid,
+              stateKey: item.key || "image",
+              payload: item
+            })
+          );
+        }
+      }
+
+      return Promise.all(uploads);
     },
+
     onSuccess: () => {
       Notify("Images updated successfully", {
         type: "success",
         duration: 3000,
         dismissible: true
       });
-
-      displayRecipe(contentContainer, true, recipe.recipeid);
     }
   });
 }
@@ -69,7 +94,7 @@ export async function displayRecipe(content, isLoggedIn, recipeid) {
 
   try {
     recipe = await apiFetch(`/recipes/recipe/${recipeid}`);
-  } catch (err) {
+  } catch {
     container.replaceChildren(
       createElement("p", {}, ["Recipe not found or failed to load."])
     );
@@ -79,10 +104,7 @@ export async function displayRecipe(content, isLoggedIn, recipeid) {
   const isFavorite = getFavorites().includes(recipeid);
   const isCreator = currentUser && recipe.userId === currentUser;
 
-  /* =========================
-     HEADER
-  ========================= */
-
+  /* HEADER */
   const titleEl = createElement("h2", {}, [
     recipe.title || "Untitled"
   ]);
@@ -107,18 +129,12 @@ export async function displayRecipe(content, isLoggedIn, recipeid) {
 
   const authorEl = renderAuthor(recipe, currentUser);
 
-  /* =========================
-     BANNER + INFO
-  ========================= */
-
+  /* BANNER + INFO */
   const bannerEl = createRecipeBannerSection(recipe, currentUser);
   const infoBox = renderInfoBox(recipe);
   const tagsEl = renderTags(recipe.tags);
 
-  /* =========================
-     GALLERY
-  ========================= */
-
+  /* GALLERY */
   const gallerySection = createElement("div", {
     class: "gallery-section"
   });
@@ -142,12 +158,9 @@ export async function displayRecipe(content, isLoggedIn, recipeid) {
   if (isCreator) {
     const addImagesBtn = Button("Add Images", "", {
       click: () => {
-        const galleryView = showGallery(
-          recipe,
-          isCreator,
-          content
-        );
+        const galleryView = showGallery(recipe, isCreator);
 
+        // SAFE: no circular reference anymore
         content.replaceChildren(galleryView);
 
         const backBtn = Button("← Back to Recipe", "", {
@@ -167,10 +180,7 @@ export async function displayRecipe(content, isLoggedIn, recipeid) {
     gallerySection.appendChild(addImagesBtn);
   }
 
-  /* =========================
-     INGREDIENTS
-  ========================= */
-
+  /* INGREDIENTS */
   const ingredientsTitle = createElement("h3", {}, ["Ingredients"]);
   const ingredientsEl = renderIngredients(
     recipe.ingredients,
@@ -178,10 +188,7 @@ export async function displayRecipe(content, isLoggedIn, recipeid) {
     recipe
   );
 
-  /* =========================
-     STEPS
-  ========================= */
-
+  /* STEPS */
   const stepsTitle = createElement("h3", {}, ["Steps"]);
   const stepsEl = renderSteps(
     recipeid,
@@ -189,10 +196,7 @@ export async function displayRecipe(content, isLoggedIn, recipeid) {
     recipe
   );
 
-  /* =========================
-     ACTIONS
-  ========================= */
-
+  /* ACTIONS */
   const actionsEl = renderActions(
     recipe,
     currentUser,
@@ -201,16 +205,10 @@ export async function displayRecipe(content, isLoggedIn, recipeid) {
     recipeid
   );
 
-  /* =========================
-     COMMENTS
-  ========================= */
-
+  /* COMMENTS */
   const commentsEl = renderComments(recipe);
 
-  /* =========================
-     FINAL ASSEMBLY
-  ========================= */
-
+  /* FINAL ASSEMBLY */
   container.replaceChildren(
     titleEl,
     ...metaInfo,

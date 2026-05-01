@@ -129,8 +129,8 @@ export function renderItemForm(container, mode, itemData, type, onDone) {
       {
         click: async () => {
           if (!confirm(`Delete this ${type}?`)) {
-return;
-}
+            return;
+          }
           try {
             await apiFetch(`/farm/${type}/${itemData.productid}`, "DELETE");
             onDone();
@@ -188,13 +188,14 @@ return;
       const url = mode === "create" ? `/farm/${type}` : `/farm/${type}/${itemData.productid}`;
       const method = mode === "create" ? "POST" : "PUT";
 
-      const res = await apiFetch(url, method, JSON.stringify(payload), {
-        headers: { "Content-Type": "application/json" }
-      });
+      const res = await apiFetch(url, method, payload);
+      //const res = await apiFetch(url, method, JSON.stringify(payload), {
+        // headers: { "Content-Type": "application/json" }
+      //});
 
       if (!res || !res.productid) {
-throw new Error("Request failed");
-}
+        throw new Error("Request failed");
+      }
       onDone();
     } catch (err) {
       if (err.status === 403) {

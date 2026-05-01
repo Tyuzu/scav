@@ -23,8 +23,8 @@ export async function updateImageWithCrop({
 }) {
     const choice = await askUpdateMethod(imageType);
     if (!choice) {
-return false;
-}
+        return false;
+    }
 
     try {
         showLoadingMessage(`Updating ${imageType} picture...`);
@@ -32,11 +32,11 @@ return false;
         const payload =
             choice === "upload"
                 ? await getCroppedImage(imageType)
-                : await getImageUrl();
+                : await getImageFromUrl(); // now returns REMOTE object
 
         if (!payload) {
-return false;
-}
+            return false;
+        }
 
         const response = await uploadImage({
             entityType,
@@ -45,11 +45,24 @@ return false;
             payload
         });
 
+        // 🔴 FIX: handle API response correctly
+        const attachments = Array.isArray(response)
+            ? response
+            : Array.isArray(response?.data)
+                ? response.data
+                : [];
+
+        const attachment = attachments.find(a => a.key === stateKey);
+
+        if (!attachment) {
+            throw new Error("Upload succeeded but no matching file returned");
+        }
+
         updatePreview(
             previewElementId,
             entityType,
             pictureType,
-            response.data[stateKey]
+            attachment.filename
         );
 
         Notify(
@@ -58,6 +71,7 @@ return false;
         );
 
         return response;
+
     } catch (err) {
         console.error(err);
         handleError(`Error updating ${imageType} picture.`);
@@ -74,13 +88,17 @@ function askUpdateMethod(imageType) {
             createElement("p", {}, [`Update ${imageType} picture:`])
         ]);
 
-        const uploadBtn = Button("Upload Image", "up-banner-btn", { click: () => resolve("upload"), }, "btn")
-        const urlBtn = Button("Use URLAdd Media", "url-banner-btn", { click: () => resolve("url"), }, "btn")
-        const cancelBtn = Button("Cancel", "cancel-banner-btn", { click: () => resolve(false), }, "btn")
+        const uploadBtn = Button("Upload Image", "up-banner-btn", {
+            click: () => resolve("upload")
+        }, "btn");
 
-        // const uploadBtn = createButton("Upload Image", () => resolve("upload"));
-        // const urlBtn = createButton("Use URL", () => resolve("url"));
-        // const cancelBtn = createButton("Cancel", () => resolve(false));
+        const urlBtn = Button("Use URL", "url-banner-btn", {
+            click: () => resolve("url")
+        }, "btn");
+
+        const cancelBtn = Button("Cancel", "cancel-banner-btn", {
+            click: () => resolve(false)
+        }, "btn");
 
         content.append(uploadBtn, urlBtn, cancelBtn);
 
@@ -99,14 +117,38 @@ function askUpdateMethod(imageType) {
 async function getCroppedImage(imageType) {
     const file = await pickFile();
     if (!file) {
-return null;
-}
+        return null;
+    }
+
     return await openCropper({ file, type: imageType });
 }
 
-function getImageUrl() {
+/**
+ * ✅ NEW: Return remote descriptor instead of Blob
+ */
+async function getImageFromUrl() {
     const url = window.prompt("Enter image URL:");
-    return url || null;
+    if (!url) {
+        return null;
+    }
+    
+    try {
+        // basic validation only
+        const parsed = new URL(url);
+
+        if (!["http:", "https:"].includes(parsed.protocol)) {
+            throw new Error("Invalid protocol");
+        }
+
+        return {
+            type: "remote",
+            url
+        };
+
+    } catch {
+        handleError("Invalid image URL");
+        return null;
+    }
 }
 
 function pickFile() {
@@ -120,37 +162,40 @@ function pickFile() {
         document.body.append(input);
         input.click();
 
-        input.addEventListener(
-            "change",
-            () => {
-                const file = input.files?.[0] || null;
-                input.remove();
-                resolve(file);
-            },
-            { once: true }
-        );
+        input.addEventListener("change", () => {
+            const file = input.files?.[0] || null;
+            input.remove();
+            resolve(file);
+        }, { once: true });
     });
 }
 
 /* ────────── Upload ────────── */
-async function uploadImage({ entityType, entityId, stateKey, payload }) {
-    const endpoint = `/api/v1/banner/${entityType.toLowerCase()}/${entityId}`;
+export async function uploadImage({ entityType, entityId, stateKey, payload }) {
+    const endpoint = `/api/v1/filedrop`;
+
+    const formData = new FormData();
+
+    formData.append("entityType", entityType);
+    formData.append("entityId", entityId);
 
     if (payload instanceof Blob) {
-        const formData = new FormData();
-        formData.append(stateKey, payload, "image.jpg");
-        return bannerFetch(endpoint, "PUT", formData);
+        formData.append(stateKey, payload, "upload.jpg");
+
+    } else if (payload?.type === "remote") {
+        formData.append("remoteUrl", payload.url);
+        formData.append("remoteKey", stateKey);
     }
 
-    return bannerFetch(endpoint, "PUT", { [stateKey]: payload });
+    return bannerFetch(endpoint, "POST", formData);
 }
 
 /* ────────── Preview Update ────────── */
 function updatePreview(previewElementId, entityType, pictureType, imageName) {
     const preview = document.getElementById(previewElementId);
     if (!preview || !imageName) {
-return;
-}
+        return;
+    }
 
     preview.src =
         resolveImagePath(entityType, pictureType, imageName) +

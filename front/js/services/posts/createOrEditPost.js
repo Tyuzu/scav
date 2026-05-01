@@ -38,7 +38,7 @@ return;
         const formData = new FormData();
         formData.append("image", fileInput.files[0]);
         try {
-          const res = await bannerFetch("/api/v1/filedrop/feedpost", "POST", formData, { isForm: true });
+          const res = await bannerFetch("/api/v1/filedrop", "POST", formData, { isForm: true });
           update({ ...block, url: res.url });
           preview.setAttribute("src", resolveImagePath("post", "photo", res.url));
         } catch (err) {

@@ -69,7 +69,7 @@ export const apiConfig = {
   EMBED_URL: `${CONFIG.MAIN_URL}/embed`,
   SRC_URL: `${CONFIG.BANNERDROP_URL}/static`,
   FILEDROP_URL: `${CONFIG.BANNERDROP_URL}/api/v1/filedrop`,
-  CHATDROP_URL: `${CONFIG.BANNERDROP_URL}/api/v1/filedrop/chat`,
+  CHATDROP_URL: `${CONFIG.BANNERDROP_URL}/api/v1/filedrop`,
 
   // Runtime info
   isDev: CURRENT_ENV === "dev",
