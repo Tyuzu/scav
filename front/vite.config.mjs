@@ -108,7 +108,7 @@ export default defineConfig(({ mode }) => {
       allowedHosts: ['.trycloudflare.com', 'localhost'],
       https: true, // Required to enable the HTTPS server
       '/api/v1': {
-        target: 'https://192.168.234.236:4000',
+        target: 'https://localhost:4000',
         //      changeOrigin: true,
         //      rewrite: (path) => path.replace(/^\/v1/, ''),
         secure: false, // Set to true if target uses valid SSL

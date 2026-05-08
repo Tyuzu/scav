@@ -3,9 +3,59 @@ import Button from "../../components/base/Button.js";
 import { createElement } from "../../components/createElement.js";
 import Notify from "../../components/ui/Notify.mjs";
 
-/**
- * Render a single cart category section
- */
+/* ────────────────────── Constants & Helpers ────────────────────── */
+
+const toRupees = (paise = 0) => paise / 100;
+
+const formatPrice = (value = 0) => `₹${value.toFixed(2)}`;
+
+const normalize = (v) =>
+  typeof v === "string" ? v.trim().toLowerCase() : "";
+
+const capitalize = (str = "") =>
+  str ? str[0].toUpperCase() + str.slice(1) : "";
+
+/* ────────────────────── API Layer ────────────────────── */
+
+function buildPayload(base, entityId, entityType) {
+  const payload = { ...base };
+  if (entityId) {
+    payload.entityId = entityId;
+  }
+  if (entityType) {
+    payload.entityType = normalize(entityType);
+  }
+  return payload;
+}
+
+export const CartAPI = {
+  remove(itemId, category, entityId, entityType) {
+    return apiFetch(
+      "/cart/item",
+      "DELETE",
+      buildPayload({ itemId, category }, entityId, entityType)
+    );
+  },
+
+  updateQty(itemId, category, quantity, entityId, entityType) {
+    return apiFetch(
+      "/cart/item",
+      "PATCH",
+      buildPayload({ itemId, category, quantity }, entityId, entityType)
+    );
+  },
+
+  clear() {
+    return apiFetch("/cart", "DELETE");
+  },
+
+  updateCategory(category, items) {
+    return apiFetch("/cart/update", "POST", { category, items });
+  }
+};
+
+/* ────────────────────── Main Renderer ────────────────────── */
+
 export function renderCartCategory({
   cart = {},
   category = "",
@@ -15,29 +65,23 @@ export function renderCartCategory({
   displayCheckout
 }) {
   const items = cart[category];
-  if (!Array.isArray(items) || items.length === 0) {
-return;
-}
+  if (!Array.isArray(items) || !items.length) {
+    return;
+  }
 
   const section = createElement("section", { class: "cart-category" });
-
-  const header = createElement("div", { class: "cart-category-header" }, [
-    createElement("h3", {}, [`${capitalize(category)} (${items.length})`])
-  ]);
-
   const cardsContainer = createElement("div", { class: "cart-cards" });
   const subtotalDisplay = createElement("p", { class: "cart-subtotal" });
 
+  const header = createElement("div", { class: "cart-category-header" }, [
+    createElement("h3", {}, [])
+  ]);
+
   const checkoutBtn = Button(
-    `Checkout ${capitalize(category)}`,
+    "Checkout",
     "checkoutbtn",
     {
-      click: () => {
-        if (!items.length) {
-return;
-}
-        displayCheckout(contentContainer, items);
-      }
+      click: () => items.length && displayCheckout(contentContainer, items)
     },
     "buttonx primary"
   );
@@ -45,28 +89,35 @@ return;
   section.append(header, cardsContainer, subtotalDisplay, checkoutBtn);
   contentContainer.appendChild(section);
 
-  renderItems();
+  render();
 
-  /* ---------------- Internals ---------------- */
+  /* ────────────────────── Internal Logic ────────────────────── */
 
-  function renderItems() {
-    cardsContainer.replaceChildren();
-
-    if (items.length === 0) {
-      section.remove();
-      delete cart[category];
-      delete sectionTotals[category];
-      updateGrandTotal();
+  function render() {
+    if (!items.length) {
+      cleanup();
       return;
     }
 
-    items.forEach((item, index) => {
-      cardsContainer.appendChild(createCard(item, index));
-    });
+    updateHeader();
+    renderItems();
+    updateTotals();
+  }
 
-    // CRITICAL FIX: Convert price from paise (int64) to rupees for calculation
+  function updateHeader() {
+    header.firstChild.textContent = `${capitalize(category)} (${items.length})`;
+    checkoutBtn.textContent = `Checkout ${capitalize(category)}`;
+  }
+
+  function renderItems() {
+    cardsContainer.replaceChildren(
+      ...items.map((item, i) => createCard(item, i))
+    );
+  }
+
+  function updateTotals() {
     const subtotal = items.reduce(
-      (sum, x) => sum + ((x.price || 0) / 100) * (x.quantity || 0),
+      (sum, x) => sum + toRupees(x.price) * (x.quantity || 1),
       0
     );
 
@@ -75,183 +126,127 @@ return;
 
     subtotalDisplay.replaceChildren(
       createElement("strong", {}, ["Subtotal: "]),
-      `₹${subtotal.toFixed(2)}`
+      formatPrice(subtotal)
     );
   }
 
-  function createCard(it = {}, index) {
-    const details = [
+  function cleanup() {
+    section.remove();
+    delete cart[category];
+    delete sectionTotals[category];
+    updateGrandTotal();
+  }
+
+  function createCard(item, index) {
+    const price = toRupees(item.price);
+    const qty = item.quantity || 1;
+
+    return createElement("div", { class: "cart-card" }, [
+      createDetails(item),
+      createQuantityControls(index, qty),
+      createPricing(price, qty),
+      createActions(item, index)
+    ]);
+  }
+
+  function createDetails(it) {
+    const nodes = [
       createElement("p", {}, [`Item: ${it.itemName || "Item"}`])
     ];
 
     if (it.itemType) {
-details.push(createElement("p", {}, [`Type: ${it.itemType}`]));
-}
+      nodes.push(createElement("p", {}, [`Type: ${it.itemType}`]));
+    }
 
     if (it.entityName) {
-details.push(
+      nodes.push(
         createElement("p", {}, [
           `${it.entityType || "Entity"}: ${it.entityName}`
         ])
       );
-}
+    }
 
-    const quantityLine = createElement("div", { class: "quantity-line" }, [
+    return createElement("div", { class: "cart-card-details" }, nodes);
+  }
+
+  function createQuantityControls(index, qty) {
+    return createElement("div", { class: "quantity-line" }, [
       createElement("span", {}, ["Qty:"]),
-      Button("−", "qty-dec", { click: () => updateQty(index, -1) }, "buttonx subtle"),
-      createElement("span", { class: "quantity-value" }, [
-        String(it.quantity || 1)
-      ]),
-      Button("+", "qty-inc", { click: () => updateQty(index, 1) }, "buttonx subtle")
+      Button("−", "", { click: () => changeQty(index, -1) }, "buttonx subtle"),
+      createElement("span", { class: "quantity-value" }, [String(qty)]),
+      Button("+", "", { click: () => changeQty(index, 1) }, "buttonx subtle")
     ]);
+  }
 
-    // CRITICAL FIX: Convert price from paise (int64) to rupees for display
-    const priceInRupees = (it.price || 0) / 100;
-    const pricing = [
-      createElement("p", {}, [`Unit Price: ₹${priceInRupees.toFixed(2)}`]),
+  function createPricing(price, qty) {
+    return createElement("div", { class: "cart-card-pricing" }, [
+      createElement("p", {}, [`Unit Price: ${formatPrice(price)}`]),
       createElement("p", {}, [
-        `Subtotal: ₹${(priceInRupees * (it.quantity || 1)).toFixed(2)}`
+        `Subtotal: ${formatPrice(price * qty)}`
       ])
-    ];
+    ]);
+  }
 
-    const actions = createElement("div", { class: "action-row" }, [
+  function createActions(item, index) {
+    return createElement("div", { class: "action-row" }, [
       Button(
         "✕ Remove",
-        "remove-btn",
-        {
-          click: async () => {
-            try {
-              // CRITICAL FIX: Normalize entityType to lowercase for API consistency
-              await removeItem(it.itemId, category, it.entityId, (it.entityType || "").toLowerCase());
-              items.splice(index, 1);
-              renderItems();
-              updateGrandTotal();
-              Notify("Item removed from cart", { type: "success", duration: 2000 });
-            } catch (err) {
-              console.error("Failed to remove item:", err);
-              Notify("Failed to remove item", { type: "error", duration: 3000 });
-            }
-          }
-        },
+        "",
+        { click: () => handleRemove(item, index) },
         "buttonx danger"
       ),
       Button(
         "♡ Save for Later",
-        "wishlist-btn",
+        "",
         {
           click: () =>
-            alert(`Saved "${it.itemName || "item"}" for later!`)
+            alert(`Saved "${item.itemName || "item"}" for later`)
         },
         "buttonx secondary"
       )
     ]);
-
-    return createElement("div", { class: "cart-card" }, [
-      createElement("div", { class: "cart-card-details" }, details),
-      quantityLine,
-      createElement("div", { class: "cart-card-pricing" }, pricing),
-      actions
-    ]);
   }
 
-  async function updateQty(index, delta) {
+  async function handleRemove(item, index) {
+    try {
+      await CartAPI.remove(
+        item.itemId,
+        category,
+        item.entityId,
+        item.entityType
+      );
+
+      items.splice(index, 1);
+      Notify("Item removed from cart", { type: "success", duration: 2000 });
+      render();
+    } catch (err) {
+      console.error(err);
+      Notify("Failed to remove item", { type: "error", duration: 3000 });
+    }
+  }
+
+  async function changeQty(index, delta) {
     const item = items[index];
     if (!item) {
-return;
-}
+      return;
+    }
 
     const newQty = Math.max(1, (item.quantity || 1) + delta);
-    
+
     try {
-      await updateItemQuantity(item.itemId, category, newQty, item.entityId, item.entityType);
+      await CartAPI.updateQty(
+        item.itemId,
+        category,
+        newQty,
+        item.entityId,
+        item.entityType
+      );
+
       item.quantity = newQty;
-      renderItems();
-      updateGrandTotal();
+      render();
     } catch (err) {
-      console.error("Failed to update quantity:", err);
+      console.error(err);
       Notify("Failed to update quantity", { type: "error", duration: 3000 });
     }
   }
-
-  async function syncCategory() {
-    try {
-      await updateCartCategory(category, items);
-    } catch (err) {
-      console.error(`Cart sync failed for ${category}:`, err);
-      Notify(`Failed to sync ${category} items`, { type: "error", duration: 3000 });
-    }
-  }
-}
-
-function capitalize(str = "") {
-  return str ? str[0].toUpperCase() + str.slice(1) : "";
-}
-
-/* ────────────────────── Cart Item Operations ────────────────────── */
-
-/**
- * Remove a single item from cart via backend API
- * @param {string} itemId - Item identifier
- * @param {string} category - Item category
- * @param {string} [entityId] - Optional entity ID
- * @param {string} [entityType] - Optional entity type
- * @returns {Promise<Object>} Updated grouped cart
- */
-export async function removeItem(itemId, category, entityId = "", entityType = "") {
-  const payload = {
-    itemId,
-    category
-  };
-  if (entityId) payload.entityId = entityId;
-  if (entityType) payload.entityType = entityType;
-
-  return await apiFetch("/cart/item", "DELETE", JSON.stringify(payload), {
-    headers: { "Content-Type": "application/json" }
-  });
-}
-
-/**
- * Update quantity of a single cart item via backend API
- * @param {string} itemId - Item identifier
- * @param {string} category - Item category
- * @param {number} quantity - New quantity
- * @param {string} [entityId] - Optional entity ID
- * @param {string} [entityType] - Optional entity type
- * @returns {Promise<Object>} Updated grouped cart
- */
-export async function updateItemQuantity(itemId, category, quantity, entityId = "", entityType = "") {
-  const payload = {
-    itemId,
-    category,
-    quantity
-  };
-  if (entityId) payload.entityId = entityId;
-  if (entityType) payload.entityType = entityType;
-
-  return await apiFetch("/cart/item", "PATCH", JSON.stringify(payload), {
-    headers: { "Content-Type": "application/json" }
-  });
-}
-
-/**
- * Clear entire cart via backend API
- * @returns {Promise<Object>} Server response
- */
-export async function clearCart() {
-  return await apiFetch("/cart", "DELETE");
-}
-
-/**
- * Update all items in a category via backend API
- * @param {string} category - Item category
- * @param {Array} items - Array of cart items for this category
- * @returns {Promise<Object>} Updated grouped cart
- */
-export async function updateCartCategory(category, items) {
-  return await apiFetch("/cart/update", "POST", JSON.stringify({
-    category,
-    items
-  }), {
-    headers: { "Content-Type": "application/json" }
-  });
 }

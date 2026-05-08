@@ -24,16 +24,6 @@ export async function displayItems(
 
   container.appendChild(createElement("h2", {}, [`${capitalize(type)}s`]));
 
-  await renderCategoryChips(container, category, (newCategory) =>
-    displayItems(type, content, isLoggedIn, {
-      limit,
-      offset: 0,
-      search,
-      category: newCategory,
-      sort,
-    }), type
-  );
-
   const { sortSelect, searchInput } = renderSearchAndSortUI(type, sort, search, (newSort, newSearch) =>
     displayItems(type, content, isLoggedIn, {
       limit,
@@ -44,16 +34,26 @@ export async function displayItems(
     })
   );
 
+  await renderCategoryChips(container, category, (newCategory) =>
+    displayItems(type, content, isLoggedIn, {
+      limit,
+      offset: 0,
+      search,
+      category: newCategory,
+      sort,
+    }), type
+  );
+
   if (isLoggedIn) {
     const topBar = createElement("div", { class: "items-topbar" }, [
+      searchInput,
+      sortSelect,
       Button(
         `Create ${type}`,
         `create-${type}-btn`,
         { click: () => renderItemForm(container, "create", null, type, refresh) },
         "primary-button"
       ),
-      searchInput,
-      sortSelect,
     ]);
     container.appendChild(topBar);
   }
@@ -66,6 +66,7 @@ export async function displayItems(
     const result = await apiFetch(`/farm/items?${qs.toString()}`);
     items = result.items || [];
     total = result.total ?? items.length;
+  // eslint-disable-next-line no-unused-vars
   } catch (err) {
     container.appendChild(createElement("p", {}, [`Failed to load ${type}s.`]));
     return;

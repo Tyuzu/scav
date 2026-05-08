@@ -4,207 +4,199 @@ import { showPaymentModal } from "../pay/pay.js";
 import Notify from "../../components/ui/Notify.mjs";
 import Button from "../../components/base/Button.js";
 
-/* ---------------- Utilities ---------------- */
-const formatINR = val =>
-  Intl.NumberFormat("en-IN", { style: "currency", currency: "INR" }).format(val);
+/* ────────────────────── Helpers ────────────────────── */
 
-function calculateTotals(items = [], discount = 0, delivery = 20, taxRate = 0.05) {
-  const flat = Array.isArray(items) ? items : Object.values(items).flat();
+const formatINR = v =>
+  new Intl.NumberFormat("en-IN", {
+    style: "currency",
+    currency: "INR"
+  }).format(v);
 
-  const subtotal = flat.reduce(
-    (sum, { price = 0, quantity = 0 }) =>
-      sum + (price / 100) * quantity,
-    0
-  );
+const toRupees = p => (p || 0) / 100;
 
-  const taxable = Math.max(0, subtotal - discount);
-  const tax = +(taxable * taxRate).toFixed(2);
-  const total = +(taxable + tax + delivery).toFixed(2);
+const flattenItems = items =>
+  Array.isArray(items) ? items : Object.values(items || {}).flat();
 
-  return { subtotal, discount, tax, delivery, total };
+function groupByCategory(items = []) {
+  return items.reduce((acc, item) => {
+    const key = item.category || "general";
+
+    if (!acc[key]) {
+      acc[key] = [];
+    }
+
+    acc[key].push({
+      itemId: item.itemId,
+      quantity: item.quantity
+    });
+
+    return acc;
+  }, {});
 }
 
-/* ---------------- Renderers ---------------- */
-function renderItems(items = []) {
-  const ul = createElement("ul", {});
+/* ────────────────────── Renderers ────────────────────── */
 
-  const flat = Array.isArray(items) ? items : Object.values(items).flat();
-  flat.forEach(i => {
-    const priceInRupees = (i.price || 0) / 100;
+function renderItems(items) {
+  const list = createElement("ul", {});
 
-    ul.append(
+  flattenItems(items).forEach(i => {
+    const price = toRupees(i.price);
+    const total = price * i.quantity;
+
+    list.append(
       createElement("li", {}, [
-        `${i.itemName} – ${i.quantity} × ${formatINR(priceInRupees)} = `,
-        createElement("strong", {}, [
-          formatINR(priceInRupees * i.quantity)
-        ])
+        `${i.itemName} – ${i.quantity} × ${formatINR(price)} = `,
+        createElement("strong", {}, [formatINR(total)])
       ])
     );
   });
 
-  return ul;
+  return list;
 }
 
-function renderTotals(totals, couponCode) {
-  return createElement("div", { 
-    style: "margin-top: 1.5rem; padding: 1rem; background: #f9f9f9; border-radius: 4px;"
-  }, [
-    createElement("div", {}, [`Subtotal: ${formatINR(totals.subtotal)}`]),
-    ...(totals.discount > 0
+function renderTotalsFromBackend(order) {
+  const subtotal = toRupees(order.subtotal || 0);
+  const discount = toRupees(order.discount || 0);
+  const tax = toRupees(order.tax || 0);
+  const delivery = toRupees(order.delivery || 0);
+  const total = toRupees(order.total || 0);
+
+  return createElement("div", { class: "payment-totals" }, [
+    createElement("div", {}, [`Subtotal: ${formatINR(subtotal)}`]),
+
+    ...(discount > 0
       ? [
-          createElement("div", { 
-            style: "color: green; font-weight: bold; margin: 0.5rem 0;"
-          }, [
-            `✓ Coupon Discount: −${formatINR(totals.discount)}${couponCode ? ` (${couponCode})` : ""}`
-          ])
-        ]
+        createElement("div", { class: "discount-line" }, [
+          `Discount: −${formatINR(discount)}`
+        ])
+      ]
       : []),
-    createElement("div", {}, [`Tax: ${formatINR(totals.tax)}`]),
-    createElement("div", {}, [`Delivery: ${formatINR(totals.delivery)}`]),
-    createElement("div", { 
-      style: "border-top: 2px solid #333; margin-top: 0.5rem; padding-top: 0.5rem; font-size: 1.2em; font-weight: bold;"
-    }, [
-      `Total: ${formatINR(totals.total)}`
+
+    createElement("div", {}, [`Tax: ${formatINR(tax)}`]),
+    createElement("div", {}, [`Delivery: ${formatINR(delivery)}`]),
+
+    createElement("div", { class: "total-line" }, [
+      `Total: ${formatINR(total)}`
     ])
   ]);
 }
 
-/* ---------------- Main Entry ---------------- */
+/* ────────────────────── API ────────────────────── */
+
+async function createOrder({ items, address, couponCode }) {
+  const payload = {
+    address,
+    items: groupByCategory(items),
+    paymentMethod: "wallet",
+    coupon_code: couponCode || null
+  };
+
+  const res = await apiFetch("/order", "POST", payload);
+
+  if (!res?.success) {
+    throw new Error(res?.message || "Order creation failed");
+  }
+
+  const order = res?.farmOrders?.[0];
+
+  if (!order?.orderid) {
+    throw new Error("Missing order ID");
+  }
+
+  return order;
+}
+
+async function processPayment(orderId) {
+  try {
+    return await showPaymentModal({
+      paymentType: "purchase",
+      entityType: "order",
+      entityId: orderId,
+      entityName: "Order"
+    });
+  } catch (err) {
+    console.warn("Payment error:", err);
+    return null;
+  }
+}
+
+/* ────────────────────── Main Entry ────────────────────── */
+
 export function displayPayment(container, sessionData = {}) {
   container.replaceChildren(
     createElement("h2", {}, ["Order Summary"])
   );
 
-  // Filter items by category if specified (ensures only selected category is shown)
-  let itemsToDisplay = sessionData.items || [];
-  if (sessionData.category && Array.isArray(itemsToDisplay)) {
-    itemsToDisplay = itemsToDisplay.filter(item => item.category === sessionData.category);
-  }
+  let items = flattenItems(sessionData.items);
 
-  const totals = calculateTotals(
-    itemsToDisplay,
-    sessionData.discount || 0
-  );
+  if (sessionData.category) {
+    items = items.filter(i => i.category === sessionData.category);
+  }
 
   container.append(
     createElement("h3", {}, ["Delivery Address"]),
     createElement("p", {}, [sessionData.address || "N/A"]),
+
     createElement("h3", {}, ["Items"]),
-    renderItems(itemsToDisplay),
-    renderTotals(totals, sessionData.couponCode)
+    renderItems(items)
   );
 
-  // Button instance (declared first so handler can reference it)
+  // ⚠️ Totals will only show AFTER order is created (backend truth)
+  const totalsContainer = createElement("div", {});
+  container.append(totalsContainer);
+
   const confirmBtn = Button(
     "Pay & Place Order",
     "confirm-order-btn",
-    {
-      click: async (e) => {
-        e.preventDefault();
-
-        confirmBtn.disabled = true;
-        confirmBtn.textContent = "Processing…";
-
-        try {
-          // 0️⃣ Coupon is already validated and locked in from checkout
-          if (sessionData.couponCode && sessionData.discount > 0) {
-            Notify(
-              `✓ Coupon validated: ${sessionData.couponCode} (₹${sessionData.discount} off)`,
-              { type: "success", duration: 2000 }
-            );
-          }
-
-          // 1️⃣ Create order first
-          // Group items by category for backend Order model
-          const itemsByCategory = {};
-          itemsToDisplay.forEach(item => {
-            if (!itemsByCategory[item.category]) {
-              itemsByCategory[item.category] = [];
-            }
-            itemsByCategory[item.category].push({
-              itemId: item.itemId,
-              itemName: item.itemName,
-              quantity: item.quantity,
-              price: item.price, // Already in paise
-              category: item.category,
-              entityId: item.entityId,
-              entityName: item.entityName,
-              entityType: item.entityType
-            });
-          });
-
-          const orderPayload = {
-            address: sessionData.address,
-            items: itemsByCategory, // Grouped by category
-            paymentMethod: "wallet", // Payment method
-            coupon_code: sessionData.couponCode || null,
-            discount_amount: Math.round((sessionData.discount || 0) * 100), // Convert ₹ to paise
-            total: Math.round(totals.total * 100), // Convert ₹ to paise
-            subtotal: Math.round(totals.subtotal * 100),
-            tax: Math.round(totals.tax * 100),
-            delivery: Math.round(totals.delivery * 100)
-          };
-
-          console.warn("Order payload:", orderPayload);
-
-          const res = await apiFetch(
-            "/order",
-            "POST",
-            JSON.stringify(orderPayload),
-            {
-              headers: { "Content-Type": "application/json" }
-            }
-          );
-
-          if (!res?.success) {
-            throw new Error(res?.message || "Order confirmation failed");
-          }
-
-          const orderId = res.order?.orderId || res.data?.id || res.data?.orderId || res.orderId || res.id;
-
-          if (!orderId) {
-            throw new Error("No order ID returned from server");
-          }
-
-          // 2️⃣ Process payment for the created order
-          let paymentResult = null;
-
-          try {
-            paymentResult = await showPaymentModal({
-              paymentType: "purchase",
-              entityType: "order",
-              entityId: orderId,
-              entityName: "Your Order"
-            });
-
-            if (!paymentResult || paymentResult.success !== true) {
-              console.warn("Payment was not completed for order:", orderId);
-            }
-          } catch (paymentErr) {
-            console.warn("Payment processing error:", paymentErr);
-          }
-
-          container.replaceChildren(
-            createElement("div", { class: "success-message" }, [
-              "Order placed successfully!"
-            ])
-          );
-        } catch (err) {
-          console.error("Order error:", err);
-
-          container.appendChild(
-            createElement("div", { class: "error" }, [
-              err.message || "Order failed"
-            ])
-          );
-
-          confirmBtn.disabled = false;
-          confirmBtn.textContent = "Pay & Place Order";
-        }
-      }
-    },
+    { click: () => handleConfirm() },
     "primary-button"
   );
 
-  container.appendChild(confirmBtn);
+  container.append(confirmBtn);
+
+  /* ────────────────────── Handler ────────────────────── */
+
+  async function handleConfirm() {
+    confirmBtn.disabled = true;
+    confirmBtn.textContent = "Processing…";
+
+    try {
+      const order = await createOrder({
+        items,
+        address: sessionData.address,
+        couponCode: sessionData.couponCode
+      });
+
+      // ✅ Now render backend totals
+      totalsContainer.replaceChildren(
+        renderTotalsFromBackend(order)
+      );
+
+      if (order.discount > 0) {
+        Notify(
+          `Discount applied: ${formatINR(toRupees(order.discount))}`,
+          { type: "success", duration: 2000 }
+        );
+      }
+
+      await processPayment(order.orderid);
+
+      container.replaceChildren(
+        createElement("div", { class: "success-message" }, [
+          "Order placed successfully"
+        ])
+      );
+    } catch (err) {
+      console.error(err);
+
+      container.append(
+        createElement("div", { class: "error" }, [
+          err.message || "Order failed"
+        ])
+      );
+
+      confirmBtn.disabled = false;
+      confirmBtn.textContent = "Pay & Place Order";
+    }
+  }
 }

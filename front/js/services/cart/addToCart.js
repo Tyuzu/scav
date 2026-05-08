@@ -4,46 +4,88 @@ import Notify from "../../components/ui/Notify.mjs";
 /**
  * Map itemType to backend category
  */
+const TYPE_MAP = Object.freeze({
+  product: "products",
+  book: "products",
+  merch: "merchandise",
+  merchandise: "merchandise",
+  menu: "menu",
+  food: "menu",
+  crop: "crops",
+  farm: "crops",
+  service: "services"
+});
+
+function normalize(value) {
+  return typeof value === "string" ? value.trim().toLowerCase() : "";
+}
+
 function getCategory(itemType = "", entityType = "") {
-  if (!itemType) return entityType || "general";
-  
-  const typeMap = {
-    "product": "products",
-    "book": "products",
-    "merch": "merchandise",
-    "merchandise": "merchandise",
-    "menu": "menu",
-    "food": "menu",
-    "crop": "crops",
-    "farm": "crops",
-    "service": "services"
+  const type = normalize(itemType);
+  const entity = normalize(entityType);
+
+  if (type && TYPE_MAP[type]) {
+    return TYPE_MAP[type];
+  }
+  return entity || "general";
+}
+
+function validateInput({ itemId, quantity }) {
+  const qty = Number(quantity);
+
+  if (!itemId || typeof itemId !== "string") {
+    return "Invalid item ID";
+  }
+
+  if (!Number.isFinite(qty) || qty <= 0) {
+    return "Invalid quantity";
+  }
+
+  return null;
+}
+
+function buildPayload(options) {
+  const {
+    itemId,
+    quantity,
+    itemType,
+    itemName,
+    entityType,
+    entityId,
+    entityName
+  } = options;
+
+  const payload = {
+    itemId,
+    quantity: Number(quantity),
+    category: getCategory(itemType, entityType)
   };
-  
-  return typeMap[itemType.toLowerCase()] || (entityType ? entityType.toLowerCase() : "general");
+
+  const optionalFields = {
+    itemType,
+    itemName,
+    entityType: normalize(entityType),
+    entityId,
+    entityName
+  };
+
+  Object.entries(optionalFields).forEach(([key, value]) => {
+    if (value) {
+      payload[key] = value;
+    }
+  });
+
+  return payload;
 }
 
 /**
- * Add item to cart with enhanced metadata support
- * @param {Object} options - Cart item options
- * @param {string} options.itemId - Unique item identifier (required)
- * @param {number} options.quantity - Quantity to add (default: 1)
- * @param {boolean} options.isLoggedIn - User login status (required)
- * @param {string} options.itemType - Type of item: 'product', 'merch', 'service', etc.
- * @param {string} options.itemName - Display name of the item
- * @param {string} options.entityType - Parent entity type: 'event', 'artist', 'farm', etc.
- * @param {string} options.entityId - Parent entity identifier
- * @param {string} options.entityName - Display name of parent entity
+ * Add item to cart
  */
-export async function addToCart({
-  itemId = "",
-  quantity = 1,
-  isLoggedIn = false,
-  itemType = "",
-  itemName = "",
-  entityType = "",
-  entityId = "",
-  entityName = ""
-}) {
+export async function addToCart(options = {}) {
+  const {
+    isLoggedIn = false
+  } = options;
+
   if (!isLoggedIn) {
     Notify("Please log in to add items to your cart", {
       type: "warning",
@@ -52,49 +94,16 @@ export async function addToCart({
     return false;
   }
 
-  const qty = Number(quantity);
-
-  if (!itemId || !Number.isFinite(qty) || qty <= 0) {
-    Notify("Invalid item data", {
-      type: "warning",
-      duration: 3000
-    });
+  const error = validateInput(options);
+  if (error) {
+    Notify(error, { type: "warning", duration: 3000 });
     return false;
   }
 
-  const payload = {
-    itemId,
-    quantity: qty,
-    category: getCategory(itemType, entityType)
-  };
-
-  // Add optional metadata for better cart display
-  if (itemType) {
-payload.itemType = itemType;
-}
-  if (itemName) {
-payload.itemName = itemName;
-}
-  if (entityType) {
-    // CRITICAL FIX: Normalize entityType to lowercase for API consistency
-    payload.entityType = entityType.toLowerCase();
-  }
-  if (entityId) {
-payload.entityId = entityId;
-}
-  if (entityName) {
-payload.entityName = entityName;
-}
+  const payload = buildPayload(options);
 
   try {
-    const response = await apiFetch(
-      "/cart",
-      "POST",
-      JSON.stringify(payload),
-      {
-        headers: { "Content-Type": "application/json" }
-      }
-    );
+    await apiFetch("/cart", "POST", payload);
 
     Notify("Added to cart successfully", {
       type: "success",
@@ -104,13 +113,12 @@ payload.entityName = entityName;
     return true;
   } catch (err) {
     console.error("Add to cart failed:", err);
-    Notify(
-      err?.message || "Failed to add item to cart",
-      {
-        type: "error",
-        duration: 3000
-      }
-    );
+
+    Notify(err?.message || "Failed to add item to cart", {
+      type: "error",
+      duration: 3000
+    });
+
     return false;
   }
 }
