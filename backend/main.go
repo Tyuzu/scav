@@ -12,6 +12,7 @@ import (
 	"naevis/config"
 	"naevis/discord"
 	"naevis/infra"
+	"naevis/infra/mq/bootstrap"
 	"naevis/mechat"
 	"naevis/middleware"
 	"naevis/newchat"
@@ -28,6 +29,15 @@ func main() {
 	app, err := infra.New(cfg)
 	if err != nil {
 		log.Fatalf("Failed to initialize infrastructure: %v", err)
+	}
+
+	subscriberCtx := context.Background()
+
+	if err := bootstrap.RegisterSubscribers(
+		subscriberCtx,
+		app,
+	); err != nil {
+		log.Fatalf("subscriber bootstrap failed: %v", err)
 	}
 
 	// =====================

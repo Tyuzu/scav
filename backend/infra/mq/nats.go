@@ -57,3 +57,38 @@ func (j *JetStreamMQ) Subscribe(
 
 	return nil
 }
+
+func (j *JetStreamMQ) QueueSubscribe(
+	ctx context.Context,
+	subject string,
+	queue string,
+	handler MessageHandler,
+) error {
+
+	sub, err := j.js.QueueSubscribe(
+		subject,
+		queue,
+		func(msg *nats.Msg) {
+			if err := handler(ctx, msg.Data); err != nil {
+				_ = msg.Nak()
+				return
+			}
+
+			_ = msg.Ack()
+		},
+		nats.Durable(queue),
+		nats.ManualAck(),
+		nats.AckExplicit(),
+	)
+
+	if err != nil {
+		return err
+	}
+
+	go func() {
+		<-ctx.Done()
+		_ = sub.Unsubscribe()
+	}()
+
+	return nil
+}

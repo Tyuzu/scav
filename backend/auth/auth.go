@@ -2,21 +2,14 @@ package auth
 
 import (
 	"context"
-	"crypto/hmac"
-	"crypto/rand"
-	"crypto/sha256"
-	"encoding/hex"
 	"encoding/json"
 	"fmt"
-	"net"
 	"net/http"
-	"os"
-	"regexp"
 	"strconv"
 	"strings"
 	"time"
 
-	"naevis/globals"
+	"naevis/config/mqevent"
 	"naevis/infra"
 	"naevis/models"
 	"naevis/utils"
@@ -27,125 +20,6 @@ import (
 	"go.mongodb.org/mongo-driver/mongo"
 	"golang.org/x/crypto/bcrypt"
 )
-
-const (
-	RefreshTokenTTL = 7 * 24 * time.Hour
-	AccessTokenTTL  = 15 * time.Minute
-
-	maxFailedAttempts = 5
-	lockoutDuration   = 10 * time.Minute
-)
-
-var (
-	usernameRegex = regexp.MustCompile(`^[a-zA-Z0-9_]{3,20}$`)
-	emailRegex    = regexp.MustCompile(`^[^@\s]+@[^@\s]+\.[^@\s]+$`)
-)
-
-/* ============================================================
-   Helpers
-============================================================ */
-
-func isProd() bool {
-	return strings.ToLower(os.Getenv("ENV")) == "production"
-}
-
-func clientIP(r *http.Request) string {
-	if fwd := r.Header.Get("X-Forwarded-For"); fwd != "" {
-		return strings.TrimSpace(strings.Split(fwd, ",")[0])
-	}
-	if rip := r.Header.Get("X-Real-IP"); rip != "" {
-		return rip
-	}
-	host, _, _ := net.SplitHostPort(r.RemoteAddr)
-	return host
-}
-
-func ipPrefix(ip string) string {
-	if strings.Contains(ip, ":") {
-		return ip
-	}
-	parts := strings.Split(ip, ".")
-	if len(parts) < 2 {
-		return ip
-	}
-	return parts[0] + "." + parts[1]
-}
-
-func uaHash(r *http.Request) string {
-	sum := sha256.Sum256([]byte(r.UserAgent()))
-	return hex.EncodeToString(sum[:])
-}
-
-func hashRefreshToken(token string) string {
-	mac := hmac.New(sha256.New, globals.RefreshTokenSecret)
-	mac.Write([]byte(token))
-	return hex.EncodeToString(mac.Sum(nil))
-}
-
-func generateRefreshToken() (string, error) {
-	b := make([]byte, 64)
-	_, err := rand.Read(b)
-	if err != nil {
-		return "", err
-	}
-	return hex.EncodeToString(b), nil
-}
-
-func createAccessToken(claims *models.Claims) (string, error) {
-	t := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
-	return t.SignedString(globals.JwtSecret)
-}
-
-func setRefreshCookie(w http.ResponseWriter, token string) {
-	http.SetCookie(w, &http.Cookie{
-		Name:     "refresh_token",
-		Value:    token,
-		Path:     "/",
-		HttpOnly: true,
-		SameSite: http.SameSiteNoneMode,
-		Secure:   true,
-		Expires:  time.Now().Add(RefreshTokenTTL),
-		MaxAge:   int(RefreshTokenTTL.Seconds()),
-	})
-}
-
-// func setRefreshCookie(w http.ResponseWriter, token string) {
-// 	sameSite, secure := refreshCookieAttrs()
-
-// 	http.SetCookie(w, &http.Cookie{
-// 		Name:     "refresh_token",
-// 		Value:    token,
-// 		Path:     "/",
-// 		HttpOnly: true,
-// 		Secure:   secure,
-// 		SameSite: sameSite,
-// 		Expires:  time.Now().Add(RefreshTokenTTL),
-// 		MaxAge:   int(RefreshTokenTTL.Seconds()),
-// 	})
-// }
-
-func clearRefreshCookie(w http.ResponseWriter) {
-	sameSite, secure := http.SameSiteNoneMode, true
-
-	http.SetCookie(w, &http.Cookie{
-		Name:     "refresh_token",
-		Value:    "",
-		Path:     "/",
-		HttpOnly: true,
-		Secure:   secure,
-		SameSite: sameSite,
-		Expires:  time.Unix(0, 0),
-		MaxAge:   -1,
-	})
-}
-
-/* ============================================================
-   Validators
-============================================================ */
-
-func validateUsername(u string) bool { return usernameRegex.MatchString(u) }
-func validateEmail(e string) bool    { return emailRegex.MatchString(e) }
-func validatePassword(p string) bool { return len(p) >= 6 }
 
 /* ============================================================
    REGISTER
@@ -174,6 +48,7 @@ func Register(app *infra.Deps) httprouter.Handle {
 		if !validateUsername(input.Username) ||
 			!validateEmail(input.Email) ||
 			!validatePassword(input.Password) {
+
 			utils.RespondWithError(w, http.StatusBadRequest, "Invalid credentials")
 			return
 		}
@@ -207,7 +82,41 @@ func Register(app *infra.Deps) httprouter.Handle {
 				utils.RespondWithError(w, http.StatusConflict, "User already exists")
 				return
 			}
+
 			utils.RespondWithError(w, http.StatusInternalServerError, "Registration failed")
+			return
+		}
+
+		/* ---------------- Event Payload ---------------- */
+
+		payload := mqevent.UserRegisteredPayload{
+			UserID:    user.UserID,
+			Username:  user.Username,
+			Email:     user.Email,
+			CreatedAt: user.CreatedAt,
+		}
+
+		payloadBytes, err := json.Marshal(payload)
+		if err != nil {
+			utils.RespondWithError(w, http.StatusInternalServerError, "Event serialization failed")
+			return
+		}
+
+		/* ---------------- Publish Event ---------------- */
+
+		publishCtx, publishCancel := context.WithTimeout(
+			context.Background(),
+			3*time.Second,
+		)
+		defer publishCancel()
+
+		if err := app.MQ.Publish(
+			publishCtx,
+			mqevent.UserRegistered,
+			payloadBytes,
+		); err != nil {
+
+			utils.RespondWithError(w, http.StatusInternalServerError, "Event publish failed")
 			return
 		}
 
@@ -244,7 +153,9 @@ func Login(app *infra.Deps) httprouter.Handle {
 		failKey := fmt.Sprintf("auth:fail:%s:%s", creds.Username, ipPrefix(ip))
 
 		val, err := app.Cache.Get(ctx, failKey)
+
 		var cnt int64
+
 		if err == nil && len(val) > 0 {
 			cnt, _ = strconv.ParseInt(string(val), 10, 64)
 		}
@@ -255,6 +166,7 @@ func Login(app *infra.Deps) httprouter.Handle {
 		}
 
 		var user models.User
+
 		if err := app.DB.FindOne(
 			ctx,
 			UsersCollection,
@@ -263,6 +175,7 @@ func Login(app *infra.Deps) httprouter.Handle {
 		); err != nil {
 
 			cnt, _ = app.Cache.Incr(ctx, failKey)
+
 			app.Cache.Set(
 				ctx,
 				failKey,
@@ -280,6 +193,7 @@ func Login(app *infra.Deps) httprouter.Handle {
 		) != nil {
 
 			cnt, _ = app.Cache.Incr(ctx, failKey)
+
 			app.Cache.Set(
 				ctx,
 				failKey,
@@ -291,16 +205,21 @@ func Login(app *infra.Deps) httprouter.Handle {
 			return
 		}
 
-		// Clear fail counter on success
+		/* ---------------- Clear Fail Counter ---------------- */
+
 		app.Cache.Del(ctx, failKey)
+
+		/* ---------------- JWT Claims ---------------- */
 
 		claims := &models.Claims{
 			UserID:   user.UserID,
 			Username: user.Username,
 			Role:     user.Role,
 			RegisteredClaims: jwt.RegisteredClaims{
-				ExpiresAt: jwt.NewNumericDate(time.Now().Add(AccessTokenTTL)),
-				IssuedAt:  jwt.NewNumericDate(time.Now()),
+				ExpiresAt: jwt.NewNumericDate(
+					time.Now().Add(AccessTokenTTL),
+				),
+				IssuedAt: jwt.NewNumericDate(time.Now()),
 			},
 		}
 
@@ -316,7 +235,8 @@ func Login(app *infra.Deps) httprouter.Handle {
 			return
 		}
 
-		// Persist session state in DB first (authoritative)
+		/* ---------------- Persist Session ---------------- */
+
 		err = app.DB.Update(
 			ctx,
 			UsersCollection,
@@ -338,8 +258,34 @@ func Login(app *infra.Deps) httprouter.Handle {
 			return
 		}
 
-		// Set cookie after DB update (single place for cookie writes)
+		/* ---------------- Set Refresh Cookie ---------------- */
+
 		setRefreshCookie(w, refreshToken)
+
+		/* ---------------- Publish Login Event ---------------- */
+
+		loginPayload := mqevent.UserLoggedInPayload{
+			UserID:     user.UserID,
+			Username:   user.Username,
+			OccurredAt: time.Now(),
+			IP:         ipPrefix(ip),
+		}
+
+		loginBytes, err := json.Marshal(loginPayload)
+		if err == nil {
+			publishCtx, cancel := context.WithTimeout(
+				context.Background(),
+				3*time.Second,
+			)
+
+			defer cancel()
+
+			_ = app.MQ.Publish(
+				publishCtx,
+				mqevent.UserLoggedIn,
+				loginBytes,
+			)
+		}
 
 		utils.RespondWithJSON(w, http.StatusOK, map[string]any{
 			"message": "Login successful",
@@ -350,6 +296,10 @@ func Login(app *infra.Deps) httprouter.Handle {
 		})
 	}
 }
+
+/* ============================================================
+   LOGOUT
+============================================================ */
 
 func LogoutUser(app *infra.Deps) httprouter.Handle {
 	return func(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
@@ -362,12 +312,20 @@ func LogoutUser(app *infra.Deps) httprouter.Handle {
 		defer cancel()
 
 		cookie, err := r.Cookie("refresh_token")
+
 		if err == nil && cookie.Value != "" {
 			hashed := hashRefreshToken(cookie.Value)
-			app.DB.Update(ctx,
+
+			_ = app.DB.Update(
+				ctx,
 				UsersCollection,
 				bson.M{"refresh_token": hashed},
-				bson.M{"$unset": bson.M{"refresh_token": "", "refresh_expiry": ""}},
+				bson.M{
+					"$unset": bson.M{
+						"refresh_token":  "",
+						"refresh_expiry": "",
+					},
+				},
 			)
 		}
 
@@ -380,18 +338,20 @@ func LogoutUser(app *infra.Deps) httprouter.Handle {
 	}
 }
 
+/* ============================================================
+   LOGOUT ALL
+============================================================ */
+
 func LogoutAllSessions(app *infra.Deps) httprouter.Handle {
 	return func(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
-		// 1. Extract and validate the JWT from the Authorization header (strip "Bearer " if present).
 		authHeader := r.Header.Get("Authorization")
+
 		if authHeader == "" {
 			http.Error(w, "Unauthorized", http.StatusUnauthorized)
 			return
 		}
+
 		tokenString := authHeader
-		// if strings.HasPrefix(authHeader, "Bearer ") {
-		// 	tokenString = strings.TrimPrefix(authHeader, "Bearer ")
-		// }
 
 		claims, err := utils.ValidateJWT(tokenString)
 		if err != nil {

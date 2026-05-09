@@ -26,49 +26,53 @@ type Deps struct {
 
 /* -------------------- Constructor -------------------- */
 
-	func New(cfg *config.Config) (*Deps, error) {
-		/* -------- Mongo -------- */
+func New(cfg *config.Config) (*Deps, error) {
+	/* -------- Mongo -------- */
 
-		mongoURI := env("MONGO_URI", "mongodb://localhost:27017")
-		mongoDB := env("MONGO_DB", "eventdb")
+	mongoURI := env("MONGO_URI", "mongodb://localhost:27017")
+	mongoDB := env("MONGO_DB", "eventdb")
 
-		client, database, err := NewMongo(mongoURI, mongoDB)
-		if err != nil {
-			return nil, err
-		}
-
-		dbLayer := db.NewMongoDatabase(database, client, 100)
-
-		/* -------- Redis -------- */
-
-		redisAddr := env("REDIS_ADDR", "localhost:6379")
-		redisPassword := env("REDIS_PASSWORD", "")
-		redisDB := 0
-
-		rclient := NewRedis(redisAddr, redisPassword, redisDB)
-		cacheLayer := cache.NewRedisCache(rclient)
-
-		/* -------- NATS JetStream -------- */
-
-		natsURL := env("NATS_URL", nats.DefaultURL)
-		_, js, err := NewJetStream(natsURL)
-		if err != nil {
-			return nil, err
-		}
-
-		mqLayer := mq.NewJetStreamMQ(js, "naevis-consumer")
-
-		log.Println("infra initialized")
-
-		return &Deps{
-			DB:     dbLayer,
-			Cache:  cacheLayer,
-			MQ:     mqLayer,
-			Config: *cfg,
-		}, nil
+	client, database, err := NewMongo(mongoURI, mongoDB)
+	if err != nil {
+		return nil, err
 	}
 
-	/* -------------------- Helpers -------------------- */
+	dbLayer := db.NewMongoDatabase(database, client, 100)
+
+	/* -------- Redis -------- */
+
+	redisAddr := env("REDIS_ADDR", "localhost:6379")
+	redisPassword := env("REDIS_PASSWORD", "")
+	redisDB := 0
+
+	rclient := NewRedis(redisAddr, redisPassword, redisDB)
+	cacheLayer := cache.NewRedisCache(rclient)
+
+	/* -------- NATS JetStream -------- */
+
+	natsURL := env("NATS_URL", nats.DefaultURL)
+	_, js, err := NewJetStream(natsURL)
+	if err != nil {
+		return nil, err
+	}
+
+	mqLayer := mq.NewJetStreamMQ(js, "naevis-consumer")
+
+	err = EnsureStreams(js)
+	if err != nil {
+		return nil, err
+	}
+	log.Println("infra initialized")
+
+	return &Deps{
+		DB:     dbLayer,
+		Cache:  cacheLayer,
+		MQ:     mqLayer,
+		Config: *cfg,
+	}, nil
+}
+
+/* -------------------- Helpers -------------------- */
 
 func env(key string, fallback string) string {
 	if v := os.Getenv(key); v != "" {
