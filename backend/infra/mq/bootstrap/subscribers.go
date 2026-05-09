@@ -3,6 +3,11 @@ package bootstrap
 import (
 	"context"
 
+	authsub "naevis/infra/mq/subscriber/auth"
+	ordersub "naevis/infra/mq/subscriber/order"
+
+	// refundsub "naevis/infra/mq/subscriber/refund"
+
 	"naevis/infra"
 	"naevis/infra/mq/subscriber"
 )
@@ -12,49 +17,17 @@ func RegisterSubscribers(
 	app *infra.Deps,
 ) error {
 
-	/* =========================
-	   AUTH
-	========================= */
-
-	if err := subscriber.RegisterAuthSubscribers(
-		ctx,
-		app.MQ,
-	); err != nil {
-		return err
+	subscribers := []subscriber.Subscriber{
+		authsub.New(),
+		ordersub.New(),
+		// refundsub.New(),
 	}
 
-	// /* =========================
-	//    ORDERS
-	// ========================= */
-
-	// if err := subscriber.RegisterOrderSubscribers(
-	// 	ctx,
-	// 	app.MQ,
-	// ); err != nil {
-	// 	return err
-	// }
-
-	// /* =========================
-	//    REFUNDS
-	// ========================= */
-
-	// if err := subscriber.RegisterRefundSubscribers(
-	// 	ctx,
-	// 	app.MQ,
-	// ); err != nil {
-	// 	return err
-	// }
-
-	// /* =========================
-	//    LISTINGS
-	// ========================= */
-
-	// if err := subscriber.RegisterListingSubscribers(
-	// 	ctx,
-	// 	app.MQ,
-	// ); err != nil {
-	// 	return err
-	// }
+	for _, sub := range subscribers {
+		if err := sub.Register(ctx, app.MQ); err != nil {
+			return err
+		}
+	}
 
 	return nil
 }
