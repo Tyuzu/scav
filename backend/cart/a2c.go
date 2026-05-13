@@ -111,21 +111,40 @@ func AddToCart(app *infra.Deps) httprouter.Handle {
 		item.Unit = itemDetails.Unit
 		item.Price = int64(itemDetails.Price * 100)
 		item.Category = itemDetails.Category
+		if item.EntityID == "" {
+			item.EntityID = itemDetails.EntityID
+		}
+		if item.EntityType == "" {
+			item.EntityType = itemDetails.EntityType
+		}
 
+		// Build filter: match by userId, itemId, AND entity if provided
 		filter := bson.M{
 			"userId": userID,
 			"itemId": item.ItemID,
+		}
+		
+		// Include entity in filter for unique identification
+		if item.EntityID != "" {
+			filter["entityId"] = item.EntityID
+		}
+		if item.EntityType != "" {
+			filter["entityType"] = item.EntityType
 		}
 
 		update := bson.M{
 			"$inc": bson.M{"quantity": item.Quantity},
 			"$set": bson.M{
-				"price": item.Price, // keep updated
+				"price":      item.Price,
+				"itemName":   item.ItemName,
+				"itemType":   item.ItemType,
+				"unit":       item.Unit,
+				"category":   item.Category,
+				"entityId":   item.EntityID,
+				"entityType": item.EntityType,
 			},
 			"$setOnInsert": bson.M{
-				"itemName": item.ItemName,
-				"unit":     item.Unit,
-				"addedAt":  time.Now(),
+				"addedAt": time.Now(),
 			},
 		}
 

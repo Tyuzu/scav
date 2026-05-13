@@ -1,3 +1,4 @@
+/* eslint-disable no-console */
 import { createElement } from "../../components/createElement.js";
 import { apiFetch } from "../../api/api.js";
 import { showPaymentModal } from "../pay/pay.js";
@@ -19,15 +20,25 @@ const flattenItems = items =>
 
 function groupByCategory(items = []) {
   return items.reduce((acc, item) => {
-    const key = item.category || "general";
+    // preserve real backend category
+    const key = item.category;
+
+    if (!key) {
+      console.error("Missing category on item:", item);
+      return acc;
+    }
 
     if (!acc[key]) {
       acc[key] = [];
     }
 
+    // 🔒 SECURITY: Only send item ID and quantity - backend fetches current price
     acc[key].push({
       itemId: item.itemId,
-      quantity: item.quantity
+      quantity: item.quantity,
+      category: item.category,
+      entityId: item.entityId,
+      entityType: item.entityType
     });
 
     return acc;
@@ -66,10 +77,10 @@ function renderTotalsFromBackend(order) {
 
     ...(discount > 0
       ? [
-        createElement("div", { class: "discount-line" }, [
-          `Discount: −${formatINR(discount)}`
-        ])
-      ]
+          createElement("div", { class: "discount-line" }, [
+            `Discount: −${formatINR(discount)}`
+          ])
+        ]
       : []),
 
     createElement("div", {}, [`Tax: ${formatINR(tax)}`]),
@@ -87,32 +98,47 @@ async function createOrder({ items, address, couponCode }) {
   const payload = {
     address,
     items: groupByCategory(items),
-    paymentMethod: "wallet",
-    coupon_code: couponCode || null
+    coupon: couponCode || null
   };
 
   const res = await apiFetch("/order", "POST", payload);
+
+  console.log("Order response:", res);
 
   if (!res?.success) {
     throw new Error(res?.message || "Order creation failed");
   }
 
-  const order = res?.farmOrders?.[0];
+  const order =
+    res?.farmOrders?.[0] ||
+    res?.order;
 
-  if (!order?.orderid) {
+  const orderId =
+    order?.orderid ||
+    order?.orderId ||
+    order?.OrderID;
+
+  if (!orderId) {
+    console.error("Invalid order response:", res);
     throw new Error("Missing order ID");
   }
 
-  return order;
+  // Ensure we return order ID and total amount for payment processing
+  return {
+    ...order,
+    orderid: orderId,
+    total: order?.total || order?.totalAmount || 0
+  };
 }
 
-async function processPayment(orderId) {
+async function processPayment(orderId, total) {
   try {
     return await showPaymentModal({
       paymentType: "purchase",
       entityType: "order",
       entityId: orderId,
-      entityName: "Order"
+      entityName: "Order",
+      amount: total
     });
   } catch (err) {
     console.warn("Payment error:", err);
@@ -141,7 +167,6 @@ export function displayPayment(container, sessionData = {}) {
     renderItems(items)
   );
 
-  // ⚠️ Totals will only show AFTER order is created (backend truth)
   const totalsContainer = createElement("div", {});
   container.append(totalsContainer);
 
@@ -167,19 +192,23 @@ export function displayPayment(container, sessionData = {}) {
         couponCode: sessionData.couponCode
       });
 
-      // ✅ Now render backend totals
       totalsContainer.replaceChildren(
         renderTotalsFromBackend(order)
       );
 
-      if (order.discount > 0) {
+      if ((order.discount || 0) > 0) {
         Notify(
-          `Discount applied: ${formatINR(toRupees(order.discount))}`,
-          { type: "success", duration: 2000 }
+          `Discount applied: ${formatINR(
+            toRupees(order.discount)
+          )}`,
+          {
+            type: "success",
+            duration: 2000
+          }
         );
       }
 
-      await processPayment(order.orderid);
+      await processPayment(order.orderid, toRupees(order.total));
 
       container.replaceChildren(
         createElement("div", { class: "success-message" }, [

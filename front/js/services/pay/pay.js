@@ -252,13 +252,11 @@ async function showPaymentModal({
 
           if (method === "wallet") {
             try {
-              const res = await apiFetch("/wallet/pay", "POST", JSON.stringify({
+              const res = await apiFetch("/wallet/pay", "POST", {
                 paymentType,
                 entityType,
                 entityId
-              }), {
-                headers: { "Content-Type": "application/json" }
-              });
+              }, {});
 
               console.warn("Wallet payment response:", res);
 

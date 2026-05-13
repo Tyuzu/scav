@@ -17,7 +17,7 @@ func (p *PaymentService) GetBalance(w http.ResponseWriter, r *http.Request, _ ht
 
 	var acc models.Account
 	if err := p.app.DB.FindOne(ctx, accountsCollection, map[string]any{"userid": userID}, &acc); err != nil {
-		http.Error(w, "account not found", http.StatusNotFound)
+		utils.RespondWithError(w, http.StatusNotFound, "account not found")
 		return
 	}
 
@@ -35,20 +35,20 @@ func (p *PaymentService) TopUp(w http.ResponseWriter, r *http.Request, _ httprou
 		Method string `json:"method"`
 	}
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil || req.Amount <= 0 {
-		http.Error(w, "invalid request", http.StatusBadRequest)
+		utils.RespondWithError(w, http.StatusBadRequest, "invalid request")
 		return
 	}
 
 	ok, _ := p.lock(ctx, userID)
 	if !ok {
-		http.Error(w, "retry", http.StatusTooManyRequests)
+		utils.RespondWithError(w, http.StatusTooManyRequests, "retry")
 		return
 	}
 	defer p.unlock(ctx, userID)
 
 	accID, err := p.getOrCreateAccount(ctx, userID)
 	if err != nil {
-		http.Error(w, "account error", http.StatusInternalServerError)
+		utils.RespondWithError(w, http.StatusInternalServerError, "account error")
 		return
 	}
 
@@ -85,7 +85,7 @@ func (p *PaymentService) TopUp(w http.ResponseWriter, r *http.Request, _ httprou
 	}
 
 	if err := p.app.DB.InsertOne(ctx, journalCollection, j); err != nil {
-		http.Error(w, "failed", http.StatusInternalServerError)
+		utils.RespondWithError(w, http.StatusInternalServerError, "failed")
 		return
 	}
 
@@ -122,7 +122,17 @@ func (p *PaymentService) Pay(w http.ResponseWriter, r *http.Request, _ httproute
 
 	var req models.PayRequest
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
-		http.Error(w, "invalid request", http.StatusBadRequest)
+		// Log the error for debugging
+		auditlog.LogAction(
+			ctx, p.app, r, userID,
+			models.AuditActionPayment,
+			"payment_error", "json_decode", "failed",
+			map[string]interface{}{
+				"error":        err.Error(),
+				"content_type": r.Header.Get("Content-Type"),
+			},
+		)
+		utils.RespondWithError(w, http.StatusBadRequest, "invalid request: "+err.Error())
 		return
 	}
 
@@ -131,59 +141,84 @@ func (p *PaymentService) Pay(w http.ResponseWriter, r *http.Request, _ httproute
 		req.Method = "wallet"
 	}
 
+	// Validate required fields
+	if req.PaymentType == "" || req.EntityType == "" || req.EntityID == "" {
+		utils.RespondWithError(w, http.StatusBadRequest, "missing required fields: paymentType, entityType, or entityId")
+		return
+	}
+
 	// ────────── PAYMENT RULES ──────────
 	rule, ok := PaymentRules[req.PaymentType]
 	if !ok {
-		http.Error(w, "invalid payment type", http.StatusBadRequest)
+		utils.RespondWithError(w, http.StatusBadRequest, "invalid payment type")
 		return
 	}
 
 	if !rule.AllowedEntities[req.EntityType] {
-		http.Error(w, "entity not allowed for payment type", http.StatusBadRequest)
+		utils.RespondWithError(w, http.StatusBadRequest, "entity not allowed for payment type")
 		return
 	}
 
 	if !rule.AllowedMethods[req.Method] {
-		http.Error(w, "payment method not allowed", http.StatusBadRequest)
+		utils.RespondWithError(w, http.StatusBadRequest, "payment method not allowed")
 		return
 	}
 
 	// ────────── PRICE RESOLUTION ──────────
 	resolver, err := p.resolver(req.EntityType)
 	if err != nil {
-		http.Error(w, "unsupported entity", http.StatusBadRequest)
+		auditlog.LogAction(
+			ctx, p.app, r, userID,
+			models.AuditActionPayment,
+			"payment_error", "resolver_failed", "failed",
+			map[string]interface{}{
+				"entity_type": req.EntityType,
+				"error":       err.Error(),
+			},
+		)
+		utils.RespondWithError(w, http.StatusBadRequest, "unsupported entity")
 		return
 	}
 
 	price, err := resolver(ctx, req.EntityID)
 	if err != nil {
-		http.Error(w, "entity not found", http.StatusNotFound)
+		auditlog.LogAction(
+			ctx, p.app, r, userID,
+			models.AuditActionPayment,
+			"payment_error", "entity_not_found", "failed",
+			map[string]interface{}{
+				"entity_type": req.EntityType,
+				"entity_id":   req.EntityID,
+				"error":       err.Error(),
+			},
+		)
+		utils.RespondWithError(w, http.StatusNotFound, "entity not found: "+req.EntityType+" ("+req.EntityID+")")
 		return
 	}
 
 	// SECURITY: Handle custom amounts carefully
 	if req.Amount > 0 {
 		if !rule.AllowCustomAmt {
-			http.Error(w, "custom amount not allowed", http.StatusBadRequest)
+			utils.RespondWithError(w, http.StatusBadRequest, "custom amount not allowed")
 			return
 		}
 
 		// Only allow custom amounts for specific payment types (funding/donations)
 		// not for purchases, orders, etc
 		if req.PaymentType != "funding" && req.PaymentType != "donation" {
-			http.Error(w, "custom amounts only allowed for donations", http.StatusBadRequest)
+			utils.RespondWithError(w, http.StatusBadRequest, "custom amounts only allowed for donations")
 			return
 		}
 
 		// SECURITY: Set reasonable limits on custom amounts
 		const maxCustomAmount = 1000000 // 10 lakh rupees max
 		if req.Amount > maxCustomAmount {
-			http.Error(w, "custom amount exceeds maximum limit", http.StatusBadRequest)
+			utils.RespondWithError(w, http.StatusBadRequest, "custom amount exceeds maximum limit")
 			return
 		}
 
 		if req.Amount < 0 {
-			http.Error(w, "amount must be positive", http.StatusBadRequest)
+			utils.RespondWithError(w, http.StatusBadRequest, "amount must be positive")
 			return
 		}
 
@@ -191,21 +226,21 @@ func (p *PaymentService) Pay(w http.ResponseWriter, r *http.Request, _ httproute
 	}
 
 	if price <= 0 {
-		http.Error(w, "invalid amount", http.StatusBadRequest)
+		utils.RespondWithError(w, http.StatusBadRequest, "invalid amount")
 		return
 	}
 
 	// ────────── ACCOUNT RESOLUTION ──────────
 	ok, _ = p.lock(ctx, userID)
 	if !ok {
-		http.Error(w, "retry", http.StatusTooManyRequests)
+		utils.RespondWithError(w, http.StatusTooManyRequests, "retry")
 		return
 	}
 	defer p.unlock(ctx, userID)
 
 	userAcc, err := p.getOrCreateAccount(ctx, userID)
 	if err != nil {
-		http.Error(w, "account error", http.StatusInternalServerError)
+		utils.RespondWithError(w, http.StatusInternalServerError, "account error")
 		return
 	}
 
@@ -216,7 +251,7 @@ func (p *PaymentService) Pay(w http.ResponseWriter, r *http.Request, _ httproute
 		destinationAcc, err = p.getOrCreateAccount(ctx, "merchant")
 	}
 	if err != nil {
-		http.Error(w, "destination account error", http.StatusInternalServerError)
+		utils.RespondWithError(w, http.StatusInternalServerError, "destination account error")
 		return
 	}
 

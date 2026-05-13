@@ -10,9 +10,11 @@ import (
 	"io"
 	"log"
 	"net/http"
+	"os"
 	"time"
 
 	"naevis/infra"
+	"naevis/models"
 	"naevis/utils"
 
 	"github.com/julienschmidt/httprouter"
@@ -58,31 +60,42 @@ func (p *PaymentService) HandlePaymentWebhook(w http.ResponseWriter, r *http.Req
 	body, err := io.ReadAll(r.Body)
 	if err != nil {
 		log.Printf("Failed to read webhook body: %v", err)
-		http.Error(w, "Invalid request", http.StatusBadRequest)
+		utils.RespondWithError(w, http.StatusBadRequest, "Invalid request")
 		return
 	}
 
-	// Verify webhook signature (use environment variable for webhook secret)
-	webhookSecret := "your-webhook-secret" // TODO: Use env var
+	// Verify webhook signature using environment variable
+	webhookSecret := os.Getenv("PAYMENT_WEBHOOK_SECRET")
+	if webhookSecret == "" {
+		log.Printf("PAYMENT_WEBHOOK_SECRET not configured")
+		utils.RespondWithError(w, http.StatusInternalServerError, "Webhook not configured")
+		return
+	}
+
 	signature := r.Header.Get("X-Webhook-Signature")
+	if signature == "" {
+		log.Printf("Missing webhook signature header from %s", r.RemoteAddr)
+		utils.RespondWithError(w, http.StatusUnauthorized, "Unauthorized")
+		return
+	}
 
 	if !VerifyWebhookSignature(body, signature, webhookSecret) {
 		log.Printf("Invalid webhook signature from %s", r.RemoteAddr)
-		http.Error(w, "Unauthorized", http.StatusUnauthorized)
+		utils.RespondWithError(w, http.StatusUnauthorized, "Unauthorized")
 		return
 	}
 
 	var payload PaymentWebhookPayload
 	if err := json.Unmarshal(body, &payload); err != nil {
 		log.Printf("Failed to parse webhook payload: %v", err)
-		http.Error(w, "Invalid payload", http.StatusBadRequest)
+		utils.RespondWithError(w, http.StatusBadRequest, "Invalid payload")
 		return
 	}
 
 	// Validate webhook payload
 	if err := validateWebhookPayload(&payload); err != nil {
 		log.Printf("Invalid webhook payload: %v", err)
-		http.Error(w, err.Error(), http.StatusBadRequest)
+		utils.RespondWithError(w, http.StatusBadRequest, err.Error())
 		return
 	}
 
@@ -103,19 +116,19 @@ func (p *PaymentService) HandlePaymentWebhook(w http.ResponseWriter, r *http.Req
 	case "success":
 		if err := p.processSuccessfulPayment(ctx, &payload); err != nil {
 			logWebhookAttempt(ctx, p.app, &payload, "failed", err.Error())
-			http.Error(w, "Failed to process payment", http.StatusInternalServerError)
+			utils.RespondWithError(w, http.StatusInternalServerError, "Failed to process payment")
 			return
 		}
 
 	case "failed":
 		if err := p.processFailedPayment(ctx, &payload); err != nil {
 			logWebhookAttempt(ctx, p.app, &payload, "failed", err.Error())
-			http.Error(w, "Failed to process failure", http.StatusInternalServerError)
+			utils.RespondWithError(w, http.StatusInternalServerError, "Failed to process failure")
 			return
 		}
 
 	default:
-		http.Error(w, "Unknown payment status", http.StatusBadRequest)
+		utils.RespondWithError(w, http.StatusBadRequest, "Unknown payment status")
 		return
 	}
 
@@ -138,23 +151,34 @@ func (p *PaymentService) HandlePaymentWebhook(w http.ResponseWriter, r *http.Req
 	})
 }
 
-// processSuccessfulPayment updates account balances and order status
+// processSuccessfulPayment updates transaction status and applies balance changes
 func (p *PaymentService) processSuccessfulPayment(ctx context.Context, payload *PaymentWebhookPayload) error {
-	// Update account balance
-	if err := p.app.DB.UpdateOne(ctx, accountsCollection, bson.M{
-		"userid": payload.UserID,
-	}, bson.M{
-		"$inc": bson.M{
-			"cached_balance": int64(payload.Amount),
-		},
-		"$set": bson.M{
-			"updated_at": time.Now(),
-		},
-	}); err != nil {
-		return err
+	// Fetch the original transaction to determine its type
+	var txn models.Transaction
+	if err := p.app.DB.FindOne(ctx, transactionsCollection, bson.M{
+		"_id": payload.TransactionID,
+	}, &txn); err != nil {
+		return fmt.Errorf("transaction not found: %w", err)
 	}
 
-	// Update transaction status
+	// For topup transactions, increment the account balance
+	// For other transaction types, balance should already be updated
+	if txn.Type == "topup" {
+		if err := p.app.DB.UpdateOne(ctx, accountsCollection, bson.M{
+			"userid": payload.UserID,
+		}, bson.M{
+			"$inc": bson.M{
+				"cached_balance": int64(payload.Amount),
+			},
+			"$set": bson.M{
+				"updated_at": time.Now(),
+			},
+		}); err != nil {
+			return err
+		}
+	}
+
+	// Update transaction status to success
 	if err := p.app.DB.UpdateOne(ctx, transactionsCollection, bson.M{
 		"_id": payload.TransactionID,
 	}, bson.M{

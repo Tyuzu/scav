@@ -19,18 +19,18 @@ func (p *PaymentService) Transfer(w http.ResponseWriter, r *http.Request, _ http
 		Amount    int64  `json:"amount"`
 	}
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil || req.Amount <= 0 || req.Recipient == "" {
-		http.Error(w, "invalid request", http.StatusBadRequest)
+		utils.RespondWithError(w, http.StatusBadRequest, "invalid request")
 		return
 	}
 
 	senderAcc, err := p.getOrCreateAccount(ctx, senderID)
 	if err != nil {
-		http.Error(w, "account error", http.StatusInternalServerError)
+		utils.RespondWithError(w, http.StatusInternalServerError, "account error")
 		return
 	}
 	recipientAcc, err := p.getOrCreateAccount(ctx, req.Recipient)
 	if err != nil {
-		http.Error(w, "recipient error", http.StatusInternalServerError)
+		utils.RespondWithError(w, http.StatusInternalServerError, "recipient error")
 		return
 	}
 
@@ -86,7 +86,7 @@ func (p *PaymentService) Transfer(w http.ResponseWriter, r *http.Request, _ http
 	}
 
 	if err := p.app.DB.InsertOne(ctx, transactionsCollection, master); err != nil {
-		http.Error(w, "failed", http.StatusInternalServerError)
+		utils.RespondWithError(w, http.StatusInternalServerError, "failed")
 		return
 	}
 
@@ -108,13 +108,13 @@ func (p *PaymentService) Transfer(w http.ResponseWriter, r *http.Request, _ http
 
 	if err := p.app.DB.Inc(ctx, accountsCollection, map[string]any{"_id": senderAcc}, "cached_balance", -req.Amount); err != nil {
 		p.failTxn(ctx, txnID)
-		http.Error(w, "failed", http.StatusInternalServerError)
+		utils.RespondWithError(w, http.StatusInternalServerError, "failed")
 		return
 	}
 
 	if err := p.app.DB.Inc(ctx, accountsCollection, map[string]any{"_id": recipientAcc}, "cached_balance", req.Amount); err != nil {
 		p.failTxn(ctx, txnID)
-		http.Error(w, "failed", http.StatusInternalServerError)
+		utils.RespondWithError(w, http.StatusInternalServerError, "failed")
 		return
 	}
 
@@ -150,22 +150,30 @@ func (p *PaymentService) Transfer(w http.ResponseWriter, r *http.Request, _ http
 
 func (p *PaymentService) Refund(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
 	ctx := r.Context()
+	userID := utils.GetUserIDFromRequest(r)
 
 	var req struct {
 		TransactionID string `json:"transaction_id"`
 	}
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil || req.TransactionID == "" {
-		http.Error(w, "invalid request", http.StatusBadRequest)
+		utils.RespondWithError(w, http.StatusBadRequest, "invalid request")
 		return
 	}
 
 	var orig models.Transaction
 	if err := p.app.DB.FindOne(ctx, transactionsCollection, map[string]any{"_id": req.TransactionID}, &orig); err != nil {
-		http.Error(w, "not found", http.StatusNotFound)
+		utils.RespondWithError(w, http.StatusNotFound, "not found")
 		return
 	}
+
+	// Verify user owns the transaction (they are the original payer)
+	if orig.UserID != "" && orig.UserID != userID {
+		utils.RespondWithError(w, http.StatusForbidden, "unauthorized")
+		return
+	}
+
 	if orig.Status != "success" {
-		http.Error(w, "not refundable", http.StatusBadRequest)
+		utils.RespondWithError(w, http.StatusBadRequest, "not refundable")
 		return
 	}
 
@@ -179,14 +187,14 @@ func (p *PaymentService) Refund(w http.ResponseWriter, r *http.Request, _ httpro
 
 	ok, _ := p.lock(ctx, lockA)
 	if !ok {
-		http.Error(w, "retry", http.StatusTooManyRequests)
+		utils.RespondWithError(w, http.StatusTooManyRequests, "retry")
 		return
 	}
 	defer p.unlock(ctx, lockA)
 
 	ok, _ = p.lock(ctx, lockB)
 	if !ok {
-		http.Error(w, "retry", http.StatusTooManyRequests)
+		utils.RespondWithError(w, http.StatusTooManyRequests, "retry")
 		return
 	}
 	defer p.unlock(ctx, lockB)
@@ -196,6 +204,7 @@ func (p *PaymentService) Refund(w http.ResponseWriter, r *http.Request, _ httpro
 
 	refund := models.Transaction{
 		ID:          txnID,
+		UserID:      orig.UserID,
 		Type:        "refund",
 		Method:      "wallet",
 		FromAccount: fromAcc,
@@ -209,7 +218,7 @@ func (p *PaymentService) Refund(w http.ResponseWriter, r *http.Request, _ httpro
 	}
 
 	if err := p.app.DB.InsertOne(ctx, transactionsCollection, refund); err != nil {
-		http.Error(w, "failed", http.StatusInternalServerError)
+		utils.RespondWithError(w, http.StatusInternalServerError, "failed")
 		return
 	}
 
@@ -231,13 +240,13 @@ func (p *PaymentService) Refund(w http.ResponseWriter, r *http.Request, _ httpro
 
 	if err := p.app.DB.Inc(ctx, accountsCollection, map[string]any{"_id": fromAcc}, "cached_balance", -refund.Amount); err != nil {
 		p.failTxn(ctx, txnID)
-		http.Error(w, "failed", http.StatusInternalServerError)
+		utils.RespondWithError(w, http.StatusInternalServerError, "failed")
 		return
 	}
 
 	if err := p.app.DB.Inc(ctx, accountsCollection, map[string]any{"_id": toAcc}, "cached_balance", refund.Amount); err != nil {
 		p.failTxn(ctx, txnID)
-		http.Error(w, "failed", http.StatusInternalServerError)
+		utils.RespondWithError(w, http.StatusInternalServerError, "failed")
 		return
 	}
 
@@ -268,7 +277,7 @@ func (p *PaymentService) ListTransactions(w http.ResponseWriter, r *http.Request
 			},
 		}, &txns,
 	); err != nil {
-		http.Error(w, "failed", http.StatusInternalServerError)
+		utils.RespondWithError(w, http.StatusInternalServerError, "failed")
 		return
 	}
 

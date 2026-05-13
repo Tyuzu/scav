@@ -21,25 +21,39 @@ async function validateCoupon({ code, subtotal }) {
   }
 
   try {
-    const res = await apiFetch("/coupon/validate", "POST", {
-      code: code.trim(),
-      cart: subtotal
-    });
+    // UX-only validation - server will validate again during checkout
+    // Don't fail if validation endpoint isn't available
+    try {
+      const res = await apiFetch("/coupon/validate", "POST", {
+        code: code.trim(),
+        cart: subtotal,
+        entityId: "general",
+        entityType: "cart"
+      });
 
-    if (res?.valid) {
-      const discount = Math.max(0, Number(res.discount) || 0);
+      if (res?.valid) {
+        const discount = Math.max(0, Number(res.discount) || 0);
+        return {
+          valid: true,
+          discount,
+          message: res.message || `${formatPrice(discount)} discount applied`
+        };
+      }
+
       return {
-        valid: true,
-        discount,
-        message: res.message || `${formatPrice(discount)} discount applied`
+        valid: false,
+        discount: 0,
+        message: res?.message || "Invalid or expired coupon"
+      };
+    } catch (err) {
+      // If UX validation fails, still allow code to be sent (backend will validate)
+      console.warn("Coupon preview validation failed:", err);
+      return {
+        valid: null,
+        discount: 0,
+        message: "Code will be verified at checkout"
       };
     }
-
-    return {
-      valid: false,
-      discount: 0,
-      message: res?.message || "Invalid or expired coupon"
-    };
   } catch (err) {
     console.error(err);
     return {
@@ -217,29 +231,53 @@ async function handleCheckout({
   button.textContent = "Processing…";
 
   try {
-    // Only send safe data
-    const sanitizedItems = items.map(i => ({
-      itemId: i.itemId || i.id,
-      quantity: i.quantity
-    }));
+    // Send complete item data - preserve all fields needed for backend validation
+    const itemsByCategory = groupByCategory(items);
 
     const session = await apiFetch("/checkout/session", "POST", {
       address,
-      items: sanitizedItems,
-      couponCode: couponCode || null
+      items: itemsByCategory,
+      coupon: couponCode || null
     });
 
+    // 🔒 Use validated items from backend response, not frontend items
     displayPayment(container, {
       ...session,
-      items,
-      address,
       couponCode
     });
   } catch (err) {
     console.error(err);
     button.disabled = false;
     button.textContent = "Proceed to Payment";
+    alert(err?.message || "Checkout failed. Please try again.");
   }
+}
+
+/**
+ * Group items by category for checkout
+ * SECURITY: Never send prices to backend - backend will look them up from database
+ */
+function groupByCategory(items = []) {
+  const grouped = {};
+  
+  (Array.isArray(items) ? items : Object.values(items || {})).forEach(item => {
+    const category = item.category || "products";
+    
+    if (!grouped[category]) {
+      grouped[category] = [];
+    }
+    
+    // 🔒 SECURITY: Only send item ID and quantity - backend fetches current price
+    grouped[category].push({
+      itemId: item.itemId || item.id,
+      quantity: item.quantity || 1,
+      category: item.category,
+      entityId: item.entityId,
+      entityType: item.entityType
+    });
+  });
+  
+  return grouped;
 }
 
 /* ────────────────────── Main Entry ────────────────────── */
@@ -250,7 +288,19 @@ export async function displayCheckout(container, passedItems = null) {
   );
 
   try {
-    const items = passedItems || (await apiFetch("/cart", "GET"));
+    let items = passedItems;
+    
+    // If not provided, fetch from cart endpoint
+    if (!items) {
+      const cartData = await apiFetch("/cart", "GET");
+      // Flatten grouped cart into array
+      items = Array.isArray(cartData) 
+        ? cartData 
+        : Object.values(cartData || {}).flat();
+    } else if (!Array.isArray(items)) {
+      // If grouped object passed, flatten it
+      items = Object.values(items).flat();
+    }
 
     if (!Array.isArray(items) || !items.length) {
       container.replaceChildren(
