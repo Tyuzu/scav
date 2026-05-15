@@ -34,6 +34,7 @@ func GetMerch(app *infra.Deps) httprouter.Handle {
 				"entity_type": entityType,
 				"entity_id":   eventID,
 				"merchid":     merchID,
+				"deletedAt":   bson.M{"$exists": false},
 			},
 			&merch,
 		)
@@ -75,6 +76,7 @@ func GetMerchs(app *infra.Deps) httprouter.Handle {
 			bson.M{
 				"entity_type": entityType,
 				"entity_id":   eventID,
+				"deletedAt":   bson.M{"$exists": false},
 			},
 			&list,
 		)
@@ -105,7 +107,10 @@ func GetMerchPage(app *infra.Deps) httprouter.Handle {
 		err := app.DB.FindOne(
 			r.Context(),
 			merchCollection,
-			bson.M{"merchid": merchID},
+			bson.M{
+				"merchid":   merchID,
+				"deletedAt": bson.M{"$exists": false},
+			},
 			&merch,
 		)
 		if err != nil {

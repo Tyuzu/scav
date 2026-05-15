@@ -257,7 +257,7 @@ func (p *PaymentService) Pay(w http.ResponseWriter, r *http.Request, _ httproute
 
 	// ────────── PREVENT SELF-FUNDING ──────────
 	if req.PaymentType == "funding" && userID == req.EntityID {
-		http.Error(w, "self funding not allowed", http.StatusForbidden)
+		utils.RespondWithError(w, http.StatusForbidden, "self funding not allowed")
 		return
 	}
 
@@ -265,7 +265,7 @@ func (p *PaymentService) Pay(w http.ResponseWriter, r *http.Request, _ httproute
 	if req.Method == "wallet" {
 		var acc models.Account
 		if err := p.app.DB.FindOne(ctx, accountsCollection, map[string]any{"_id": userAcc}, &acc); err != nil {
-			http.Error(w, "account error", http.StatusInternalServerError)
+			utils.RespondWithError(w, http.StatusInternalServerError, "account error")
 			return
 		}
 
@@ -316,7 +316,7 @@ func (p *PaymentService) Pay(w http.ResponseWriter, r *http.Request, _ httproute
 
 	if err := p.app.DB.InsertOne(ctx, journalCollection, j); err != nil {
 		p.failTxn(ctx, txnID)
-		http.Error(w, "failed", http.StatusInternalServerError)
+		utils.RespondWithError(w, http.StatusInternalServerError, "failed")
 		return
 	}
 
@@ -324,13 +324,13 @@ func (p *PaymentService) Pay(w http.ResponseWriter, r *http.Request, _ httproute
 	if req.Method == "wallet" {
 		if err := p.app.DB.Inc(ctx, accountsCollection, map[string]any{"_id": userAcc}, "cached_balance", -price); err != nil {
 			p.failTxn(ctx, txnID)
-			http.Error(w, "failed", http.StatusInternalServerError)
+			utils.RespondWithError(w, http.StatusInternalServerError, "failed")
 			return
 		}
 
 		if err := p.app.DB.Inc(ctx, accountsCollection, map[string]any{"_id": destinationAcc}, "cached_balance", price); err != nil {
 			p.failTxn(ctx, txnID)
-			http.Error(w, "failed", http.StatusInternalServerError)
+			utils.RespondWithError(w, http.StatusInternalServerError, "failed")
 			return
 		}
 	}

@@ -42,21 +42,21 @@ func (p *PaymentService) Transfer(w http.ResponseWriter, r *http.Request, _ http
 
 	ok, _ := p.lock(ctx, lockA)
 	if !ok {
-		http.Error(w, "retry", http.StatusTooManyRequests)
+		utils.RespondWithError(w, http.StatusTooManyRequests, "retry")
 		return
 	}
 	defer p.unlock(ctx, lockA)
 
 	ok, _ = p.lock(ctx, lockB)
 	if !ok {
-		http.Error(w, "retry", http.StatusTooManyRequests)
+		utils.RespondWithError(w, http.StatusTooManyRequests, "retry")
 		return
 	}
 	defer p.unlock(ctx, lockB)
 
 	var sender models.Account
 	if err := p.app.DB.FindOne(ctx, accountsCollection, map[string]any{"_id": senderAcc}, &sender); err != nil {
-		http.Error(w, "account error", http.StatusInternalServerError)
+		utils.RespondWithError(w, http.StatusInternalServerError, "account error")
 		return
 	}
 
@@ -102,7 +102,7 @@ func (p *PaymentService) Transfer(w http.ResponseWriter, r *http.Request, _ http
 
 	if err := p.app.DB.InsertOne(ctx, journalCollection, j); err != nil {
 		p.failTxn(ctx, txnID)
-		http.Error(w, "failed", http.StatusInternalServerError)
+		utils.RespondWithError(w, http.StatusInternalServerError, "failed")
 		return
 	}
 
