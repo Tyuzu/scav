@@ -272,3 +272,125 @@ type RefundCompletedPayload struct {
 	OrderID     string    `json:"order_id"`
 	CompletedAt time.Time `json:"completed_at"`
 }
+
+/* ============================================================
+   POST EVENTS
+============================================================ */
+
+const (
+	PostCreated = "post.created"
+	PostUpdated = "post.updated"
+	PostDeleted = "post.deleted"
+)
+
+type PostCreatedPayload struct {
+	PostID     string    `json:"post_id"`
+	UserID     string    `json:"user_id"`
+	Username   string    `json:"username"`
+	PostType   string    `json:"post_type"`
+	OccurredAt time.Time `json:"occurred_at"`
+}
+
+type PostUpdatedPayload struct {
+	PostID     string    `json:"post_id"`
+	UserID     string    `json:"user_id"`
+	OccurredAt time.Time `json:"occurred_at"`
+}
+
+type PostDeletedPayload struct {
+	PostID     string    `json:"post_id"`
+	UserID     string    `json:"user_id"`
+	OccurredAt time.Time `json:"occurred_at"`
+}
+
+/* ============================================================
+   FARM EVENTS
+============================================================ */
+
+const (
+	FarmCreated    = "farm.created"
+	FarmUpdated    = "farm.updated"
+	CropCreated    = "crop.created"
+	CropUpdated    = "crop.updated"
+	ProductCreated = "product.created"
+	ProductUpdated = "product.updated"
+)
+
+type FarmCreatedPayload struct {
+	FarmID     string    `json:"farm_id"`
+	UserID     string    `json:"user_id"`
+	FarmName   string    `json:"farm_name"`
+	Location   string    `json:"location"`
+	OccurredAt time.Time `json:"occurred_at"`
+}
+
+type FarmUpdatedPayload struct {
+	FarmID     string    `json:"farm_id"`
+	UserID     string    `json:"user_id"`
+	OccurredAt time.Time `json:"occurred_at"`
+}
+
+type CropCreatedPayload struct {
+	CropID     string    `json:"crop_id"`
+	FarmID     string    `json:"farm_id"`
+	UserID     string    `json:"user_id"`
+	CropName   string    `json:"crop_name"`
+	OccurredAt time.Time `json:"occurred_at"`
+}
+
+type CropUpdatedPayload struct {
+	CropID     string    `json:"crop_id"`
+	FarmID     string    `json:"farm_id"`
+	UserID     string    `json:"user_id"`
+	OccurredAt time.Time `json:"occurred_at"`
+}
+
+type ProductCreatedPayload struct {
+	ProductID   string    `json:"product_id"`
+	UserID      string    `json:"user_id"`
+	ProductName string    `json:"product_name"`
+	OccurredAt  time.Time `json:"occurred_at"`
+}
+
+type ProductUpdatedPayload struct {
+	ProductID  string    `json:"product_id"`
+	UserID     string    `json:"user_id"`
+	OccurredAt time.Time `json:"occurred_at"`
+}
+
+/* ============================================================
+   ARTIST EVENTS
+============================================================ */
+
+const (
+	ArtistCreated = "artist.created"
+	ArtistUpdated = "artist.updated"
+	SongCreated   = "song.created"
+	SongUpdated   = "song.updated"
+)
+
+type ArtistCreatedPayload struct {
+	ArtistID   string    `json:"artist_id"`
+	UserID     string    `json:"user_id"`
+	ArtistName string    `json:"artist_name"`
+	OccurredAt time.Time `json:"occurred_at"`
+}
+
+type ArtistUpdatedPayload struct {
+	ArtistID   string    `json:"artist_id"`
+	UserID     string    `json:"user_id"`
+	OccurredAt time.Time `json:"occurred_at"`
+}
+
+type SongCreatedPayload struct {
+	SongID     string    `json:"song_id"`
+	ArtistID   string    `json:"artist_id"`
+	SongTitle  string    `json:"song_title"`
+	OccurredAt time.Time `json:"occurred_at"`
+}
+
+type SongUpdatedPayload struct {
+	SongID     string    `json:"song_id"`
+	ArtistID   string    `json:"artist_id"`
+	OccurredAt time.Time `json:"occurred_at"`
+}

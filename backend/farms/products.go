@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"naevis/config/mqevent"
 	"naevis/infra"
 	"naevis/models"
 	"naevis/utils"
@@ -54,6 +55,29 @@ func createItem(w http.ResponseWriter, r *http.Request, itemType string, app *in
 	if err := app.DB.InsertOne(ctx, productsCollection, item); err != nil {
 		http.Error(w, "Failed to insert item", http.StatusInternalServerError)
 		return
+	}
+
+	/* -------- Publish ProductCreated Event -------- */
+	productPayload := mqevent.ProductCreatedPayload{
+		ProductID:   item.ProductID,
+		UserID:      userID,
+		ProductName: item.Name,
+		OccurredAt:  time.Now(),
+	}
+
+	productBytes, err := json.Marshal(productPayload)
+	if err == nil {
+		publishCtx, cancel := context.WithTimeout(
+			context.Background(),
+			3*time.Second,
+		)
+		defer cancel()
+
+		_ = app.MQ.Publish(
+			publishCtx,
+			mqevent.ProductCreated,
+			productBytes,
+		)
 	}
 
 	w.Header().Set("Content-Type", "application/json")
@@ -125,6 +149,28 @@ func updateItem(
 	if err := app.DB.UpdateOne(ctx, productsCollection, bson.M{"productid": id}, update); err != nil {
 		http.Error(w, "Failed to update item", http.StatusInternalServerError)
 		return
+	}
+
+	/* -------- Publish ProductUpdated Event -------- */
+	productUpdatePayload := mqevent.ProductUpdatedPayload{
+		ProductID:  id,
+		UserID:     userID,
+		OccurredAt: time.Now(),
+	}
+
+	productUpdateBytes, err := json.Marshal(productUpdatePayload)
+	if err == nil {
+		publishCtx, cancel := context.WithTimeout(
+			context.Background(),
+			3*time.Second,
+		)
+		defer cancel()
+
+		_ = app.MQ.Publish(
+			publishCtx,
+			mqevent.ProductUpdated,
+			productUpdateBytes,
+		)
 	}
 
 	w.Header().Set("Content-Type", "application/json")

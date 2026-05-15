@@ -2,10 +2,13 @@ package feed
 
 import (
 	"context"
+	"encoding/json"
 	"errors"
+	"naevis/config/mqevent"
 	"naevis/infra"
 	"naevis/utils"
 	"net/http"
+	"time"
 
 	"github.com/julienschmidt/httprouter"
 	"go.mongodb.org/mongo-driver/bson"
@@ -54,6 +57,28 @@ func DeletePostFromDB(ctx context.Context, userID string, postID string, app *in
 
 	if deleted == 0 {
 		return errors.New("post not found or unauthorized")
+	}
+
+	/* -------- Publish PostDeleted Event -------- */
+	deletePayload := mqevent.PostDeletedPayload{
+		PostID:     postID,
+		UserID:     userID,
+		OccurredAt: time.Now(),
+	}
+
+	deleteBytes, err := json.Marshal(deletePayload)
+	if err == nil {
+		publishCtx, cancel := context.WithTimeout(
+			context.Background(),
+			3*time.Second,
+		)
+		defer cancel()
+
+		_ = app.MQ.Publish(
+			publishCtx,
+			mqevent.PostDeleted,
+			deleteBytes,
+		)
 	}
 
 	return nil

@@ -1,11 +1,14 @@
 package artists
 
 import (
+	"context"
 	"encoding/json"
 	"net/http"
 	"os"
 	"strings"
+	"time"
 
+	"naevis/config/mqevent"
 	"naevis/dels"
 	"naevis/infra"
 	"naevis/models"
@@ -35,6 +38,29 @@ func CreateArtist(app *infra.Deps) httprouter.Handle {
 		if err := app.DB.Insert(ctx, ArtistsCollection, artist); err != nil {
 			utils.RespondWithError(w, http.StatusInternalServerError, "Failed to create artist")
 			return
+		}
+
+		/* -------- Publish ArtistCreated Event -------- */
+		artistPayload := mqevent.ArtistCreatedPayload{
+			ArtistID:   artist.ArtistID,
+			UserID:     artist.CreatorID,
+			ArtistName: artist.Name,
+			OccurredAt: time.Now(),
+		}
+
+		artistBytes, err := json.Marshal(artistPayload)
+		if err == nil {
+			publishCtx, cancel := context.WithTimeout(
+				context.Background(),
+				3*time.Second,
+			)
+			defer cancel()
+
+			_ = app.MQ.Publish(
+				publishCtx,
+				mqevent.ArtistCreated,
+				artistBytes,
+			)
 		}
 
 		utils.RespondWithJSON(w, http.StatusCreated, artist)
@@ -78,6 +104,28 @@ func UpdateArtist(app *infra.Deps) httprouter.Handle {
 		// Cleanup old images only after DB update succeeds
 		for _, path := range filesToDelete {
 			_ = os.Remove(path)
+		}
+
+		/* -------- Publish ArtistUpdated Event -------- */
+		updatePayload := mqevent.ArtistUpdatedPayload{
+			ArtistID:   idParam,
+			UserID:     existing.CreatorID,
+			OccurredAt: time.Now(),
+		}
+
+		updateBytes, err := json.Marshal(updatePayload)
+		if err == nil {
+			publishCtx, cancel := context.WithTimeout(
+				context.Background(),
+				3*time.Second,
+			)
+			defer cancel()
+
+			_ = app.MQ.Publish(
+				publishCtx,
+				mqevent.ArtistUpdated,
+				updateBytes,
+			)
 		}
 
 		utils.RespondWithJSON(w, http.StatusOK, bson.M{"message": "Artist updated"})

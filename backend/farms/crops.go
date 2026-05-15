@@ -2,10 +2,12 @@ package farms
 
 import (
 	"context"
+	"encoding/json"
 	"net/http"
 	"strings"
 	"time"
 
+	"naevis/config/mqevent"
 	"naevis/dels"
 	"naevis/infra"
 	"naevis/models"
@@ -57,6 +59,30 @@ func AddCrop(app *infra.Deps) httprouter.Handle {
 				"message": "Failed to create crop",
 			})
 			return
+		}
+
+		/* -------- Publish CropCreated Event -------- */
+		cropPayload := mqevent.CropCreatedPayload{
+			CropID:     crop.CropId,
+			FarmID:     farmID,
+			UserID:     userID,
+			CropName:   crop.Name,
+			OccurredAt: time.Now(),
+		}
+
+		cropBytes, err := json.Marshal(cropPayload)
+		if err == nil {
+			publishCtx, cancel := context.WithTimeout(
+				context.Background(),
+				3*time.Second,
+			)
+			defer cancel()
+
+			_ = app.MQ.Publish(
+				publishCtx,
+				mqevent.CropCreated,
+				cropBytes,
+			)
 		}
 
 		utils.RespondWithJSON(w, http.StatusOK, utils.M{
@@ -151,6 +177,30 @@ func EditCrop(app *infra.Deps) httprouter.Handle {
 				"message": "Update failed",
 			})
 			return
+		}
+
+		/* -------- Publish CropUpdated Event -------- */
+		userID := utils.GetUserIDFromRequest(r)
+		cropUpdatePayload := mqevent.CropUpdatedPayload{
+			CropID:     cropID,
+			FarmID:     "",
+			UserID:     userID,
+			OccurredAt: time.Now(),
+		}
+
+		cropUpdateBytes, err := json.Marshal(cropUpdatePayload)
+		if err == nil {
+			publishCtx, cancel := context.WithTimeout(
+				context.Background(),
+				3*time.Second,
+			)
+			defer cancel()
+
+			_ = app.MQ.Publish(
+				publishCtx,
+				mqevent.CropUpdated,
+				cropUpdateBytes,
+			)
 		}
 
 		utils.RespondWithJSON(w, http.StatusOK, utils.M{"success": true})

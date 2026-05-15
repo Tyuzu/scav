@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"log"
+	"naevis/config/mqevent"
 	"naevis/infra"
 	"naevis/models"
 	"naevis/utils"
@@ -22,10 +23,10 @@ func PlaceOrder(app *infra.Deps) httprouter.Handle {
 		defer cancel()
 
 		var payload struct {
-			Address       string                        `json:"address"`
+			Address       string                       `json:"address"`
 			Items         map[string][]models.CartItem `json:"items"`
-			PaymentMethod string                        `json:"paymentMethod"`
-			Coupon        string                        `json:"coupon"`
+			PaymentMethod string                       `json:"paymentMethod"`
+			Coupon        string                       `json:"coupon"`
 		}
 
 		if err := json.NewDecoder(r.Body).Decode(&payload); err != nil {
@@ -62,7 +63,7 @@ func PlaceOrder(app *infra.Deps) httprouter.Handle {
 		var subtotal int64 = 0
 		// Rebuild items with validated data from database
 		validatedGroupedItems := make(map[string][]models.CartItem)
-		
+
 		for _, item := range allItems {
 			// Lookup current item details to verify price and availability
 			details, err := lookupItemDetails(ctx, item.ItemID, app)
@@ -81,7 +82,7 @@ func PlaceOrder(app *infra.Deps) httprouter.Handle {
 			}
 
 			subtotal += price * int64(item.Quantity)
-			
+
 			// 🔒 Store validated item with database entity info
 			category := details.Category
 			validatedGroupedItems[category] = append(validatedGroupedItems[category], models.CartItem{
@@ -90,8 +91,8 @@ func PlaceOrder(app *infra.Deps) httprouter.Handle {
 				Quantity:   item.Quantity,
 				Price:      price,
 				Category:   category,
-				EntityID:   details.EntityID,    // 🔒 From database
-				EntityType: details.EntityType,  // 🔒 From database
+				EntityID:   details.EntityID,   // 🔒 From database
+				EntityType: details.EntityType, // 🔒 From database
 			})
 		}
 
@@ -122,7 +123,7 @@ func PlaceOrder(app *infra.Deps) httprouter.Handle {
 			UserID:        userID,
 			Address:       payload.Address,
 			PaymentMethod: payload.PaymentMethod,
-			Items:         validatedGroupedItems,  // 🔒 Use validated items with entity info
+			Items:         validatedGroupedItems, // 🔒 Use validated items with entity info
 			Subtotal:      subtotal,
 			Discount:      discount,
 			Tax:           tax,
@@ -144,6 +145,28 @@ func PlaceOrder(app *infra.Deps) httprouter.Handle {
 
 		if _, err := app.DB.Delete(ctx, cartCollection, bson.M{"userId": userID}); err != nil {
 			log.Println("Cart cleanup error:", err)
+		}
+
+		/* -------- Publish CheckoutStarted Event -------- */
+		checkoutPayload := mqevent.CheckoutStartedPayload{
+			CheckoutID: "CHK" + utils.GenerateRandomDigitString(12),
+			UserID:     userID,
+			OccurredAt: time.Now(),
+		}
+
+		checkoutBytes, err := json.Marshal(checkoutPayload)
+		if err == nil {
+			publishCtx, cancel := context.WithTimeout(
+				context.Background(),
+				3*time.Second,
+			)
+			defer cancel()
+
+			_ = app.MQ.Publish(
+				publishCtx,
+				mqevent.CheckoutStarted,
+				checkoutBytes,
+			)
 		}
 
 		resp := map[string]any{
@@ -264,10 +287,10 @@ func CreateCheckoutSession(app *infra.Deps) httprouter.Handle {
 		defer cancel()
 
 		var payload struct {
-			Address       string                        `json:"address"`
+			Address       string                       `json:"address"`
 			Items         map[string][]models.CartItem `json:"items"`
-			PaymentMethod string                        `json:"paymentMethod"`
-			Coupon        string                        `json:"coupon"`
+			PaymentMethod string                       `json:"paymentMethod"`
+			Coupon        string                       `json:"coupon"`
 		}
 
 		if err := json.NewDecoder(r.Body).Decode(&payload); err != nil {
@@ -331,8 +354,8 @@ func CreateCheckoutSession(app *infra.Deps) httprouter.Handle {
 				Quantity:   item.Quantity,
 				Price:      price, // 🔒 Server price, not frontend
 				Category:   details.Category,
-				EntityID:   details.EntityID,    // 🔒 From database
-				EntityType: details.EntityType,  // 🔒 From database
+				EntityID:   details.EntityID,   // 🔒 From database
+				EntityType: details.EntityType, // 🔒 From database
 			})
 		}
 
@@ -359,14 +382,14 @@ func CreateCheckoutSession(app *infra.Deps) httprouter.Handle {
 		total := totalAfterDiscount + tax + delivery
 
 		session := map[string]any{
-			"items":      validatedItems,
-			"subtotal":   subtotal,
-			"discount":   discount,
-			"tax":        tax,
-			"delivery":   delivery,
-			"total":      total,
-			"address":    payload.Address,
-			"createdAt":  time.Now(),
+			"items":     validatedItems,
+			"subtotal":  subtotal,
+			"discount":  discount,
+			"tax":       tax,
+			"delivery":  delivery,
+			"total":     total,
+			"address":   payload.Address,
+			"createdAt": time.Now(),
 		}
 
 		utils.RespondWithJSON(w, http.StatusCreated, session)

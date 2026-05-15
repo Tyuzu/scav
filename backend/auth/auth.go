@@ -316,6 +316,14 @@ func LogoutUser(app *infra.Deps) httprouter.Handle {
 		if err == nil && cookie.Value != "" {
 			hashed := hashRefreshToken(cookie.Value)
 
+			var user models.User
+			_ = app.DB.FindOne(
+				ctx,
+				UsersCollection,
+				bson.M{"refresh_token": hashed},
+				&user,
+			)
+
 			_ = app.DB.Update(
 				ctx,
 				UsersCollection,
@@ -325,8 +333,35 @@ func LogoutUser(app *infra.Deps) httprouter.Handle {
 						"refresh_token":  "",
 						"refresh_expiry": "",
 					},
+					"$set": bson.M{
+						"online":     false,
+						"updated_at": time.Now(),
+					},
 				},
 			)
+
+			/* -------- Publish Logout Event -------- */
+			if user.UserID != "" {
+				logoutPayload := mqevent.UserLoggedOutPayload{
+					UserID:     user.UserID,
+					OccurredAt: time.Now(),
+				}
+
+				logoutBytes, err := json.Marshal(logoutPayload)
+				if err == nil {
+					publishCtx, cancel := context.WithTimeout(
+						context.Background(),
+						3*time.Second,
+					)
+					defer cancel()
+
+					_ = app.MQ.Publish(
+						publishCtx,
+						mqevent.UserLoggedOut,
+						logoutBytes,
+					)
+				}
+			}
 		}
 
 		clearRefreshCookie(w)
@@ -383,6 +418,27 @@ func LogoutAllSessions(app *infra.Deps) httprouter.Handle {
 		if err != nil {
 			utils.RespondWithError(w, http.StatusInternalServerError, "Logout failed")
 			return
+		}
+
+		/* -------- Publish Logout Event -------- */
+		logoutPayload := mqevent.UserLoggedOutPayload{
+			UserID:     claims.UserID,
+			OccurredAt: time.Now(),
+		}
+
+		logoutBytes, err := json.Marshal(logoutPayload)
+		if err == nil {
+			publishCtx, cancel := context.WithTimeout(
+				context.Background(),
+				3*time.Second,
+			)
+			defer cancel()
+
+			_ = app.MQ.Publish(
+				publishCtx,
+				mqevent.UserLoggedOut,
+				logoutBytes,
+			)
 		}
 
 		clearRefreshCookie(w)

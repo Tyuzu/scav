@@ -1,6 +1,7 @@
 package farms
 
 import (
+	"context"
 	"encoding/json"
 	"log"
 	"net/http"
@@ -8,6 +9,7 @@ import (
 	"time"
 
 	"naevis/auditlog"
+	"naevis/config/mqevent"
 	"naevis/globals"
 	"naevis/infra"
 	"naevis/middleware"
@@ -107,6 +109,30 @@ func CreateFarm(app *infra.Deps) httprouter.Handle {
 				"location": farm.Location,
 			})
 
+		/* -------- Publish FarmCreated Event -------- */
+		farmPayload := mqevent.FarmCreatedPayload{
+			FarmID:     farm.FarmID,
+			UserID:     requestingUserID,
+			FarmName:   farm.Name,
+			Location:   farm.Location,
+			OccurredAt: time.Now(),
+		}
+
+		farmBytes, err := json.Marshal(farmPayload)
+		if err == nil {
+			publishCtx, cancel := context.WithTimeout(
+				context.Background(),
+				3*time.Second,
+			)
+			defer cancel()
+
+			_ = app.MQ.Publish(
+				publishCtx,
+				mqevent.FarmCreated,
+				farmBytes,
+			)
+		}
+
 		utils.RespondWithJSON(w, http.StatusOK, utils.M{
 			"success": true,
 			"id":      farm.FarmID,
@@ -195,6 +221,8 @@ func EditFarm(app *infra.Deps) httprouter.Handle {
 
 		update["updatedAt"] = time.Now()
 
+		userID, _ := ctx.Value(globals.UserIDKey).(string)
+
 		if err := app.DB.UpdateOne(
 			ctx,
 			farmsCollection,
@@ -206,6 +234,28 @@ func EditFarm(app *infra.Deps) httprouter.Handle {
 				"message": "Database error",
 			})
 			return
+		}
+
+		/* -------- Publish FarmUpdated Event -------- */
+		farmUpdatePayload := mqevent.FarmUpdatedPayload{
+			FarmID:     farmID,
+			UserID:     userID,
+			OccurredAt: time.Now(),
+		}
+
+		farmUpdateBytes, err := json.Marshal(farmUpdatePayload)
+		if err == nil {
+			publishCtx, cancel := context.WithTimeout(
+				context.Background(),
+				3*time.Second,
+			)
+			defer cancel()
+
+			_ = app.MQ.Publish(
+				publishCtx,
+				mqevent.FarmUpdated,
+				farmUpdateBytes,
+			)
 		}
 
 		utils.RespondWithJSON(w, http.StatusOK, utils.M{
