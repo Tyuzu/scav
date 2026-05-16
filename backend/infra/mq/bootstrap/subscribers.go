@@ -3,24 +3,24 @@ package bootstrap
 import (
 	"context"
 
-	authsub "naevis/infra/mq/subscriber/auth"
-	ordersub "naevis/infra/mq/subscriber/order"
-
-	// refundsub "naevis/infra/mq/subscriber/refund"
+	authsub "naevis/domain/auth"
+	ordersub "naevis/domain/order"
 
 	"naevis/infra"
 	"naevis/infra/mq/subscriber"
 )
 
+// RegisterSubscribers registers all domain event subscribers
+// Each domain owns its event subscriptions and implements the Subscriber interface
 func RegisterSubscribers(
 	ctx context.Context,
 	app *infra.Deps,
 ) error {
 
 	subscribers := []subscriber.Subscriber{
-		authsub.New(),
-		ordersub.New(),
-		// refundsub.New(),
+		authsub.NewSubscriber(app),
+		ordersub.NewSubscriber(app),
+		// Additional domains can be easily added here without modifying bootstrap logic
 	}
 
 	for _, sub := range subscribers {
