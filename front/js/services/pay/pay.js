@@ -8,13 +8,20 @@ import { Button } from "../../components/base/Button.js";
 /* Payment Contract */
 /* ───────────────────────────────────────── */
 
-const FUNDABLE_ENTITIES = ["artist", "farmer", "creator", "donation", "funding"];
+const FUNDABLE_ENTITIES = [
+  "artist",
+  "farmer",
+  "creator",
+  "donation",
+  "funding"
+];
 
 const PAYMENT_RULES = {
   funding: {
     allowedEntities: FUNDABLE_ENTITIES,
     methods: ["card"]
   },
+
   purchase: {
     allowedEntities: [
       "order",
@@ -26,28 +33,45 @@ const PAYMENT_RULES = {
       "merch",
       "crop",
       "service",
-      "farm",
-      "beat"
+      "farm"
     ],
-    methods: ["wallet", "card"]
+
+    methods: ["wallet", "card", "cash_on_delivery"]
   }
 };
 
 function validatePaymentConfig(paymentType, entityType) {
   if (!paymentType || !entityType) {
-    console.error(`Invalid payment config: paymentType=${paymentType}, entityType=${entityType}`);
-    return { valid: false, error: "Missing payment type or entity type" };
+    console.error(
+      `Invalid payment config: paymentType=${paymentType}, entityType=${entityType}`
+    );
+
+    return {
+      valid: false,
+      error: "Missing payment type or entity type"
+    };
   }
 
   const rules = PAYMENT_RULES[paymentType];
+
   if (!rules) {
     console.error(`Unknown payment type: ${paymentType}`);
-    return { valid: false, error: `Unknown payment type: ${paymentType}` };
+
+    return {
+      valid: false,
+      error: `Unknown payment type: ${paymentType}`
+    };
   }
 
   if (!rules.allowedEntities.includes(entityType)) {
-    console.error(`Entity type "${entityType}" not allowed for ${paymentType}. Allowed: ${rules.allowedEntities.join(", ")}`);
-    return { valid: false, error: `Entity type "${entityType}" not supported for ${paymentType} payments` };
+    console.error(
+      `Entity type "${entityType}" not allowed for ${paymentType}. Allowed: ${rules.allowedEntities.join(", ")}`
+    );
+
+    return {
+      valid: false,
+      error: `Entity type "${entityType}" not supported for ${paymentType} payments`
+    };
   }
 
   return { valid: true };
@@ -61,27 +85,60 @@ let stripePromise = null;
 
 function loadStripeJs(key) {
   if (stripePromise) {
-return stripePromise;
-}
+    return stripePromise;
+  }
 
   stripePromise = new Promise((resolve, reject) => {
-    if (window.Stripe) {
-      resolve(window.Stripe(key));
-      return;
-    }
+    try {
+      if (window.Stripe) {
+        resolve(window.Stripe(key));
+        return;
+      }
 
-    const script = document.createElement("script");
-    script.src = "https://js.stripe.com/v3/";
-    script.onload = () =>
-      window.Stripe
-        ? resolve(window.Stripe(key))
-        : reject(new Error("Stripe.js failed to initialize"));
-    script.onerror = () =>
-      reject(new Error("Failed to load Stripe.js"));
-    document.head.appendChild(script);
+      const script = document.createElement("script");
+
+      script.src = "https://js.stripe.com/v3/";
+
+      script.onload = () => {
+        try {
+          if (!window.Stripe) {
+            reject(new Error("Stripe.js failed to initialize"));
+            return;
+          }
+
+          resolve(window.Stripe(key));
+        } catch (err) {
+          reject(err);
+        }
+      };
+
+      script.onerror = () => {
+        reject(new Error("Failed to load Stripe.js"));
+      };
+
+      document.head.appendChild(script);
+    } catch (err) {
+      reject(err);
+    }
   });
 
   return stripePromise;
+}
+
+/* ───────────────────────────────────────── */
+/* Helpers */
+/* ───────────────────────────────────────── */
+
+function createMessageElement() {
+  return createElement("div", {
+    class: "payment-message"
+  });
+}
+
+function setMessage(el, message = "") {
+  if (el) {
+    el.textContent = message;
+  }
 }
 
 /* ───────────────────────────────────────── */
@@ -93,25 +150,63 @@ async function payViaStripe({
   entityType,
   entityId
 }) {
-  const validation = validatePaymentConfig(paymentType, entityType);
+  const validation = validatePaymentConfig(
+    paymentType,
+    entityType
+  );
+
   if (!validation.valid) {
-    console.error("Payment validation failed:", validation.error);
-    return { success: false, error: validation.error };
+    console.error(
+      "Payment validation failed:",
+      validation.error
+    );
+
+    return {
+      success: false,
+      error: validation.error
+    };
   }
 
-  const stripe = await loadStripeJs(STRIPE_PUB_KEY);
+  let stripe;
+
+  try {
+    stripe = await loadStripeJs(STRIPE_PUB_KEY);
+  } catch (err) {
+    console.error("Stripe initialization failed:", err);
+
+    return {
+      success: false,
+      error: "Stripe failed to initialize"
+    };
+  }
 
   let resolveResult;
+
   const resultPromise = new Promise(resolve => {
     resolveResult = resolve;
   });
+
+  let settled = false;
+
+  function finish(result) {
+    if (settled) {
+      return;
+    }
+
+    settled = true;
+    resolveResult(result);
+  }
+
+  let card = null;
 
   const modal = Modal({
     title:
       paymentType === "funding"
         ? "Support Creator"
         : "Complete Payment",
+
     size: "small",
+
     returnDataOnClose: false,
 
     content: () => {
@@ -119,84 +214,253 @@ async function payViaStripe({
         id: "stripe-elements-container"
       });
 
-      container.append(
-        createElement("div", { id: "card-element" }),
-        createElement("div", {
-          id: "payment-message",
-          class: "payment-message"
-        })
-      );
+      const cardContainer = createElement("div", {
+        id: "card-element"
+      });
+
+      const messageEl = createMessageElement();
+
+      container.append(cardContainer, messageEl);
 
       return container;
     },
 
     onOpen: async () => {
-      const elements = stripe.elements();
-      const card = elements.create("card");
+      try {
+        const elements = stripe.elements();
 
-      if (!document.querySelector("#card-element iframe")) {
-        card.mount("#card-element");
-      }
+        card = elements.create("card");
 
-      const payBtn = createElement(
-        "button",
-        { type: "button" },
-        ["Pay"]
-      );
+        if (
+          !document.querySelector("#card-element iframe")
+        ) {
+          card.mount("#card-element");
+        }
 
-      const messageEl =
-        document.getElementById("payment-message");
+        const payBtn = createElement(
+          "button",
+          { type: "button" },
+          ["Pay"]
+        );
 
-      payBtn.addEventListener("click", async () => {
-        payBtn.disabled = true;
-        messageEl.textContent = "Processing…";
+        const messageEl = document.querySelector(
+          "#stripe-elements-container .payment-message"
+        );
 
-        try {
-          const res = await stripeFetch(
-            "/create-payment-intent",
-            "POST",
-            { paymentType, entityType, entityId }
-          );
+        payBtn.addEventListener("click", async () => {
+          payBtn.disabled = true;
 
-          const { error, paymentIntent } =
-            await stripe.confirmCardPayment(
-              res.clientSecret,
-              { payment_method: { card } }
+          setMessage(messageEl, "Processing…");
+
+          try {
+            const res = await stripeFetch(
+              "/create-payment-intent",
+              "POST",
+              {
+                paymentType,
+                entityType,
+                entityId
+              }
             );
 
-          if (error) {
-throw error;
-}
+            if (!res?.clientSecret) {
+              throw new Error(
+                "Missing Stripe client secret"
+              );
+            }
 
-          await stripeFetch("/payment-success", "POST", {
-            paymentType,
-            entityType,
-            entityId,
-            paymentIntentId: paymentIntent.id
-          });
+            const {
+              error,
+              paymentIntent
+            } = await stripe.confirmCardPayment(
+              res.clientSecret,
+              {
+                payment_method: {
+                  card
+                }
+              }
+            );
 
-          resolveResult({ success: true });
-          setTimeout(() => modal.close(), 300);
+            if (error) {
+              throw error;
+            }
 
-        } catch (err) {
-          console.error("Stripe payment failed:", err);
-          messageEl.textContent = "Payment failed";
-          payBtn.disabled = false;
-          resolveResult({ success: false });
-        }
-      });
+            await stripeFetch(
+              "/payment-success",
+              "POST",
+              {
+                paymentType,
+                entityType,
+                entityId,
+                paymentIntentId: paymentIntent.id
+              }
+            );
 
-      document
-        .getElementById("stripe-elements-container")
-        .appendChild(payBtn);
+            setMessage(messageEl, "Payment successful");
+
+            finish({
+              success: true,
+              paymentIntentId: paymentIntent.id
+            });
+
+            setTimeout(() => {
+              modal.close();
+            }, 300);
+
+          } catch (err) {
+            console.error(
+              "Stripe payment failed:",
+              err
+            );
+
+            setMessage(
+              messageEl,
+              err?.message || "Payment failed"
+            );
+
+            finish({
+              success: false,
+              error:
+                err?.message || "Payment failed"
+            });
+
+          } finally {
+            payBtn.disabled = false;
+          }
+        });
+
+        document
+          .getElementById(
+            "stripe-elements-container"
+          )
+          .appendChild(payBtn);
+
+      } catch (err) {
+        console.error(
+          "Stripe modal initialization failed:",
+          err
+        );
+
+        finish({
+          success: false,
+          error: err?.message || "Initialization failed"
+        });
+
+        modal.close();
+      }
     },
 
     onClose: () => {
-      resolveResult({ success: false });
+      try {
+        if (card) {
+          card.destroy();
+          card = null;
+        }
+      } catch (err) {
+        console.error(
+          "Stripe card cleanup failed:",
+          err
+        );
+      }
+
+      finish({ success: false });
     }
   });
 
   return resultPromise;
+}
+
+/* ───────────────────────────────────────── */
+/* Wallet Payment */
+/* ───────────────────────────────────────── */
+
+async function payViaWallet({
+  paymentType,
+  entityType,
+  entityId
+}) {
+  try {
+    const res = await apiFetch(
+      "/wallet/pay",
+      "POST",
+      {
+        paymentType,
+        entityType,
+        entityId
+      },
+      {}
+    );
+
+    if (!res?.success) {
+      return {
+        success: false,
+        error:
+          res?.message || "Wallet payment failed"
+      };
+    }
+
+    return {
+      success: true
+    };
+
+  } catch (err) {
+    console.error("Wallet payment error:", err);
+
+    return {
+      success: false,
+      error:
+        err?.message || "Wallet payment failed"
+    };
+  }
+}
+
+/* ───────────────────────────────────────── */
+/* Cash On Delivery */
+/* ───────────────────────────────────────── */
+
+async function payCashOnDelivery({
+  paymentType,
+  entityType,
+  entityId
+}) {
+  try {
+    const res = await apiFetch(
+      "/payments/cash-on-delivery",
+      "POST",
+      {
+        paymentType,
+        entityType,
+        entityId
+      },
+      {}
+    );
+
+    if (!res?.success) {
+      return {
+        success: false,
+        error:
+          res?.message ||
+          "Cash on delivery setup failed"
+      };
+    }
+
+    return {
+      success: true
+    };
+
+  } catch (err) {
+    console.error(
+      "Cash on delivery error:",
+      err
+    );
+
+    return {
+      success: false,
+      error:
+        err?.message ||
+        "Cash on delivery failed"
+    };
+  }
 }
 
 /* ───────────────────────────────────────── */
@@ -209,109 +473,169 @@ async function showPaymentModal({
   entityId,
   entityName
 }) {
-  // Validate payment configuration
-  const validation = validatePaymentConfig(paymentType, entityType);
+  const validation = validatePaymentConfig(
+    paymentType,
+    entityType
+  );
+
   if (!validation.valid) {
-            console.warn("Payment validation failed:", validation.error);
+    console.warn(
+      "Payment validation failed:",
+      validation.error
+    );
+
+    return Promise.resolve({
+      success: false,
+      error: validation.error
+    });
   }
 
   const rules = PAYMENT_RULES[paymentType];
 
-  // Declare modalRef early so click handler can reference it
-  let modalRef;
+  if (!rules) {
+    return Promise.resolve({
+      success: false,
+      error: "Invalid payment type"
+    });
+  }
+
+  let modalRef = null;
+
+  const messageEl = createMessageElement();
+
+  const paymentHandlers = {
+    card: () =>
+      payViaStripe({
+        paymentType,
+        entityType,
+        entityId
+      }),
+
+    wallet: () =>
+      payViaWallet({
+        paymentType,
+        entityType,
+        entityId
+      }),
+
+    cash_on_delivery: () =>
+      payCashOnDelivery({
+        paymentType,
+        entityType,
+        entityId
+      })
+  };
 
   const confirmBtn = Button(
     "Confirm Payment",
     "",
+
     {
       click: async () => {
-        const method =
-          document.querySelector("input[name=paymethod]:checked")?.value;
+        const method = document.querySelector(
+          "input[name=paymethod]:checked"
+        )?.value;
 
         if (!method) {
-          console.warn("No payment method selected");
+          setMessage(
+            messageEl,
+            "Select a payment method"
+          );
+
           return;
         }
 
-        // Disable button and show loading state
+        const handler = paymentHandlers[method];
+
+        if (!handler) {
+          setMessage(
+            messageEl,
+            "Unsupported payment method"
+          );
+
+          return;
+        }
+
         confirmBtn.disabled = true;
-        const originalText = confirmBtn.textContent;
+
+        const originalText =
+          confirmBtn.textContent;
+
         confirmBtn.textContent = "Processing…";
 
+        setMessage(messageEl, "");
+
         try {
-          if (method === "card") {
-            const res = await payViaStripe({
-              paymentType,
-              entityType,
-              entityId
+          const result = await handler();
+
+          if (result?.success) {
+            modalRef.close({
+              success: true,
+              method
             });
 
-            modalRef.close({ success: res?.success === true });
             return;
           }
 
-          if (method === "wallet") {
-            try {
-              const res = await apiFetch("/wallet/pay", "POST", {
-                paymentType,
-                entityType,
-                entityId
-              }, {});
+          setMessage(
+            messageEl,
+            result?.error || "Payment failed"
+          );
 
-              console.warn("Wallet payment response:", res);
-
-              // Check if payment was successful
-              if (res && res.success) {
-                modalRef.close({ success: true });
-              } else {
-                console.error("Wallet payment failed:", res?.message || "Unknown error");
-                confirmBtn.disabled = false;
-                confirmBtn.textContent = originalText;
-                alert(res?.message || "Payment failed. Please try again.");
-              }
-            } catch (err) {
-              console.error("Wallet payment error:", err);
-              confirmBtn.disabled = false;
-              confirmBtn.textContent = originalText;
-              alert("Payment error: " + (err.message || "Unknown error"));
-            }
-
-            return;
-          }
-
-          // Default error for unknown method
-          modalRef.close({ success: false });
         } catch (err) {
-          console.error("Payment processing error:", err);
+          console.error(
+            "Payment processing error:",
+            err
+          );
+
+          setMessage(
+            messageEl,
+            err?.message ||
+            "An unexpected error occurred"
+          );
+
+        } finally {
           confirmBtn.disabled = false;
           confirmBtn.textContent = originalText;
-          alert("An error occurred: " + (err.message || "Unknown error"));
         }
       }
     },
+
     "buttonx"
   );
 
   modalRef = Modal({
     title: `Pay for ${entityName}`,
-    content: createElement("div", {}, [
-      ...rules.methods.map(m =>
+
+    content: createElement("div", { class: "payoptions" }, [
+      ...rules.methods.map(method =>
         createElement("label", {}, [
           createElement("input", {
             type: "radio",
             name: "paymethod",
-            value: m,
-            checked: m === rules.methods[0]
+            value: method,
+            checked:
+              method === rules.methods[0]
           }),
-          ` ${m.toUpperCase()}`
+
+          ` ${method
+            .replaceAll("_", " ")
+            .toUpperCase()}`
         ])
-      )
+      ),
+
+      messageEl
     ]),
+
     actions: () => confirmBtn,
+
     returnDataOnClose: true
   });
 
   return modalRef.closed;
 }
 
-export { payViaStripe, showPaymentModal };
+export {
+  payViaStripe,
+  showPaymentModal
+};

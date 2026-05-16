@@ -58,7 +58,7 @@ func New(cfg *config.Config) (*Deps, error) {
 
 	mqLayer := mq.NewJetStreamMQ(js, "naevis-consumer")
 
-	err = EnsureStreams(js)
+	err = mq.EnsureStreams(js)
 	if err != nil {
 		return nil, err
 	}

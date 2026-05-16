@@ -1,6 +1,6 @@
 .notify-container {
     position: fixed;
-    bottom: 1rem;
+    bottom: 3rem;
     left: 50%;
     transform: translateX(-50%);
     z-index: 9999;
