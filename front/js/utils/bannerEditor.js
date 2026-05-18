@@ -45,14 +45,17 @@ export async function updateImageWithCrop({
             payload
         });
 
-        // 🔴 FIX: handle API response correctly
+        // Handle dropify response: array of attachments with uppercase Key field
         const attachments = Array.isArray(response)
             ? response
             : Array.isArray(response?.data)
                 ? response.data
                 : [];
 
-        const attachment = attachments.find(a => a.key === stateKey);
+        // Find matching attachment (key can be uppercase or lowercase from dropify)
+        const attachment = attachments.find(a => 
+            (a.key || a.Key) === stateKey || a.filename
+        );
 
         if (!attachment) {
             throw new Error("Upload succeeded but no matching file returned");

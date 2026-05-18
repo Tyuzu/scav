@@ -4,21 +4,16 @@ import (
 	"context"
 	"dropify/config"
 	"dropify/infra/cache"
-	"dropify/infra/db"
 	"dropify/infra/mq"
 	"dropify/mqpubs"
 	"log"
 	"os"
-	"time"
 
 	"github.com/nats-io/nats.go"
 	"github.com/redis/go-redis/v9"
-	"go.mongodb.org/mongo-driver/mongo"
-	"go.mongodb.org/mongo-driver/mongo/options"
 )
 
 type Deps struct {
-	DB     db.Database
 	Cache  cache.Cache
 	MQ     mq.MQ
 	Config config.Config
@@ -30,18 +25,6 @@ type Deps struct {
 /* -------------------- Constructor -------------------- */
 
 func New(cfg *config.Config) (*Deps, error) {
-
-	/* -------- Mongo -------- */
-
-	mongoURI := env("MONGO_URI", "mongodb://localhost:27017")
-	mongoDB := env("MONGO_DB", "eventdb")
-
-	client, database, err := NewMongo(mongoURI, mongoDB)
-	if err != nil {
-		return nil, err
-	}
-
-	dbLayer := db.NewMongoDatabase(database, client, 100)
 
 	/* -------- Redis -------- */
 
@@ -69,7 +52,6 @@ func New(cfg *config.Config) (*Deps, error) {
 	log.Println("infra initialized")
 
 	return &Deps{
-		DB:             dbLayer,
 		Cache:          cacheLayer,
 		MQ:             mqLayer,
 		Config:         *cfg,
@@ -97,31 +79,6 @@ func env(key string, fallback string) string {
 		return v
 	}
 	return fallback
-}
-
-/* -------------------- Mongo -------------------- */
-
-func NewMongo(uri string, dbName string) (*mongo.Client, *mongo.Database, error) {
-	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
-	defer cancel()
-
-	client, err := mongo.Connect(
-		ctx,
-		options.Client().
-			ApplyURI(uri).
-			SetMaxPoolSize(100).
-			SetMinPoolSize(10).
-			SetRetryWrites(true),
-	)
-	if err != nil {
-		return nil, nil, err
-	}
-
-	if err := client.Ping(ctx, nil); err != nil {
-		return nil, nil, err
-	}
-
-	return client, client.Database(dbName), nil
 }
 
 /* -------------------- Redis -------------------- */

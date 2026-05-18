@@ -4,6 +4,7 @@ import (
 	"context"
 
 	authsub "naevis/domain/auth"
+	mediasub "naevis/domain/media"
 	ordersub "naevis/domain/order"
 
 	"naevis/infra"
@@ -19,6 +20,7 @@ func RegisterSubscribers(
 
 	subscribers := []subscriber.Subscriber{
 		authsub.NewSubscriber(app),
+		mediasub.NewSubscriber(app),
 		ordersub.NewSubscriber(app),
 		// Additional domains can be easily added here without modifying bootstrap logic
 	}

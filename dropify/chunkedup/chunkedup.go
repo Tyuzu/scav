@@ -17,7 +17,6 @@ import (
 	"dropify/filemgr"
 
 	"github.com/julienschmidt/httprouter"
-	"go.mongodb.org/mongo-driver/bson"
 )
 
 var (
@@ -27,7 +26,7 @@ var (
 	maxUpload   = config.ChunkUploadSize
 	cleanupAge  = config.CleanupAge
 	chunkBuffer = config.ChunkBuffer
-	// Global app reference for database access
+	// Global app reference for event publishing
 	globalApp *infra.Deps
 )
 
@@ -42,7 +41,7 @@ var lockMap = struct {
 	locks map[string]*sync.Mutex
 }{locks: make(map[string]*sync.Mutex)}
 
-// SetApp sets the global app reference for database access
+// SetApp sets the global app reference for event publishing
 func SetApp(app *infra.Deps) {
 	globalApp = app
 }
@@ -156,23 +155,28 @@ func allChunksUploaded(tempFileDir string, totalChunks int) bool {
 	return true
 }
 
-// updateDB updates MongoDB asynchronously
-func updateDB(meta ChunkMeta, finalPath string) {
+// publishUploadEvent publishes a media.uploaded event to notify backends
+func publishUploadEvent(meta ChunkMeta, finalPath string) {
 	go func() {
-		if globalApp == nil || globalApp.DB == nil {
-			fmt.Printf("[%s] DB not available, skipping update\n", time.Now().Format(time.RFC3339))
+		if globalApp == nil || globalApp.MediaPublisher == nil {
+			fmt.Printf("[%s] MediaPublisher not available, skipping event\n", time.Now().Format(time.RFC3339))
 			return
 		}
 
 		ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 		defer cancel()
 
-		updateFields := bson.M{
-			"imageUrls":  finalPath,
-			"updated_at": time.Now(),
+		event := map[string]interface{}{
+			"entityType": string(meta.EntityType),
+			"entityID":   meta.EntityID,
+			"filePath":   finalPath,
+			"fileName":   meta.FileName,
+			"timestamp":  time.Now().Unix(),
 		}
-		if err := filemgr.UpdateEntityPicsInDB(ctx, globalApp.DB, nil, string(meta.EntityType), meta.EntityID, updateFields); err != nil {
-			fmt.Printf("[%s] DB update failed: %v\n", time.Now().Format(time.RFC3339), err)
+
+		eventJSON, _ := json.Marshal(event)
+		if err := globalApp.MediaPublisher.Publish(ctx, "media.uploaded", eventJSON); err != nil {
+			fmt.Printf("[%s] Failed to publish event: %v\n", time.Now().Format(time.RFC3339), err)
 		}
 	}()
 }
@@ -268,8 +272,8 @@ func ChunkedUploads(w http.ResponseWriter, r *http.Request, ps httprouter.Params
 			Path:     savedName + ext,
 		})
 
-		// Optionally update DB asynchronously
-		updateDB(meta, finalPath)
+		// Publish event to notify backends of upload
+		publishUploadEvent(meta, finalPath)
 	}
 	lock.Unlock()
 
