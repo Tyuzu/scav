@@ -1,0 +1,65 @@
+package config
+
+import (
+	"log"
+	"os"
+	"strings"
+
+	"github.com/joho/godotenv"
+)
+
+type Config struct {
+	STRIPE_WEBHOOK_SECRET string
+	HTTPPort              string
+	AllowedOrigins        []string
+	RTMPIngestURL         string
+	TURNServers           string
+	CDNBaseURL            string
+	JWTSecret             string
+}
+
+func InitConfig() *Config {
+	if err := godotenv.Load(); err != nil {
+		log.Println("No .env file found; using system environment")
+	}
+
+	port := os.Getenv("PORT")
+	if port == "" {
+		port = ":6925"
+	} else if port[0] != ':' {
+		port = ":" + port
+	}
+
+	allowedOrigins := parseAllowedOrigins(os.Getenv("ALLOWED_ORIGINS"))
+
+	jwtSecret := os.Getenv("JWT_SECRET")
+	if jwtSecret == "" {
+		log.Println("WARNING: JWT_SECRET environment variable not set. Using default secret. This is insecure for production!")
+		jwtSecret = "your_secret_key_change_this_in_production"
+	}
+
+	return &Config{
+		HTTPPort:              port,
+		AllowedOrigins:        allowedOrigins,
+		STRIPE_WEBHOOK_SECRET: os.Getenv("STRIPE_WEBHOOK_SECRET"),
+		RTMPIngestURL:         os.Getenv("RTMP_INGEST_URL"),
+		TURNServers:           os.Getenv("TURN_SERVERS"),
+		CDNBaseURL:            os.Getenv("CDN_BASE_URL"),
+		JWTSecret:             jwtSecret,
+	}
+}
+
+func parseAllowedOrigins(env string) []string {
+	if env == "" {
+		return []string{"http://localhost:5173", "https://indium.netlify.app"}
+	}
+	parts := strings.Split(env, ",")
+	out := make([]string, 0, len(parts))
+	for _, p := range parts {
+		p = strings.TrimSpace(p)
+		if p != "" {
+			out = append(out, p)
+		}
+	}
+	return out
+}
