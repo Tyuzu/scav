@@ -9,6 +9,7 @@ import { ImageGallery } from "../../../components/ui/IMageGallery.mjs";
 import { displayReviews } from "../../reviews/displayReviews.js";
 import Notify from "../../../components/ui/Notify.mjs";
 import { meChat } from "../../mechat/plugnplay.js";
+import { displayGenericMap } from "../../remap/displayGenericMap.js";
 import { resolveImagePath, EntityType, PictureType } from "../../../utils/imagePaths.js";
 // import { updateImageWithCrop } from "../../../utils/bannerEditor.js";
 // import Sightbox from "../../../components/ui/SightBox.mjs";
@@ -26,7 +27,7 @@ function startChatWithEmployer(userId, baitoId) {
 function uploadResumeFeature() {
   Notify("Resume upload feature is under development.", { type: "info", duration: 3000, dismissible: true });
 }
-function storeApplicationHistory(baitoId) {
+function _storeApplicationHistory(_baitoId) {
   Notify(`Application history coming soon.`, { type: "info", duration: 3000, dismissible: true });
 }
 
@@ -37,8 +38,8 @@ function renderExpandableDescription(text = "") {
   descP.textContent = isLong ? text.slice(0, 300) + "…" : text;
 
   if (!isLong) {
-return descP;
-}
+    return descP;
+  }
 
   const btn = Button("Show More", "toggle-desc", {
     click: () => {
@@ -63,8 +64,8 @@ function renderOwnerControls(baito, container, isLoggedIn) {
     Button("🗑 Delete Job", "delete-baito-btn", {
       click: async () => {
         if (!confirm("Delete this job permanently?")) {
-return;
-}
+          return;
+        }
         try {
           await apiFetch(`/baitos/baito/${baito.baitoid}`, "DELETE");
           Notify("✅ Deleted", { type: "success", duration: 3000, dismissible: true });
@@ -75,9 +76,11 @@ return;
       }
     }, "buttonx btn-danger"),
     Button("Chats", "chats-btn-baito", { click: () => navigate("/merechats") }, "buttonx btn-secondary"),
-    Button("Close job", "close-btn-baito", { click: () => {
-      alert("TODO close job");
-    } }, "buttonx btn-secondary"),
+    Button("Close job", "close-btn-baito", {
+      click: () => {
+        alert("TODO close job");
+      }
+    }, "buttonx btn-secondary"),
   ]);
 }
 
@@ -88,15 +91,15 @@ function renderApplicantControls(baito, baitoid, isOwner, container, isLoggedIn)
     Button(expired ? "⏳ Job Expired" : "📩 Apply / Contact", "apply-btn", {
       click: async (e) => {
         if (expired) {
-return Notify("This job is no longer accepting applications.", { type: "warning", duration: 3000, dismissible: true });
-}
+          return Notify("This job is no longer accepting applications.", { type: "warning", duration: 3000, dismissible: true });
+        }
         if (!isLoggedIn) {
-return Notify("Please log in to apply for this job.", { type: "warning", duration: 3000, dismissible: true });
-}
+          return Notify("Please log in to apply for this job.", { type: "warning", duration: 3000, dismissible: true });
+        }
         const pitch = prompt("Write a short message to the employer:");
         if (!pitch?.trim()) {
-return Notify("Application cancelled.", { type: "success", duration: 3000, dismissible: true });
-}
+          return Notify("Application cancelled.", { type: "success", duration: 3000, dismissible: true });
+        }
 
         const btn = e.currentTarget;
         btn.disabled = true;
@@ -131,8 +134,8 @@ return Notify("Application cancelled.", { type: "success", duration: 3000, dismi
       click: async () => {
         const reason = prompt("Why are you reporting this job?");
         if (!reason?.trim()) {
-return;
-}
+          return;
+        }
         try {
           await apiFetch(`/baitos/baito/${baitoid}/report`, "POST", { reason: reason.trim() });
           Notify("✅ Report submitted", { type: "success", duration: 3000, dismissible: true });
@@ -197,16 +200,16 @@ function createMetaSection(baito) {
 /** Tags section */
 function createTagsSection(tags) {
   if (!Array.isArray(tags) || !tags.length) {
-return null;
-}
+    return null;
+  }
   return createElement("div", { class: "baito-tags" }, tags.map(tag => createElement("span", { class: "baito-tag" }, [`#${tag.trim()}`])));
 }
 
 /** Requirements section */
 function createRequirementsSection(requirements) {
   if (!requirements || (Array.isArray(requirements) && !requirements.length)) {
-return null;
-}
+    return null;
+  }
   const reqs = Array.isArray(requirements) ? requirements : [requirements];
   return createElement("div", { class: "baito-reqs" }, [
     createElement("strong", {}, ["📌 Requirements"]),
@@ -230,8 +233,8 @@ function createBaitoBannerSection(baito, isCreator) {
 async function appendSimilarJobs(section, category, excludeId) {
   const similarJobs = await fetchSimilarJobs(category, excludeId);
   if (!similarJobs.length) {
-return;
-}
+    return;
+  }
 
   const details = createElement("details", { class: "baito-related-details" }, [
     createElement("summary", {}, ["🔎 Similar Jobs"]),
@@ -268,8 +271,8 @@ export async function displayBaito(isLoggedIn, baitoid, contentContainer) {
   try {
     const baito = await apiFetch(`/baitos/baito/${baitoid}`);
     if (!baito) {
-throw new Error("Baito not found");
-}
+      throw new Error("Baito not found");
+    }
 
     const isOwner = getState("user") === baito.ownerId;
 
@@ -280,33 +283,33 @@ throw new Error("Baito not found");
 
     const employerSection = createEmployerSection(baito.employer, baito);
     if (employerSection) {
-section.appendChild(employerSection);
-}
+      section.appendChild(employerSection);
+    }
 
     section.appendChild(createMetaSection(baito));
 
     const tagsSection = createTagsSection(baito.tags);
     if (tagsSection) {
-section.appendChild(tagsSection);
-}
+      section.appendChild(tagsSection);
+    }
 
     const reqSection = createRequirementsSection(baito.requirements);
     if (reqSection) {
-section.appendChild(reqSection);
-}
+      section.appendChild(reqSection);
+    }
 
     if (baito.description) {
-section.appendChild(renderExpandableDescription(baito.description));
-}
+      section.appendChild(renderExpandableDescription(baito.description));
+    }
 
     // section.appendChild(createBannerSection(baito, isOwner));
 
     const cleanImageNames = baito.images?.filter(Boolean) || [];
-      section.appendChild(Button("Add images", "", {
-        click: () => {
- baitoAddImages({ isLoggedIn, contentContainer, baito, mode: "edit" }) 
-}
-      }));
+    section.appendChild(Button("Add images", "", {
+      click: () => {
+        baitoAddImages({ isLoggedIn, contentContainer, baito, mode: "edit" })
+      }
+    }));
     if (cleanImageNames.length) {
       const fullURLs = cleanImageNames.map(name => resolveImagePath(EntityType.BAITO, PictureType.PHOTO, name));
       section.appendChild(ImageGallery(fullURLs));
@@ -324,14 +327,38 @@ section.appendChild(renderExpandableDescription(baito.description));
     section.appendChild(reviewSec);
 
     if (baito.coords?.lat && baito.coords?.lng) {
-      section.appendChild(createElement("iframe", {
-        src: `https://maps.google.com/maps?q=${baito.coords.lat},${baito.coords.lng}&z=15&output=embed`,
-        width: "100%",
-        height: "300",
-        class: "baito-map",
-        loading: "lazy",
-        allowfullscreen: true,
-      }));
+      const mapContainer = createElement("div", {
+        class: "baito-map-container",
+        style: "height: 300px; margin: 20px 0; border-radius: 8px; overflow: hidden;"
+      });
+      section.appendChild(mapContainer);
+
+      displayGenericMap(mapContainer, {
+        mapImage: `${SRC_URL}/images/world-map.png`,
+        mapWidth: 1200,
+        mapHeight: 800,
+        mapBounds: { minLat: -90, maxLat: 90, minLon: -180, maxLon: 180 },
+        currentLocation: {
+          lat: baito.coords.lat,
+          lon: baito.coords.lng
+        },
+        markers: [{
+          id: "baito-location",
+          lat: baito.coords.lat,
+          lon: baito.coords.lng,
+          name: baito.location || baito.title,
+          type: "shop",
+          description: `Job: ${baito.title}`
+        }],
+        projection: "mercator",
+        minZoom: 0.5,
+        maxZoom: 5,
+        showLegend: false,
+        theme: "light",
+        onMarkerClick: (_idx) => {
+          Notify(`📍 ${baito.location || baito.title}`, { type: "info", duration: 3000 });
+        }
+      });
     }
 
     await appendSimilarJobs(section, baito.category, baitoid);

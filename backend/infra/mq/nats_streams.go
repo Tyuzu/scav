@@ -22,6 +22,12 @@ func EnsureStreams(js nats.JetStreamContext) error {
 				"chat.>",
 			},
 		},
+		{
+			Name: "MEDIA",
+			Subjects: []string{
+				"media.>",
+			},
+		},
 	}
 
 	for _, stream := range streams {
