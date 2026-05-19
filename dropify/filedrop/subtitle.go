@@ -1,3 +1,5 @@
+// dropify/filedrop/subtitle.go
+
 package filedrop
 
 import (

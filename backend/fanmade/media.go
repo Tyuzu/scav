@@ -34,8 +34,9 @@ func AddMedia(app *infra.Deps) httprouter.Handle {
 		}
 
 		var payload struct {
-			Caption string                   `json:"caption"`
-			Files   []map[string]interface{} `json:"files"`
+			Caption     string                   `json:"caption"`
+			CaptionLang string                   `json:"captionLang"`
+			Files       []map[string]interface{} `json:"files"`
 		}
 		if err := json.NewDecoder(r.Body).Decode(&payload); err != nil {
 			http.Error(w, "Invalid JSON payload: "+err.Error(), http.StatusBadRequest)
@@ -44,6 +45,11 @@ func AddMedia(app *infra.Deps) httprouter.Handle {
 		if len(payload.Files) == 0 {
 			http.Error(w, "No files provided", http.StatusBadRequest)
 			return
+		}
+
+		lang := payload.CaptionLang
+		if lang == "" || lang == "unknown" {
+			lang = DetectCaptionLanguage(payload.Caption)
 		}
 
 		mediaGroupID := "g" + utils.GenerateRandomString(16)
@@ -56,15 +62,22 @@ func AddMedia(app *infra.Deps) httprouter.Handle {
 			}
 
 			extn, _ := fileData["extn"].(string)
+			if extn == "" {
+				// Try to extract from filename
+				if lastDot := strings.LastIndex(filename, "."); lastDot != -1 {
+					extn = filename[lastDot:]
+				}
+			}
+			extn = strings.ToLower(extn)
 
 			var mediaType, mimeType string
-			switch strings.ToLower(extn) {
-			case ".jpg", ".jpeg", ".png":
+			switch extn {
+			case ".jpg", ".jpeg", ".png", ".gif", ".webp", ".avif":
 				mediaType = models.MediaTypeImage
-				mimeType = "image/" + strings.TrimPrefix(strings.ToLower(extn), ".")
-			case ".mp4", ".webm":
+				mimeType = "image/" + strings.TrimPrefix(extn, ".")
+			case ".mp4", ".webm", ".ogg", ".mov", ".avi":
 				mediaType = models.MediaTypeVideo
-				mimeType = "video/" + strings.TrimPrefix(strings.ToLower(extn), ".")
+				mimeType = "video/" + strings.TrimPrefix(extn, ".")
 			default:
 				mediaType = "unknown"
 				mimeType = "application/octet-stream"
@@ -78,6 +91,7 @@ func AddMedia(app *infra.Deps) httprouter.Handle {
 				Type:         mediaType,
 				MimeType:     mimeType,
 				Caption:      payload.Caption,
+				CaptionLang:  lang,
 				CreatorID:    requestingUserID,
 				CreatedAt:    time.Now().UTC(),
 				UpdatedAt:    time.Now().UTC(),
@@ -97,4 +111,25 @@ func AddMedia(app *infra.Deps) httprouter.Handle {
 		w.Header().Set("Content-Type", "application/json")
 		_ = json.NewEncoder(w).Encode(insertedMedia)
 	}
+}
+
+// DetectCaptionLanguage detects the language of a caption
+func DetectCaptionLanguage(caption string) string {
+	caption = strings.TrimSpace(caption)
+	if caption == "" {
+		return "unknown"
+	}
+
+	for _, r := range caption {
+		switch {
+		case r >= 0x4E00 && r <= 0x9FFF:
+			return "zh" // Chinese
+		case (r >= 0x3040 && r <= 0x309F) || (r >= 0x30A0 && r <= 0x30FF):
+			return "ja" // Japanese
+		case r >= 0xAC00 && r <= 0xD7AF:
+			return "ko" // Korean
+		}
+	}
+
+	return "en"
 }

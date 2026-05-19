@@ -1,3 +1,5 @@
+// dropify/filedrop/profPics.go
+
 package filedrop
 
 import (

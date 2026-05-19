@@ -1,3 +1,5 @@
+// dropify/filedrop/ffplay.go
+
 package filedrop
 
 import (

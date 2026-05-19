@@ -1,3 +1,5 @@
+// dropify/filedrop/imgup.go
+
 package filedrop
 
 import (

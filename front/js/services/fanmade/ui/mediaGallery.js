@@ -1,14 +1,14 @@
 import { createElement } from "../../../components/createElement.js";
 import { fetchMedia } from "../api/mediaApi.js";
 import { showMediaUploadForm } from "./mediaUploadForm.js";
-import Notify from "../../../components/ui/Notify.mjs";
 import {
   lazyMediaObserver,
   clear,
   groupMedia,
   createAddMediaButton,
   createMediaActions,
-  confirmDelete
+  confirmDelete,
+  buildTranslationSection
 } from "../../media/mediaCommon.js";
 import { resolveImagePath, PictureType, EntityType } from "../../../utils/imagePaths.js";
 import Imagex from "../../../components/base/Imagex.js";
@@ -103,72 +103,6 @@ function buildMediaElement(media, thumbSrc, index, prefix) {
 
   return createElement("div", { class: `${prefix}-unsupported` }, [`Unsupported media type: ${media.type}`]);
 }
-
-/* ------------------------------------------------------
-   TRANSLATION TOGGLE BUILDER
------------------------------------------------------- */
-async function fetchTranslation(text, fromLang, toLang) {
-  try {
-    const res = await apiFetch(
-      `/translate?from=${fromLang}&to=${toLang}`,
-      "POST",
-      { text }
-    );
-    return res?.translated || "";
-  } catch {
-    return "";
-  }
-}
-
-async function handleTranslationToggle(toggle, originalText, translationBox, fromLang, toLang) {
-  const state = toggle.dataset.state;
-
-  if (state === "original") {
-    toggle.textContent = "Hide Translation";
-    toggle.dataset.state = "translated";
-
-    // lazy fetch translation
-    const translated = await fetchTranslation(originalText, fromLang, toLang);
-    translationBox.textContent = translated || "(Translation unavailable)";
-    translationBox.style.display = "block";
-  } else {
-    toggle.textContent = "See Translation";
-    toggle.dataset.state = "original";
-    translationBox.style.display = "none";
-  }
-}
-
-function buildTranslationSection(captionText, captionLang) {
-  const userLang = localStorage.getItem("lang") || "en";
-
-  // No translation toggle needed if languages match
-  if (!captionLang || captionLang === userLang) {
-return null;
-}
-
-  const translationBox = createElement("div", {
-    class: "translation-container",
-    style: "display:none;"
-  });
-
-  const toggle = createElement(
-    "span",
-    {
-      class: "translate-toggle",
-      "data-state": "original",
-      events: {
-        click: async (e) => {
-          e.stopPropagation();
-          await handleTranslationToggle(toggle, captionText, translationBox, captionLang, userLang);
-        }
-      }
-    },
-    ["See Translation"]
-  );
-
-  return [toggle, translationBox];
-}
-
 
 /* ------------------------------------------------------
    DISPLAY GALLERY

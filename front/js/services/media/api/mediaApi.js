@@ -3,28 +3,39 @@ import { FILEDROP_URL } from "../../../state/state.js";
 import { UploadStore } from "../store/uploadStore.js";
 
 /* -------------------------
-   API
+   API - Service endpoint factory
+   Default service is "media", can be overridden for "fanmade", etc.
 ------------------------- */
 
-export async function fetchMedia(entityType, entityId) {
-  return await apiFetch(`/media/${entityType}/${entityId}`);
+export function createMediaApi(service = "media") {
+  return {
+    async fetchMedia(entityType, entityId) {
+      return await apiFetch(`/${service}/${entityType}/${entityId}`);
+    },
+
+    async deleteMedia(mediaId, entityType, entityId) {
+      return await apiFetch(
+        `/${service}/${entityType}/${entityId}/${mediaId}`,
+        "DELETE"
+      );
+    },
+
+    async postMedia(entityType, entityId, payload) {
+      return await apiFetch(
+        `/${service}/${entityType}/${entityId}`,
+        "POST",
+        payload,
+        { json: true }
+      );
+    }
+  };
 }
 
-export async function deleteMedia(mediaId, entityType, entityId) {
-  return await apiFetch(
-    `/media/${entityType}/${entityId}/${mediaId}`,
-    "DELETE"
-  );
-}
-
-export async function postMedia(entityType, entityId, payload) {
-  return await apiFetch(
-    `/media/${entityType}/${entityId}`,
-    "POST",
-    payload,
-    { json: true }
-  );
-}
+// Default media API
+const defaultApi = createMediaApi("media");
+export const fetchMedia = defaultApi.fetchMedia.bind(defaultApi);
+export const deleteMedia = defaultApi.deleteMedia.bind(defaultApi);
+export const postMedia = defaultApi.postMedia.bind(defaultApi);
 
 /* -------------------------
    FileDrop Upload (single)

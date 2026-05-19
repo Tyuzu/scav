@@ -56,7 +56,7 @@ func AddMedia(app *infra.Deps) httprouter.Handle {
 		}
 
 		lang := payload.CaptionLang
-		if lang == "" {
+		if lang == "" || lang == "unknown" {
 			lang = DetectCaptionLanguage(payload.Caption)
 		}
 
@@ -66,19 +66,26 @@ func AddMedia(app *infra.Deps) httprouter.Handle {
 		insertedMedia := make([]models.Media, 0, len(payload.Files))
 
 		for _, file := range payload.Files {
-			if file.Filename == "" || file.Extn == "" {
+			if file.Filename == "" {
 				continue
 			}
 
-			extn := strings.ToLower(file.Extn)
+			// Use provided extension or extract from filename
+			extn := file.Extn
+			if extn == "" {
+				// Try to extract from filename
+				if lastDot := strings.LastIndex(file.Filename, "."); lastDot != -1 {
+					extn = file.Filename[lastDot:]
+				}
+			}
+			extn = strings.ToLower(extn)
 
 			var mediaType, mimeType string
 			switch extn {
-			case ".jpg", ".jpeg", ".png":
+			case ".jpg", ".jpeg", ".png", ".gif", ".webp", ".avif":
 				mediaType = models.MediaTypeImage
 				mimeType = "image/" + strings.TrimPrefix(extn, ".")
-			case ".mp4", ".webm":
-				mediaType = models.MediaTypeVideo
+			case ".mp4", ".webm", ".ogg", ".mov", ".avi":
 				mimeType = "video/" + strings.TrimPrefix(extn, ".")
 			default:
 				mediaType = "unknown"

@@ -5,6 +5,7 @@ import Notify from "../../../components/ui/Notify.mjs";
 import Imagex from "../../../components/base/Imagex.js";
 import { UploadStore } from "../store/uploadStore.js";
 import { uploadFile, postMedia } from "../api/mediaApi.js";
+import { detectCaptionLang } from "../mediaCommon.js";
 
 // --- Helper for unique IDs ---
 export function uid() {
@@ -20,6 +21,13 @@ return "image";
 return "video";
 }
   return "unknown";
+}
+
+// --- Helper to extract file extension ---
+function getFileExtension(file) {
+  const name = file.name;
+  const lastDot = name.lastIndexOf(".");
+  return lastDot !== -1 ? name.substring(lastDot) : "";
 }
 
 // --- Main function ---
@@ -131,6 +139,7 @@ function handleFiles(files, caption, uploadsDiv, submit) {
     uploading: true,
     fileType: getFileType(f),
     mediaEntity: "media",
+    extension: getFileExtension(f),
   }));
 
   UploadStore.uploads.push(...newUploads);
@@ -165,7 +174,15 @@ async function submitGroupedUploads(caption, uploadsDiv, entityType, entityId, m
 return Notify("No uploads ready to submit.", { type: "info" });
 }
 
-  const payload = { caption: caption.value, files: ready.map((u) => u.dropData) };
+  const captionLang = detectCaptionLang(caption.value);
+  const payload = {
+    caption: caption.value,
+    captionLang,
+    files: ready.map((u) => ({
+      filename: u.dropData.savedname || u.dropData.filename,
+      extn: u.extension,
+    }))
+  };
   try {
     const res = await postMedia(entityType, entityId, payload);
     if (Array.isArray(res)) {

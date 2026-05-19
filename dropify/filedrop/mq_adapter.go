@@ -1,3 +1,5 @@
+// dropify/filedrop/mq_adapter.go
+
 package filedrop
 
 import (
