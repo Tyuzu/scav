@@ -113,20 +113,13 @@ func UpdatePreferences(app *infra.Deps) httprouter.Handle {
 		}
 
 		filter := bson.M{"userId": userID}
-		var update bson.M
-		update = bson.M{
+		update := bson.M{
 			"$set": updates,
 		}
 
 		if err := app.DB.UpdateOne(ctx, notificationsPreferencesCollection, filter, update); err != nil {
-			// If update fails, try creating a new document with upsert
-			updates["userId"] = userID
-			updates["_id"] = primitive.NewObjectID().Hex()
-			updates["createdAt"] = time.Now()
-			if err := app.DB.Insert(ctx, notificationsPreferencesCollection, updates); err != nil {
-				utils.RespondWithError(w, http.StatusInternalServerError, "Failed to update preferences")
-				return
-			}
+			utils.RespondWithError(w, http.StatusInternalServerError, "Failed to update preferences")
+			return
 		}
 
 		// Fetch and return updated preferences

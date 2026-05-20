@@ -9,7 +9,6 @@ import (
 	"naevis/models"
 	"net"
 	"net/http"
-	"os"
 	"regexp"
 	"strings"
 	"time"
@@ -33,10 +32,6 @@ var (
 /* ============================================================
    Helpers
 ============================================================ */
-
-func isProd() bool {
-	return strings.ToLower(os.Getenv("ENV")) == "production"
-}
 
 func clientIP(r *http.Request) string {
 	if fwd := r.Header.Get("X-Forwarded-For"); fwd != "" {

@@ -41,8 +41,6 @@ func originAllowed(app *infra.Deps) func(r *http.Request) bool {
 	}
 }
 
-var upgrader *websocket.Upgrader
-
 // ------------------------- Hub lifecycle -------------------------
 
 func NewHub() *Hub {
