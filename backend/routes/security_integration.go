@@ -10,10 +10,10 @@ import (
 
 // SecurityMiddlewareConfig holds all security middleware instances
 type SecurityMiddlewareConfig struct {
-	RateLimiters       *ratelim.MultiLimiter
-	CSRFManager        *middleware.CSRFManager
-	ContentValidator   *middleware.ContentTypeValidator
-	SizeValidator      *middleware.RequestSizeValidator
+	RateLimiters     *ratelim.MultiLimiter
+	CSRFManager      *middleware.CSRFManager
+	ContentValidator *middleware.ContentTypeValidator
+	SizeValidator    *middleware.RequestSizeValidator
 }
 
 // InitializeSecurityMiddleware creates and configures all security middleware
@@ -97,7 +97,7 @@ In your main.go or route initialization:
 	// Apply security middleware to main router
 	mainRouter := httprouter.New()
 	// ... add your routes to mainRouter ...
-	
+
 	globalHandler := routes.ApplyDefaultSecurityMiddleware(
 		mainRouter,
 		secConfig,
@@ -117,13 +117,13 @@ Example 2: Apply rate limiting to specific endpoints
 	ticketBuyHandler := http.HandleFunc(func(w http.ResponseWriter, r *http.Request) {
 		// ... ticket buy logic ...
 	})
-	
+
 	rateLimitedHandler := routes.ApplyRateLimitingMiddleware(
 		"POST:/api/v1/ticket/event/:eventid/:ticketid/buy",
 		ticketBuyHandler,
 		secConfig.RateLimiters,
 	)
-	
+
 	mainRouter.Handler("POST", "/api/v1/ticket/event/:eventid/:ticketid/buy", rateLimitedHandler)
 
 ---
@@ -144,7 +144,7 @@ In your startup code:
 
 	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
 	defer cancel()
-	
+
 	if err := app.DB.InitializeIndexes(ctx); err != nil {
 		log.Fatalf("Failed to create indexes: %v", err)
 	}
@@ -160,7 +160,7 @@ Example 5: Route registration with multiple middleware
 	router := httprouter.New()
 
 	// Cart endpoints with validation and rate limiting
-	router.POST("/api/v1/cart", 
+	router.POST("/api/v1/cart",
 		secConfig.RateLimiters.GetMultiMiddleware("POST:/api/v1/cart")(
 			http.HandlerFunc(cartHandler.AddToCart),
 		).ServeHTTP,

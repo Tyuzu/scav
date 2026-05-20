@@ -86,19 +86,19 @@ func GetIncomingFarmOrders(app *infra.Deps) httprouter.Handle {
 
 		// 2. Build filter query from URL params
 		filter := bson.M{"farmid": bson.M{"$in": farmIDs}}
-		
+
 		// Filter by status
 		if status := r.URL.Query().Get("status"); status != "" {
 			filter["status"] = status
 		}
-		
+
 		// Filter by date range
 		if dateFrom := r.URL.Query().Get("dateFrom"); dateFrom != "" {
 			if t, err := time.Parse("2006-01-02", dateFrom); err == nil {
 				filter["createdat"] = bson.M{"$gte": t}
 			}
 		}
-		
+
 		if dateTo := r.URL.Query().Get("dateTo"); dateTo != "" {
 			if t, err := time.Parse("2006-01-02", dateTo); err == nil {
 				// Add one day to include all orders on that date

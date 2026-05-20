@@ -10,14 +10,14 @@ var SecurityConfig = struct {
 	RequestTimeout     time.Duration
 
 	// Rate limiting
-	RateLimitRequests  int
-	RateLimitWindow    time.Duration
-	RateLimitEnabled   bool
+	RateLimitRequests int
+	RateLimitWindow   time.Duration
+	RateLimitEnabled  bool
 
 	// Payment settings
-	MaxTopupAmount     float64
-	MaxCustomAmount    float64
-	RefundMinValidity  time.Duration // Minimum time before refund can be requested
+	MaxTopupAmount    float64
+	MaxCustomAmount   float64
+	RefundMinValidity time.Duration // Minimum time before refund can be requested
 
 	// Audit logging
 	AuditLoggingEnabled bool
@@ -30,23 +30,23 @@ var SecurityConfig = struct {
 	MaxUploadSize int64
 
 	// Passwords
-	PasswordMinLength int
+	PasswordMinLength      int
 	PasswordRequireSpecial bool
 }{
 	// Request validation
-	MaxRequestBodySize: 10 << 20,  // 10 MB
-	MaxFormBodySize:    50 << 20,  // 50 MB
+	MaxRequestBodySize: 10 << 20, // 10 MB
+	MaxFormBodySize:    50 << 20, // 50 MB
 	RequestTimeout:     30 * time.Second,
 
 	// Rate limiting
-	RateLimitRequests:  100,              // Requests per window
-	RateLimitWindow:    1 * time.Minute,
-	RateLimitEnabled:   true,
+	RateLimitRequests: 100, // Requests per window
+	RateLimitWindow:   1 * time.Minute,
+	RateLimitEnabled:  true,
 
 	// Payment settings
-	MaxTopupAmount:     100000,            // ₹1,00,000
-	MaxCustomAmount:    1000000,           // ₹10,00,000 for donations
-	RefundMinValidity:  15 * time.Minute,  // Can't refund within 15 mins of purchase
+	MaxTopupAmount:    100000,           // ₹1,00,000
+	MaxCustomAmount:   1000000,          // ₹10,00,000 for donations
+	RefundMinValidity: 15 * time.Minute, // Can't refund within 15 mins of purchase
 
 	// Audit logging
 	AuditLoggingEnabled: true,
@@ -56,18 +56,18 @@ var SecurityConfig = struct {
 	SessionTimeout: 24 * time.Hour,
 
 	// File uploads
-	MaxUploadSize: 100 << 20,  // 100 MB
+	MaxUploadSize: 100 << 20, // 100 MB
 
 	// Passwords
-	PasswordMinLength: 8,
+	PasswordMinLength:      8,
 	PasswordRequireSpecial: true,
 }
 
 // TransactionConfig for database transactions
 var TransactionConfig = struct {
-	MaxRetries  int
-	RetryDelay  time.Duration
-	Timeout     time.Duration
+	MaxRetries int
+	RetryDelay time.Duration
+	Timeout    time.Duration
 }{
 	MaxRetries: 3,
 	RetryDelay: 100 * time.Millisecond,
@@ -77,9 +77,9 @@ var TransactionConfig = struct {
 // PaymentMethodLimits restricts payment amounts by method
 var PaymentMethodLimits = map[string]float64{
 	"wallet":      SecurityConfig.MaxTopupAmount,
-	"upi":         50000,              // ₹50,000
-	"card":        100000,             // ₹1,00,000
-	"net_banking": 500000,             // ₹5,00,000
+	"upi":         50000,  // ₹50,000
+	"card":        100000, // ₹1,00,000
+	"net_banking": 500000, // ₹5,00,000
 	"donation":    SecurityConfig.MaxCustomAmount,
 }
 

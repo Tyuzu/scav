@@ -17,10 +17,10 @@ type ContentTypeValidator struct {
 func NewContentTypeValidator(strictMode bool) *ContentTypeValidator {
 	return &ContentTypeValidator{
 		allowedTypes: map[string]bool{
-			"application/json":                 true,
+			"application/json":                  true,
 			"application/x-www-form-urlencoded": true,
-			"multipart/form-data":              true,
-			"text/plain":                       true,
+			"multipart/form-data":               true,
+			"text/plain":                        true,
 		},
 		strictMode: strictMode,
 	}

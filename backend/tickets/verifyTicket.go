@@ -44,9 +44,9 @@ func VerifyTicket(app *infra.Deps) httprouter.Handle {
 		if ticket.Canceled {
 			w.Header().Set("Content-Type", "application/json")
 			json.NewEncoder(w).Encode(map[string]any{
-				"isValid": false,
-				"reason":  "Ticket has been canceled",
-				"canceledAt": ticket.CanceledAt,
+				"isValid":      false,
+				"reason":       "Ticket has been canceled",
+				"canceledAt":   ticket.CanceledAt,
 				"cancelReason": ticket.CanceledReason,
 			})
 			return
@@ -56,8 +56,8 @@ func VerifyTicket(app *infra.Deps) httprouter.Handle {
 		if ticket.Transferred {
 			w.Header().Set("Content-Type", "application/json")
 			json.NewEncoder(w).Encode(map[string]any{
-				"isValid": false,
-				"reason":  "Ticket has been transferred",
+				"isValid":       false,
+				"reason":        "Ticket has been transferred",
 				"transferredTo": ticket.TransferredTo,
 			})
 			return

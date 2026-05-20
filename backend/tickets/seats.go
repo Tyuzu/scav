@@ -16,7 +16,7 @@ import (
 func LockSeats(app *infra.Deps) httprouter.Handle {
 	return func(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 		eventID := ps.ByName("eventid")
-		
+
 		// SECURITY: Get userID from authenticated request context, not from client
 		userID := utils.GetUserIDFromRequest(r)
 		if userID == "" {
@@ -36,12 +36,12 @@ func LockSeats(app *infra.Deps) httprouter.Handle {
 		defer cancel()
 
 		filter := map[string]any{
-			"eventid": eventID, 
+			"eventid":       eventID,
 			"seats.seat_id": map[string]any{"$in": req.Seats},
 		}
 		update := map[string]any{
 			"$set": map[string]any{
-				"seats.$[].status": "locked", 
+				"seats.$[].status":  "locked",
 				"seats.$[].user_id": userID, // Use authenticated userID, not client-provided
 			},
 		}
@@ -59,7 +59,7 @@ func LockSeats(app *infra.Deps) httprouter.Handle {
 func UnlockSeats(app *infra.Deps) httprouter.Handle {
 	return func(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 		eventID := ps.ByName("eventid")
-		
+
 		// SECURITY: Get userID from authenticated request context, not from client
 		userID := utils.GetUserIDFromRequest(r)
 		if userID == "" {
@@ -79,13 +79,13 @@ func UnlockSeats(app *infra.Deps) httprouter.Handle {
 		defer cancel()
 
 		filter := map[string]any{
-			"eventid": eventID, 
+			"eventid":       eventID,
 			"seats.seat_id": map[string]any{"$in": req.Seats},
 			"seats.user_id": userID, // Only unlock seats locked by this user
 		}
 		update := map[string]any{
 			"$set": map[string]any{
-				"seats.$[].status": "available", 
+				"seats.$[].status":  "available",
 				"seats.$[].user_id": nil,
 			},
 		}

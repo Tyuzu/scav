@@ -61,7 +61,7 @@ func ValidateEmail(email string) error {
 	if len(strings.TrimSpace(email)) == 0 {
 		return fmt.Errorf("email cannot be empty")
 	}
-	
+
 	// Simple email validation regex
 	emailRegex := regexp.MustCompile(`^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$`)
 	if !emailRegex.MatchString(email) {

@@ -249,11 +249,11 @@ type BulkOrdersRequest struct {
 }
 
 type BulkOrdersResponse struct {
-	Success  bool            `json:"success"`
-	Message  string          `json:"message"`
-	Updated  int             `json:"updated"`
-	Failed   int             `json:"failed"`
-	Errors   []string        `json:"errors,omitempty"`
+	Success bool     `json:"success"`
+	Message string   `json:"message"`
+	Updated int      `json:"updated"`
+	Failed  int      `json:"failed"`
+	Errors  []string `json:"errors,omitempty"`
 }
 
 func BulkAcceptOrders(app *infra.Deps) httprouter.Handle {

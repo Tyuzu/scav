@@ -18,8 +18,8 @@ func MarkDeleted(userID string, reason string) bson.M {
 	now := time.Now()
 	return bson.M{
 		"$set": bson.M{
-			"deletedAt": now,
-			"deletedBy": userID,
+			"deletedAt":    now,
+			"deletedBy":    userID,
 			"deleteReason": reason,
 		},
 	}
