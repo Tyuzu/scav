@@ -9,49 +9,177 @@ import { createFormGroup } from "../../components/createFormGroup.js";
 import { uploadFile } from "../media/api/mediaApi.js";
 import { uid } from "../media/ui/mediaUploadForm.js";
 import { showPaymentModal } from "../pay/pay.js";
-
 /** Add a menu item */
 async function addMenu(form, placeId, menuList) {
-    const name = form.querySelector("#menu-name").value.trim();
-    const price = parseFloat(form.querySelector("#menu-price").value);
-    const stock = parseInt(form.querySelector("#menu-stock").value, 10);
-    const imageFile = form.querySelector("#menu-image").files[0];
 
-    if (!name || isNaN(price) || isNaN(stock)) {
-        Notify("Please fill in all fields correctly.", { type: "error" });
+    const name = form
+        .querySelector("#menu-name")
+        .value
+        .trim();
+
+    const price = parseFloat(
+        form.querySelector("#menu-price").value
+    );
+
+    const stock = parseInt(
+        form.querySelector("#menu-stock").value,
+        10
+    );
+
+    const imageFile = form
+        .querySelector("#menu-image")
+        .files?.[0];
+
+    // ---------------------------------
+    // VALIDATION
+    // ---------------------------------
+
+    if (
+        !name ||
+        Number.isNaN(price) ||
+        Number.isNaN(stock)
+    ) {
+
+        Notify(
+            "Please fill in all fields correctly.",
+            {
+                type: "error"
+            }
+        );
+
         return;
     }
 
-    if (imageFile && !imageFile.type.startsWith("image/")) {
-        Notify("Please upload a valid image file.", { type: "error" });
+    if (
+        imageFile &&
+        !imageFile.type.startsWith("image/")
+    ) {
+
+        Notify(
+            "Please upload a valid image file.",
+            {
+                type: "error"
+            }
+        );
+
         return;
     }
 
     try {
+
         let uploadedImage = null;
 
+        // ---------------------------------
+        // IMAGE UPLOAD
+        // ---------------------------------
+
         if (imageFile) {
-            const uploadObj = { id: uid(), file: imageFile, previewURL: URL.createObjectURL(imageFile), progress: 0, uploading: true, mediaEntity: "menu" };
-            Notify("Uploading image...", { type: "info", duration: 2000 });
-            uploadedImage = await uploadFile(uploadObj);
-            if (!uploadedImage?.filename && !uploadedImage?.file) {
-throw new Error("Image upload failed.");
-}
+
+            Notify(
+                "Uploading image...",
+                {
+                    type: "info",
+                    duration: 2000
+                }
+            );
+
+            uploadedImage = await uploadFile({
+
+                id: uid(),
+
+                file: imageFile,
+
+                entityType: "place",
+
+                entityId: String(placeId)
+            });
+
+            if (
+                !uploadedImage?.filename &&
+                !uploadedImage?.key
+            ) {
+
+                throw new Error(
+                    "Image upload failed."
+                );
+            }
         }
 
-        const payload = { name, price, stock, menu_pic: uploadedImage?.filename || uploadedImage?.file || "" };
-        const response = await apiFetch(`/places/menu/${placeId}`, "POST", payload);
+        // ---------------------------------
+        // PAYLOAD
+        // ---------------------------------
+
+        const payload = {
+
+            name,
+
+            price,
+
+            stock,
+
+            menu_pic:
+                uploadedImage?.filename
+                || uploadedImage?.key
+                || ""
+        };
+
+        // ---------------------------------
+        // API
+        // ---------------------------------
+
+        const response = await apiFetch(
+            `/places/menu/${placeId}`,
+            "POST",
+            payload
+        );
+
+        // ---------------------------------
+        // SUCCESS
+        // ---------------------------------
 
         if (response?.data?.menuid) {
-            Notify("Menu added successfully!", { type: "success", duration: 3000, dismissible: true });
-            menuList.prepend(createMenuCard(response.data, true, true, placeId));
+
+            Notify(
+                "Menu added successfully!",
+                {
+                    type: "success",
+                    duration: 3000,
+                    dismissible: true
+                }
+            );
+
+            menuList.prepend(
+                createMenuCard(
+                    response.data,
+                    true,
+                    true,
+                    placeId
+                )
+            );
+
             form.reset();
+
         } else {
-throw new Error(response?.message || "Unknown server error");
-}
+
+            throw new Error(
+                response?.message
+                || "Unknown server error"
+            );
+        }
+
     } catch (error) {
-        console.error("Error adding Menu:", error);
-        Notify(`Error adding Menu: ${error.message}`, { type: "error" });
+
+        console.error(
+            "Error adding Menu:",
+            error
+        );
+
+        Notify(
+            `Error adding Menu: ${error.message}`,
+            {
+                type: "error"
+            }
+        );
     }
 }
 
@@ -85,19 +213,19 @@ function addMenuForm(placeId, menuList) {
 /** Delete a menu item */
 async function deleteMenu(menuId, placeId) {
     if (!confirm('Are you sure you want to delete this Menu?')) {
-return;
-}
+        return;
+    }
     try {
         const response = await apiFetch(`/places/menu/${placeId}/${menuId}`, 'DELETE');
         if (response.success) {
             Notify("Menu deleted successfully!", { type: "success", duration: 3000, dismissible: true });
             const menuItem = document.getElementById(`menu-${menuId}`);
             if (menuItem) {
-menuItem.remove();
-}
+                menuItem.remove();
+            }
         } else {
-Notify(`Failed to delete Menu: ${response?.message || 'Unknown error'}`, { type: "error" });
-}
+            Notify(`Failed to delete Menu: ${response?.message || 'Unknown error'}`, { type: "error" });
+        }
     } catch (error) {
         console.error(error);
         Notify(`Error deleting Menu: ${error.message}`, { type: "error" });
@@ -171,11 +299,11 @@ export async function displayMenu(container, placeId, isCreator, isLoggedIn) {
     const menuData = await apiFetch(`/places/menu/${placeId}`);
 
     if (isCreator) {
-container.prepend(Button("Add Menu", "add-menu-btn", { click: () => addMenuForm(placeId, menuList) }, "buttonx"));
-}
+        container.prepend(Button("Add Menu", "add-menu-btn", { click: () => addMenuForm(placeId, menuList) }, "buttonx"));
+    }
     if (!Array.isArray(menuData) || menuData.length === 0) {
-return menuList.appendChild(createElement("p", {}, ["No Menu available for this place."]));
-}
+        return menuList.appendChild(createElement("p", {}, ["No Menu available for this place."]));
+    }
 
     menuData.forEach(menu => menuList.appendChild(createMenuCard(menu, isCreator, isLoggedIn, placeId)));
 }
@@ -183,82 +311,81 @@ return menuList.appendChild(createElement("p", {}, ["No Menu available for this 
 async function promptMenuNote(menu, placeId) {
     const quantityInput = createElement("input", { type: "number", min: 1, value: 1 });
     const noteInput = createElement("textarea", {
-      rows: 3,
-      placeholder: "Special request (optional)"
+        rows: 3,
+        placeholder: "Special request (optional)"
     });
-  
+
     const wrapper = createElement("div", { class: "modal-form-group" }, [
-      createElement("label", {}, ["Quantity: ", quantityInput]),
-      createElement("label", {}, ["Note: ", noteInput])
+        createElement("label", {}, ["Quantity: ", quantityInput]),
+        createElement("label", {}, ["Note: ", noteInput])
     ]);
-  
+
     const modal = Modal({
-      title: `Purchase: ${menu.name}`,
-      content: wrapper,
-      actions: () =>
-        Button(
-          "Next",
-          "",
-          {
-            click: async () => {
-              const quantity = parseInt(quantityInput.value, 10);
-              const note = noteInput.value.trim();
-  
-              if (!Number.isInteger(quantity) || quantity < 1) {
-                return Notify("⚠️ Please enter a valid quantity.", { type: "warning" });
-              }
-  
-              try {
-                const { stock } = await apiFetch(
-                  `/places/menu/${placeId}/${menu.menuid}/stock`
-                );
-  
-                if (stock <= 0) {
-                  return Notify("❌ Out of stock.", { type: "warning" });
-                }
-  
-                if (quantity > stock) {
-                  return Notify(`⚠️ Only ${stock} available.`, { type: "warning" });
-                }
-  
-                modal.close();
-  
-                const paymentResult = await showPaymentModal({
-                  paymentType: "purchase",
-                  entityType: "menu",
-                  entityId: menu.menuid,
-                  entityName: menu.name
-                });
-  
-                if (!paymentResult || paymentResult.success !== true) {
-                  return Notify("Payment was cancelled or failed.", {
-                    type: "warning"
-                  });
-                }
-  
-                const res = await apiFetch(
-                  `/places/menu/${placeId}/${menu.menuid}/confirm-purchase`,
-                  "POST",
-                  {
-                    quantity,
-                    note
-                  }
-                );
-  
-                if (res.success) {
-                  Notify("Menu purchased successfully!", { type: "success" });
-                } else {
-                  Notify(res.message || "Purchase failed.", { type: "error" });
-                }
-              } catch (err) {
-                console.error(err);
-                Notify(`Error: ${err.message}`, { type: "error" });
-              }
-            }
-          },
-          "buttonx"
-        )
+        title: `Purchase: ${menu.name}`,
+        content: wrapper,
+        actions: () =>
+            Button(
+                "Next",
+                "",
+                {
+                    click: async () => {
+                        const quantity = parseInt(quantityInput.value, 10);
+                        const note = noteInput.value.trim();
+
+                        if (!Number.isInteger(quantity) || quantity < 1) {
+                            return Notify("⚠️ Please enter a valid quantity.", { type: "warning" });
+                        }
+
+                        try {
+                            const { stock } = await apiFetch(
+                                `/places/menu/${placeId}/${menu.menuid}/stock`
+                            );
+
+                            if (stock <= 0) {
+                                return Notify("❌ Out of stock.", { type: "warning" });
+                            }
+
+                            if (quantity > stock) {
+                                return Notify(`⚠️ Only ${stock} available.`, { type: "warning" });
+                            }
+
+                            modal.close();
+
+                            const paymentResult = await showPaymentModal({
+                                paymentType: "purchase",
+                                entityType: "menu",
+                                entityId: menu.menuid,
+                                entityName: menu.name
+                            });
+
+                            if (!paymentResult || paymentResult.success !== true) {
+                                return Notify("Payment was cancelled or failed.", {
+                                    type: "warning"
+                                });
+                            }
+
+                            const res = await apiFetch(
+                                `/places/menu/${placeId}/${menu.menuid}/confirm-purchase`,
+                                "POST",
+                                {
+                                    quantity,
+                                    note
+                                }
+                            );
+
+                            if (res.success) {
+                                Notify("Menu purchased successfully!", { type: "success" });
+                            } else {
+                                Notify(res.message || "Purchase failed.", { type: "error" });
+                            }
+                        } catch (err) {
+                            console.error(err);
+                            Notify(`Error: ${err.message}`, { type: "error" });
+                        }
+                    }
+                },
+                "buttonx"
+            )
     });
     modal.open();
-  }
-  
+}

@@ -44,18 +44,30 @@ export const postMedia = defaultApi.postMedia.bind(defaultApi);
 export function uploadFile(u) {
   return new Promise((resolve, reject) => {
     const xhr = new XMLHttpRequest();
+
     UploadStore.controllers[u.id] = xhr;
 
     const formData = new FormData();
-    formData.append(u.mediaEntity, u.file);
-    formData.append("postType", u.fileType);
 
-    UploadStore.update(u.id, { status: "uploading", progress: 0 });
+    // file
+    formData.append("file", u.file);
+
+    // backend-required fields
+    formData.append("entityType", u.entityType);
+    formData.append("entityId", u.entityId || "");
+
+    UploadStore.update(u.id, {
+      status: "uploading",
+      progress: 0,
+    });
 
     xhr.upload.onprogress = (e) => {
       if (e.lengthComputable) {
         const pct = Math.round((e.loaded / e.total) * 100);
-        UploadStore.update(u.id, { progress: pct });
+
+        UploadStore.update(u.id, {
+          progress: pct,
+        });
       }
     };
 
@@ -65,30 +77,49 @@ export function uploadFile(u) {
       if (xhr.status >= 200 && xhr.status < 300) {
         try {
           const data = JSON.parse(xhr.responseText);
-          UploadStore.update(u.id, { status: "done", progress: 100 });
+
+          UploadStore.update(u.id, {
+            status: "done",
+            progress: 100,
+          });
 
           resolve(Array.isArray(data) ? data[0] : data);
+
         } catch {
-          UploadStore.update(u.id, { status: "error" });
+          UploadStore.update(u.id, {
+            status: "error",
+          });
+
           reject(new Error("Invalid FILEDROP response"));
         }
+
       } else {
-        UploadStore.update(u.id, { status: "error" });
-        reject(new Error(xhr.statusText));
+        UploadStore.update(u.id, {
+          status: "error",
+        });
+
+        reject(new Error(xhr.responseText || xhr.statusText));
       }
     };
 
     xhr.onerror = () => {
-      UploadStore.update(u.id, { status: "error" });
+      UploadStore.update(u.id, {
+        status: "error",
+      });
+
       reject(new Error("Network error"));
     };
 
     xhr.onabort = () => {
-      UploadStore.update(u.id, { status: "canceled" });
+      UploadStore.update(u.id, {
+        status: "canceled",
+      });
+
       reject(new Error("Upload canceled"));
     };
 
     xhr.open("POST", FILEDROP_URL);
+
     xhr.send(formData);
   });
 }
@@ -145,17 +176,18 @@ async function uploadWithRetry(item, retries = 2) {
 ------------------------- */
 
 export async function uploadFiles(files, options = {}) {
+
   const {
-    mediaEntity = "images",
-    fileType = "default",
+    entityType = "media",
+    entityId = "",
     concurrency = 3,
     retry = 0,
   } = options;
 
   const items = Array.from(files).map((file) => {
+
     const id = crypto.randomUUID();
 
-    // initialize store
     UploadStore.update(id, {
       fileName: file.name,
       progress: 0,
@@ -165,14 +197,15 @@ export async function uploadFiles(files, options = {}) {
     return {
       id,
       file,
-      mediaEntity,
-      fileType,
+      entityType,
+      entityId,
     };
   });
 
-  const worker = retry > 0
-    ? (item) => uploadWithRetry(item, retry)
-    : (item) => uploadFile(item);
+  const worker =
+    retry > 0
+      ? (item) => uploadWithRetry(item, retry)
+      : (item) => uploadFile(item);
 
   return runUploadQueue(items, worker, concurrency);
 }

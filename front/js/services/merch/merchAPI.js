@@ -8,60 +8,175 @@ import Imagex from "../../components/base/Imagex.js";
 import { EntityType, PictureType, resolveImagePath } from "../../utils/imagePaths.js";
 import { uploadFile } from "../media/api/mediaApi.js";
 import { uid } from "../media/ui/mediaUploadForm.js";
-
 // --- Add Merchandise ---
-async function addMerchandise(entityType, eventId, merchList) {
-    const name = document.getElementById("merch-name").value.trim();
-    const price = parseFloat(document.getElementById("merch-price").value);
-    const stock = parseInt(document.getElementById("merch-stock").value, 10);
-    const imageFile = document.getElementById("merch-image").files[0];
+async function addMerchandise(
+    entityType,
+    eventId,
+    merchList
+) {
 
-    if (!name || isNaN(price) || isNaN(stock)) {
-        Notify("Please fill in all fields correctly.", { type: "error" });
+    const name = document
+        .getElementById("merch-name")
+        .value
+        .trim();
+
+    const price = parseFloat(
+        document.getElementById("merch-price").value
+    );
+
+    const stock = parseInt(
+        document.getElementById("merch-stock").value,
+        10
+    );
+
+    const imageFile = document
+        .getElementById("merch-image")
+        .files?.[0];
+
+    // ---------------------------------
+    // VALIDATION
+    // ---------------------------------
+
+    if (
+        !name ||
+        Number.isNaN(price) ||
+        Number.isNaN(stock)
+    ) {
+
+        Notify(
+            "Please fill in all fields correctly.",
+            {
+                type: "error"
+            }
+        );
+
         return;
     }
-    if (imageFile && !imageFile.type.startsWith("image/")) {
-        Notify("Please upload a valid image file.", { type: "error" });
+
+    if (
+        imageFile &&
+        !imageFile.type.startsWith("image/")
+    ) {
+
+        Notify(
+            "Please upload a valid image file.",
+            {
+                type: "error"
+            }
+        );
+
         return;
     }
 
     try {
+
         let uploadedImage = null;
+
+        // ---------------------------------
+        // IMAGE UPLOAD
+        // ---------------------------------
+
         if (imageFile) {
-            const uploadObj = {
+
+            Notify(
+                "Uploading image...",
+                {
+                    type: "info",
+                    duration: 2000
+                }
+            );
+
+            uploadedImage = await uploadFile({
+
                 id: uid(),
+
                 file: imageFile,
-                previewURL: URL.createObjectURL(imageFile),
-                progress: 0,
-                uploading: true,
-                mediaEntity: "merch",
-                fileType: "banner"
-            };
-            Notify("Uploading image...", { type: "info", duration: 2000 });
-            uploadedImage = await uploadFile(uploadObj);
-            if (!uploadedImage?.filename && !uploadedImage?.file) {
-throw new Error("Image upload failed.");
-}
+
+                entityType,
+
+                entityId: String(eventId)
+            });
+
+            if (
+                !uploadedImage?.filename &&
+                !uploadedImage?.key
+            ) {
+
+                throw new Error(
+                    "Image upload failed."
+                );
+            }
         }
 
+        // ---------------------------------
+        // PAYLOAD
+        // ---------------------------------
+
         const payload = {
+
             name,
+
             price,
+
             stock,
-            merch_pic: uploadedImage?.filename || uploadedImage?.file || "",
+
+            merch_pic:
+                uploadedImage?.filename
+                || uploadedImage?.key
+                || ""
         };
 
-        const resp = await apiFetch(`/merch/${entityType}/${eventId}`, "POST", payload);
-        if (!resp?.data?.merchid) {
-throw new Error(resp?.message || "Invalid server response.");
-}
+        // ---------------------------------
+        // API
+        // ---------------------------------
 
-        Notify(resp.message || "Merchandise added successfully.", { type: "success", duration: 3000 });
-        displayNewMerchandise(resp.data, merchList);
+        const resp = await apiFetch(
+            `/merch/${entityType}/${eventId}`,
+            "POST",
+            payload
+        );
+
+        if (!resp?.data?.merchid) {
+
+            throw new Error(
+                resp?.message
+                || "Invalid server response."
+            );
+        }
+
+        // ---------------------------------
+        // SUCCESS
+        // ---------------------------------
+
+        Notify(
+            resp.message
+            || "Merchandise added successfully.",
+            {
+                type: "success",
+                duration: 3000
+            }
+        );
+
+        displayNewMerchandise(
+            resp.data,
+            merchList
+        );
+
         clearMerchForm();
+
     } catch (err) {
-        console.error("Error adding merchandise:", err);
-        Notify(`Error adding merchandise: ${err.message}`, { type: "error" });
+
+        console.error(
+            "Error adding merchandise:",
+            err
+        );
+
+        Notify(
+            `Error adding merchandise: ${err.message}`,
+            {
+                type: "error"
+            }
+        );
     }
 }
 
@@ -69,23 +184,23 @@ throw new Error(resp?.message || "Invalid server response.");
 function clearMerchForm() {
     const formContainer = document.getElementById('edittabs');
     if (formContainer) {
-formContainer.replaceChildren();
-}
+        formContainer.replaceChildren();
+    }
 }
 
 // --- Delete Merchandise ---
 async function deleteMerch(entityType, merchId, eventId) {
     if (!confirm('Are you sure you want to delete this merchandise?')) {
-return;
-}
+        return;
+    }
     try {
         const resp = await apiFetch(`/merch/${entityType}/${eventId}/${merchId}`, 'DELETE');
         if (resp.success) {
             Notify('Merchandise deleted successfully!', { type: "success" });
             const merchItem = document.getElementById(`merch-${merchId}`);
             if (merchItem) {
-merchItem.remove();
-}
+                merchItem.remove();
+            }
         } else {
             Notify(`Failed to delete merchandise: ${resp.message}`, { type: "error" });
         }
@@ -101,8 +216,8 @@ async function editMerchForm(entityType, merchId, eventId) {
         const resp = await apiFetch(`/merch/${entityType}/${eventId}/${merchId}`, 'GET');
         const data = resp?.data;
         if (!data) {
-throw new Error("Merchandise not found.");
-}
+            throw new Error("Merchandise not found.");
+        }
 
         const form = createElement("form", { id: "edit-merch-form" });
         const fields = [
@@ -134,8 +249,8 @@ throw new Error("Merchandise not found.");
                     Notify('Merchandise updated successfully!', { type: "success" });
                     closeModal();
                 } else {
-Notify(`Failed to update merchandise: ${updateResp.message}`, { type: "error" });
-}
+                    Notify(`Failed to update merchandise: ${updateResp.message}`, { type: "error" });
+                }
             } catch (err) {
                 console.error("Error updating merchandise:", err);
                 Notify("An error occurred while updating the merchandise.", { type: "error" });

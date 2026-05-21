@@ -24,15 +24,46 @@ type Attachment struct {
 	Resolutions []int  `json:"resolutions,omitempty"`
 }
 
+// valid entity types
+var validEntities = map[string]filemgr.EntityType{
+	"artist":  filemgr.EntityArtist,
+	"user":    filemgr.EntityUser,
+	"baito":   filemgr.EntityBaito,
+	"worker":  filemgr.EntityWorker,
+	"song":    filemgr.EntitySong,
+	"post":    filemgr.EntityPost,
+	"chat":    filemgr.EntityChat,
+	"event":   filemgr.EntityEvent,
+	"farm":    filemgr.EntityFarm,
+	"crop":    filemgr.EntityCrop,
+	"place":   filemgr.EntityPlace,
+	"media":   filemgr.EntityMedia,
+	"feed":    filemgr.EntityFeed,
+	"recipe":  filemgr.EntityRecipe,
+	"product": filemgr.EntityProduct,
+	"live":    filemgr.EntityLive,
+}
+
 // FiledropHandler handles file uploads via multipart/form-data
-func FiledropHandler(app *infra.Deps, w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
+func FiledropHandler(
+	app *infra.Deps,
+	w http.ResponseWriter,
+	r *http.Request,
+	_ httprouter.Params,
+) {
 
 	// -------------------------
-	// Validate request
+	// Validate request method + size
 	// -------------------------
 
 	if err := validateUploadRequest(w, r); err != nil {
-		utils.RespondWithError(w, http.StatusBadRequest, err.Error())
+
+		utils.RespondWithError(
+			w,
+			http.StatusBadRequest,
+			err.Error(),
+		)
+
 		return
 	}
 
@@ -41,53 +72,68 @@ func FiledropHandler(app *infra.Deps, w http.ResponseWriter, r *http.Request, _ 
 	// -------------------------
 
 	if err := r.ParseMultipartForm(maxUploadBytes); err != nil {
+
 		utils.RespondWithError(
 			w,
 			http.StatusBadRequest,
 			"failed to parse multipart form: "+err.Error(),
 		)
+
 		return
+	}
+
+	// cleanup temp files
+	if r.MultipartForm != nil {
+		defer r.MultipartForm.RemoveAll()
 	}
 
 	// -------------------------
 	// Frontend fields
 	// -------------------------
 
-	entityType := strings.ToLower(strings.TrimSpace(r.FormValue("entityType")))
-	entityId := strings.TrimSpace(r.FormValue("entityId"))
+	entityType := strings.ToLower(
+		strings.TrimSpace(r.FormValue("entityType")),
+	)
 
-	remoteURL := strings.TrimSpace(r.FormValue("remoteUrl"))
-	remoteKey := strings.TrimSpace(r.FormValue("remoteKey"))
+	entityId := strings.TrimSpace(
+		r.FormValue("entityId"),
+	)
 
-	_ = entityId // reserved for future use
+	remoteURL := strings.TrimSpace(
+		r.FormValue("remoteUrl"),
+	)
+
+	remoteKey := strings.TrimSpace(
+		r.FormValue("remoteKey"),
+	)
 
 	// -------------------------
 	// Validate entity type
 	// -------------------------
 
-	validEntities := map[string]filemgr.EntityType{
-		"artist":  filemgr.EntityArtist,
-		"user":    filemgr.EntityUser,
-		"baito":   filemgr.EntityBaito,
-		"worker":  filemgr.EntityWorker,
-		"song":    filemgr.EntitySong,
-		"post":    filemgr.EntityPost,
-		"chat":    filemgr.EntityChat,
-		"event":   filemgr.EntityEvent,
-		"farm":    filemgr.EntityFarm,
-		"crop":    filemgr.EntityCrop,
-		"place":   filemgr.EntityPlace,
-		"media":   filemgr.EntityMedia,
-		"feed":    filemgr.EntityFeed,
-		"recipe":  filemgr.EntityRecipe,
-		"product": filemgr.EntityProduct,
-		"live":    filemgr.EntityLive,
+	if entityType == "" {
+
+		utils.RespondWithError(
+			w,
+			http.StatusBadRequest,
+			"entityType is required",
+		)
+
+		return
 	}
 
 	if _, ok := validEntities[entityType]; !ok {
-		utils.RespondWithError(w, http.StatusBadRequest, "invalid entityType")
+
+		utils.RespondWithError(
+			w,
+			http.StatusBadRequest,
+			"invalid entityType",
+		)
+
 		return
 	}
+
+	log.Printf("[Filedrop] entityType=%s entityId=%s", entityType, entityId)
 
 	// -------------------------
 	// Service
@@ -107,9 +153,17 @@ func FiledropHandler(app *infra.Deps, w http.ResponseWriter, r *http.Request, _ 
 	if remoteURL != "" {
 
 		switch remoteKey {
+
 		case "banner", "photo", "avatar", "seating":
+
 		default:
-			utils.RespondWithError(w, http.StatusBadRequest, "invalid remoteKey")
+
+			utils.RespondWithError(
+				w,
+				http.StatusBadRequest,
+				"invalid remoteKey",
+			)
+
 			return
 		}
 
@@ -126,6 +180,17 @@ func FiledropHandler(app *infra.Deps, w http.ResponseWriter, r *http.Request, _ 
 		// Multipart upload
 		// -------------------------
 
+		if r.MultipartForm == nil || len(r.MultipartForm.File) == 0 {
+
+			utils.RespondWithError(
+				w,
+				http.StatusBadRequest,
+				"no files uploaded",
+			)
+
+			return
+		}
+
 		attachments, err = fileService.ProcessUploadedFiles(
 			r,
 			entityType,
@@ -134,12 +199,15 @@ func FiledropHandler(app *infra.Deps, w http.ResponseWriter, r *http.Request, _ 
 	}
 
 	// -------------------------
-	// Handle errors
+	// Handle processing errors
 	// -------------------------
 
 	if err != nil {
 
-		log.Printf("[Filedrop] Error processing files: %v", err)
+		log.Printf(
+			"[Filedrop] processing error: %v",
+			err,
+		)
 
 		utils.RespondWithError(
 			w,
@@ -156,32 +224,58 @@ func FiledropHandler(app *infra.Deps, w http.ResponseWriter, r *http.Request, _ 
 
 	response := convertToAttachments(attachments)
 
-	utils.RawJSON(w, http.StatusOK, response)
+	utils.RawJSON(
+		w,
+		http.StatusOK,
+		response,
+	)
 }
 
-// validateUploadRequest validates the incoming upload request
-func validateUploadRequest(w http.ResponseWriter, r *http.Request) error {
-	r.Body = http.MaxBytesReader(w, r.Body, maxUploadBytes)
+// validateUploadRequest validates upload request basics
+func validateUploadRequest(
+	w http.ResponseWriter,
+	r *http.Request,
+) error {
 
+	// limit body size
+	r.Body = http.MaxBytesReader(
+		w,
+		r.Body,
+		maxUploadBytes,
+	)
+
+	// only POST allowed
 	if r.Method != http.MethodPost {
 		return fmt.Errorf("method must be POST")
 	}
 
 	contentType := r.Header.Get("Content-Type")
 
-	remoteURL := strings.TrimSpace(r.FormValue("remoteUrl"))
+	// remote uploads may not use multipart
+	remoteURL := strings.TrimSpace(
+		r.FormValue("remoteUrl"),
+	)
 
-	if remoteURL == "" && !strings.HasPrefix(contentType, "multipart/") {
-		return fmt.Errorf("content-type must be multipart")
+	if remoteURL == "" &&
+		!strings.HasPrefix(contentType, "multipart/") {
+
+		return fmt.Errorf(
+			"content-type must be multipart/form-data",
+		)
 	}
 
 	return nil
 }
 
 // convertToAttachments converts service attachments to response format
-func convertToAttachments(serviceAttachments []services.Attachment) []Attachment {
+func convertToAttachments(
+	serviceAttachments []services.Attachment,
+) []Attachment {
 
-	attachments := make([]Attachment, len(serviceAttachments))
+	attachments := make(
+		[]Attachment,
+		len(serviceAttachments),
+	)
 
 	for i, sa := range serviceAttachments {
 
@@ -196,12 +290,27 @@ func convertToAttachments(serviceAttachments []services.Attachment) []Attachment
 	return attachments
 }
 
-// OptionsHandler handles preflight OPTIONS requests
-func OptionsHandler(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
+// OptionsHandler handles CORS preflight requests
+func OptionsHandler(
+	w http.ResponseWriter,
+	r *http.Request,
+	_ httprouter.Params,
+) {
 
-	w.Header().Set("Access-Control-Allow-Origin", "*")
-	w.Header().Set("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS")
-	w.Header().Set("Access-Control-Allow-Headers", "Content-Type, Authorization")
+	w.Header().Set(
+		"Access-Control-Allow-Origin",
+		"*",
+	)
+
+	w.Header().Set(
+		"Access-Control-Allow-Methods",
+		"GET, POST, PUT, DELETE, OPTIONS",
+	)
+
+	w.Header().Set(
+		"Access-Control-Allow-Headers",
+		"Content-Type, Authorization",
+	)
 
 	w.WriteHeader(http.StatusNoContent)
 }

@@ -3,273 +3,735 @@ import { Button } from "../../../components/base/Button.js";
 import { createElement } from "../../../components/createElement.js";
 import Notify from "../../../components/ui/Notify.mjs";
 import Imagex from "../../../components/base/Imagex.js";
+
 import { UploadStore } from "../store/uploadStore.js";
-import { uploadFile, postMedia } from "../api/mediaApi.js";
-import { detectCaptionLang } from "../../media/mediaCommon.js";
 
-// --- Helper for unique IDs ---
+import {
+  uploadFile,
+  postMedia
+} from "../api/mediaApi.js";
+
+import {
+  detectCaptionLang
+} from "../../media/mediaCommon.js";
+
+// ---------------------------------
+// UID
+// ---------------------------------
+
 export function uid() {
-  return crypto.randomUUID?.() || Math.random().toString(36).substring(2, 9);
+
+  return crypto.randomUUID?.()
+    || Math.random()
+      .toString(36)
+      .substring(2, 9);
 }
 
-// --- Helper to determine file type ---
+// ---------------------------------
+// FILE TYPE
+// ---------------------------------
+
 function getFileType(file) {
+
   if (file.type.startsWith("image/")) {
-return "image";
-}
+    return "image";
+  }
+
   if (file.type.startsWith("video/")) {
-return "video";
-}
+    return "video";
+  }
+
   return "unknown";
 }
 
-// --- Helper to extract file extension ---
+// ---------------------------------
+// FILE EXTENSION
+// ---------------------------------
+
 function getFileExtension(file) {
+
   const name = file.name;
+
   const lastDot = name.lastIndexOf(".");
-  return lastDot !== -1 ? name.substring(lastDot) : "";
+
+  return lastDot !== -1
+    ? name.substring(lastDot)
+    : "";
 }
 
-// --- Main function ---
-export function showMediaUploadForm(isLoggedIn, entityType, entityId, mediaList) {
-  const uploadsDiv = createElement("div", { class: "upload-list" });
-  const caption = createElement("textarea", {
-    placeholder: "Write a caption...",
-    class: "upload-caption",
-  });
+// ---------------------------------
+// MAIN MODAL
+// ---------------------------------
 
-  const fileInputId = `mediaFileInput-${uid()}`;
-  const fileInput = createElement("input", {
-    type: "file",
-    multiple: true,
-    accept: "image/*,video/*",
-    class: "hidden",
-    id: fileInputId,
-  });
+export function showMediaUploadForm(
+  isLoggedIn,
+  entityType,
+  entityId,
+  _mediaList
+) {
 
-  // Label styled as a button
-  const dropZone = createElement("div", { class: "upload-dropzone" }, [
-    createElement("label", { for: fileInputId, class: "upload-label" }, [
-      "Select or drop files here",
-    ]),
-    fileInput,
-  ]);
+  const uploadsDiv = createElement(
+    "div",
+    {
+      class: "upload-list"
+    }
+  );
+
+  const caption = createElement(
+    "textarea",
+    {
+      placeholder: "Write a caption...",
+      class: "upload-caption",
+    }
+  );
+
+  const fileInputId =
+    `mediaFileInput-${uid()}`;
+
+  const fileInput = createElement(
+    "input",
+    {
+      type: "file",
+
+      multiple: true,
+
+      accept: "image/*,video/*",
+
+      class: "hidden",
+
+      id: fileInputId,
+    }
+  );
+
+  // ---------------------------------
+  // DROPZONE
+  // ---------------------------------
+
+  const dropZone = createElement(
+    "div",
+    {
+      class: "upload-dropzone"
+    },
+    [
+      createElement(
+        "label",
+        {
+          for: fileInputId,
+          class: "upload-label"
+        },
+        [
+          "Select or drop files here"
+        ]
+      ),
+
+      fileInput
+    ]
+  );
+
+  // ---------------------------------
+  // SUBMIT
+  // ---------------------------------
 
   const submit = Button(
     "Upload All",
+
     "submitUploadsBtn",
+
     {
-      click: () =>
-        submitGroupedUploads(caption, uploadsDiv, entityType, entityId, modal),
+      click: () => submitGroupedUploads(
+        caption,
+        uploadsDiv,
+        entityType,
+        entityId,
+        modal
+      )
     },
+
     "button-primary"
   );
+
   submit.style.display = "none";
 
-  const content = createElement("div", { class: "upload-container" }, [
-    dropZone,
-    caption,
-    uploadsDiv,
-    submit,
-  ]);
+  // ---------------------------------
+  // CONTENT
+  // ---------------------------------
+
+  const content = createElement(
+    "div",
+    {
+      class: "upload-container"
+    },
+    [
+      dropZone,
+      caption,
+      uploadsDiv,
+      submit
+    ]
+  );
 
   const modal = Modal({
+
     title: "Upload Media",
+
     content,
+
     onClose: () => {
-      // Cleanup URLs to prevent blob leaks
+
+      // cleanup blob URLs
+
       UploadStore.uploads.forEach((u) => {
+
         if (u.previewURL) {
-URL.revokeObjectURL(u.previewURL);
-}
+
+          URL.revokeObjectURL(
+            u.previewURL
+          );
+        }
       });
+
       UploadStore.clear();
     },
-    size: "large",
+
+    size: "large"
   });
 
-  // --- Drag & Drop ---
+  // ---------------------------------
+  // DRAG + DROP
+  // ---------------------------------
+
   const handleDrop = (e) => {
+
     e.preventDefault();
-    dropZone.classList.remove("drag-active");
-    const files = Array.from(e.dataTransfer.files);
-    handleFiles(files, caption, uploadsDiv, submit);
+
+    dropZone.classList.remove(
+      "drag-active"
+    );
+
+    const files = Array.from(
+      e.dataTransfer.files
+    );
+
+    handleFiles(
+      files,
+      caption,
+      uploadsDiv,
+      submit,
+      entityType,
+      entityId
+    );
   };
 
-  dropZone.addEventListener("dragover", (e) => {
-    e.preventDefault();
-    dropZone.classList.add("drag-active");
-  });
-  dropZone.addEventListener("dragleave", (e) => {
-    e.preventDefault();
-    dropZone.classList.remove("drag-active");
-  });
-  dropZone.addEventListener("drop", handleDrop);
+  dropZone.addEventListener(
+    "dragover",
+    (e) => {
 
-  // File selection via input
-  fileInput.addEventListener("change", (e) =>
-    handleFiles(Array.from(e.target.files), caption, uploadsDiv, submit)
+      e.preventDefault();
+
+      dropZone.classList.add(
+        "drag-active"
+      );
+    }
+  );
+
+  dropZone.addEventListener(
+    "dragleave",
+    (e) => {
+
+      e.preventDefault();
+
+      dropZone.classList.remove(
+        "drag-active"
+      );
+    }
+  );
+
+  dropZone.addEventListener(
+    "drop",
+    handleDrop
+  );
+
+  // ---------------------------------
+  // FILE INPUT
+  // ---------------------------------
+
+  fileInput.addEventListener(
+    "change",
+    (e) => handleFiles(
+      Array.from(e.target.files),
+      caption,
+      uploadsDiv,
+      submit,
+      entityType,
+      entityId
+    )
   );
 }
 
-// --- Validate files ---
+// ---------------------------------
+// VALIDATION
+// ---------------------------------
+
 function validateFile(file) {
+
   const MAX_SIZE_MB = 100;
-  const validTypes = ["image/", "video/"];
-  if (!validTypes.some((t) => file.type.startsWith(t))) {
-throw new Error(`${file.name}: Unsupported file type`);
-}
-  if (file.size > MAX_SIZE_MB * 1024 * 1024) {
-throw new Error(`${file.name}: File too large`);
-}
+
+  const validTypes = [
+    "image/",
+    "video/"
+  ];
+
+  if (
+    !validTypes.some((t) =>
+      file.type.startsWith(t)
+    )
+  ) {
+
+    throw new Error(
+      `${file.name}: Unsupported file type`
+    );
+  }
+
+  if (
+    file.size >
+    MAX_SIZE_MB * 1024 * 1024
+  ) {
+
+    throw new Error(
+      `${file.name}: File too large`
+    );
+  }
 }
 
-// --- Handle files ---
-function handleFiles(files, caption, uploadsDiv, submit) {
+// ---------------------------------
+// HANDLE FILES
+// ---------------------------------
+
+function handleFiles(
+  files,
+  caption,
+  uploadsDiv,
+  submit,
+  entityType,
+  entityId
+) {
+
   try {
+
     files.forEach(validateFile);
+
   } catch (err) {
-    return Notify(err.message, { type: "error" });
+
+    return Notify(
+      err.message,
+      {
+        type: "error"
+      }
+    );
   }
 
   const newUploads = files.map((f) => ({
+
     id: uid(),
+
     file: f,
-    previewURL: URL.createObjectURL(f),
+
+    previewURL:
+      URL.createObjectURL(f),
+
     progress: 0,
+
     uploading: true,
+
+    done: false,
+
+    error: false,
+
     fileType: getFileType(f),
-    mediaEntity: "media",
-    extension: getFileExtension(f),
+
+    extension:
+      getFileExtension(f),
+
+    // backend-aligned fields
+    entityType,
+    entityId
   }));
 
-  UploadStore.uploads.push(...newUploads);
-  renderUploads(uploadsDiv, submit);
+  UploadStore.uploads.push(
+    ...newUploads
+  );
 
-  newUploads.forEach((u) => uploadFileAndTrack(u, uploadsDiv, submit));
+  renderUploads(
+    uploadsDiv,
+    submit
+  );
+
+  newUploads.forEach((u) =>
+    uploadFileAndTrack(
+      u,
+      uploadsDiv,
+      submit
+    )
+  );
 }
 
-// --- Upload helper ---
-async function uploadFileAndTrack(u, uploadsDiv, submit) {
+// ---------------------------------
+// UPLOAD TRACKER
+// ---------------------------------
+
+async function uploadFileAndTrack(
+  u,
+  uploadsDiv,
+  submit
+) {
+
   try {
-    const dropData = await uploadFile(u);
-    UploadStore.update(u.id, {
-      uploading: false,
-      done: true,
-      dropData,
-      progress: 100,
-    });
-    Notify(`Uploaded: ${u.file.name}`, { type: "success" });
+
+    const dropData =
+      await uploadFile({
+
+        id: u.id,
+
+        file: u.file,
+
+        entityType: u.entityType,
+
+        entityId: String(
+          u.entityId || ""
+        )
+      });
+
+    UploadStore.update(
+      u.id,
+      {
+        uploading: false,
+
+        done: true,
+
+        dropData,
+
+        progress: 100
+      }
+    );
+
+    Notify(
+      `Uploaded: ${u.file.name}`,
+      {
+        type: "success"
+      }
+    );
+
   } catch (err) {
-    UploadStore.update(u.id, { uploading: false, error: true });
-    Notify(err.message || "Upload failed", { type: "error" });
+
+    UploadStore.update(
+      u.id,
+      {
+        uploading: false,
+        error: true
+      }
+    );
+
+    Notify(
+      err.message || "Upload failed",
+      {
+        type: "error"
+      }
+    );
+
   } finally {
-    // Keep preview visible until user closes modal or removes manually
-    renderUploads(uploadsDiv, submit);
+
+    renderUploads(
+      uploadsDiv,
+      submit
+    );
   }
 }
 
-// --- Submit grouped uploads ---
-async function submitGroupedUploads(caption, uploadsDiv, entityType, entityId, modal) {
-  const ready = UploadStore.uploads.filter((u) => u.dropData && !u.serverData);
-  if (!ready.length) {
-return Notify("No uploads ready to submit.", { type: "info" });
-}
+// ---------------------------------
+// SUBMIT GROUP
+// ---------------------------------
 
-  const captionLang = detectCaptionLang(caption.value);
+async function submitGroupedUploads(
+  caption,
+  uploadsDiv,
+  entityType,
+  entityId,
+  modal
+) {
+
+  const ready =
+    UploadStore.uploads.filter(
+      (u) =>
+        u.dropData &&
+        !u.serverData
+    );
+
+  if (!ready.length) {
+
+    return Notify(
+      "No uploads ready to submit.",
+      {
+        type: "info"
+      }
+    );
+  }
+
+  const captionLang =
+    detectCaptionLang(
+      caption.value
+    );
+
   const payload = {
+
     caption: caption.value,
+
     captionLang,
+
     files: ready.map((u) => ({
-      filename: u.dropData.savedname || u.dropData.filename,
-      extn: u.extension,
+
+      filename:
+        u.dropData.filename
+        || u.dropData.key,
+
+      extn:
+        u.dropData.extension
+        || u.extension
     }))
   };
-  
+
   try {
-    const res = await postMedia(entityType, entityId, payload);
+
+    const res = await postMedia(
+      entityType,
+      entityId,
+      payload
+    );
+
     if (Array.isArray(res)) {
-      ready.forEach((u, i) =>
-        UploadStore.update(u.id, { serverData: res[i] })
+
+      ready.forEach((u, i) => {
+
+        UploadStore.update(
+          u.id,
+          {
+            serverData: res[i]
+          }
+        );
+      });
+
+      Notify(
+        "Media submitted successfully!",
+        {
+          type: "success",
+          dismissible: true
+        }
       );
-      Notify("Media submitted successfully!", { type: "success", dismissible:true });
+
       modal.close?.();
     }
+
   } catch (err) {
-    Notify(err.message || "Failed to submit media", { type: "error" });
+
+    Notify(
+      err.message
+      || "Failed to submit media",
+      {
+        type: "error"
+      }
+    );
   }
 }
 
-// --- Render uploads incrementally ---
-function renderUploads(uploadsDiv, submit) {
-  const fragment = document.createDocumentFragment();
+// ---------------------------------
+// RENDER UPLOADS
+// ---------------------------------
 
-  // Remove orphaned DOM nodes
-  const currentIds = new Set(UploadStore.uploads.map((u) => u.id));
-  uploadsDiv.querySelectorAll(".upload-card").forEach((el) => {
-    if (!currentIds.has(el.dataset.id)) {
-el.remove();
-}
-  });
+function renderUploads(
+  uploadsDiv,
+  submit
+) {
+
+  const fragment =
+    document.createDocumentFragment();
+
+  // cleanup removed uploads
+
+  const currentIds =
+    new Set(
+      UploadStore.uploads.map(
+        (u) => u.id
+      )
+    );
+
+  uploadsDiv
+    .querySelectorAll(".upload-card")
+    .forEach((el) => {
+
+      if (
+        !currentIds.has(
+          el.dataset.id
+        )
+      ) {
+
+        el.remove();
+      }
+    });
 
   UploadStore.uploads.forEach((u) => {
-    const existing = uploadsDiv.querySelector(`[data-id="${u.id}"]`);
+
+    const existing =
+      uploadsDiv.querySelector(
+        `[data-id="${u.id}"]`
+      );
+
+    // ---------------------------------
+    // UPDATE EXISTING
+    // ---------------------------------
+
     if (existing) {
-      const bar = existing.querySelector(".upload-progress > div");
+
+      const bar =
+        existing.querySelector(
+          ".upload-progress > div"
+        );
+
       if (bar) {
-bar.style.width = `${u.progress || 0}%`;
-}
-      existing.classList.toggle("upload-error", !!u.error);
-      existing.classList.toggle("upload-done", !!u.done);
+
+        bar.style.width =
+          `${u.progress || 0}%`;
+      }
+
+      existing.classList.toggle(
+        "upload-error",
+        !!u.error
+      );
+
+      existing.classList.toggle(
+        "upload-done",
+        !!u.done
+      );
+
       return;
     }
 
+    // ---------------------------------
+    // PREVIEW
+    // ---------------------------------
+
     const preview =
       u.fileType === "image"
-        ? Imagex({ src: u.previewURL, class: "upload-preview" })
-        : createElement("video", {
+
+        ? Imagex({
+          src: u.previewURL,
+          class: "upload-preview"
+        })
+
+        : createElement(
+          "video",
+          {
             src: u.previewURL,
             controls: true,
             class: "upload-preview",
-          });
+          }
+        );
 
-    const progress = createElement("div", { class: "upload-progress" }, [
-      createElement("div", {
-        class: "upload-progress-bar",
-        style: `width:${u.progress}%`,
-      }),
-    ]);
+    // ---------------------------------
+    // PROGRESS
+    // ---------------------------------
+
+    const progress = createElement(
+      "div",
+      {
+        class: "upload-progress"
+      },
+      [
+        createElement(
+          "div",
+          {
+            class:
+              "upload-progress-bar",
+
+            style:
+              `width:${u.progress}%`
+          }
+        )
+      ]
+    );
+
+    // ---------------------------------
+    // REMOVE
+    // ---------------------------------
 
     const removeBtn = Button(
       "Remove",
+
       "",
+
       {
         click: () => {
+
           if (u.previewURL) {
-URL.revokeObjectURL(u.previewURL);
-}
-          UploadStore.remove(u.id);
-          renderUploads(uploadsDiv, submit);
-        },
+
+            URL.revokeObjectURL(
+              u.previewURL
+            );
+          }
+
+          UploadStore.remove(
+            u.id
+          );
+
+          renderUploads(
+            uploadsDiv,
+            submit
+          );
+        }
       },
+
       "button-secondary"
     );
 
-    const card = createElement("div", { class: "upload-card", "data-id": u.id }, [
-      preview,
-      createElement("p", {}, [u.file.name]),
-      progress,
-      removeBtn
-    ]);
+    // ---------------------------------
+    // CARD
+    // ---------------------------------
+
+    const card = createElement(
+      "div",
+      {
+        class: "upload-card",
+        "data-id": u.id
+      },
+      [
+        preview,
+
+        createElement(
+          "p",
+          {},
+          [
+            u.file.name
+          ]
+        ),
+
+        progress,
+
+        removeBtn
+      ]
+    );
 
     fragment.append(card);
   });
 
   uploadsDiv.append(fragment);
 
-  submit.style.display = UploadStore.uploads.some(
-    (u) => u.dropData && !u.serverData
-  )
-    ? "inline-block"
-    : "none";
+  // ---------------------------------
+  // SUBMIT VISIBILITY
+  // ---------------------------------
+
+  submit.style.display =
+    UploadStore.uploads.some(
+      (u) =>
+        u.dropData &&
+        !u.serverData
+    )
+      ? "inline-block"
+      : "none";
 }

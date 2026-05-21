@@ -42,7 +42,22 @@ export async function uploadFilesInBatches(files, mediaEntity, previewContainer,
   return results;
 }
 
-export async function handleFileUpload(file, mediaEntity, fileType) {
-  const uploadMeta = { id: crypto.randomUUID(), mediaEntity, file, fileType };
+export async function handleFileUpload(
+  file,
+  entityType,
+  entityId = ""
+) {
+
+  const uploadMeta = {
+
+    id: crypto.randomUUID(),
+
+    file,
+
+    entityType,
+
+    entityId: String(entityId)
+  };
+
   return uploadFile(uploadMeta);
 }

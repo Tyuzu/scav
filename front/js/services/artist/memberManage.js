@@ -36,54 +36,88 @@ export function renderBandMembers(artist, isCreator) {
         createElement("div", { class: "member-grid" }, cards)
     ]);
 }
-
 export function createUploadControls(member, artist, img) {
+
     const fileInput = createElement("input", {
         type: "file",
         accept: "image/*",
         style: "display:none"
     });
 
-    const uploadBtn = Button("P", "", {
-        click: () => fileInput.click()
-    }, "upload-member-btn edit-banner-pic");
+    const uploadBtn = Button(
+        "P",
+        "",
+        {
+            click: () => fileInput.click()
+        },
+        "upload-member-btn edit-banner-pic"
+    );
 
     fileInput.addEventListener("change", async () => {
-        const file = fileInput.files[0];
+
+        const file = fileInput.files?.[0];
+
         if (!file) {
-return;
-}
+            return;
+        }
 
         try {
+
             const uploaded = await uploadFile({
-                mediaEntity: "artist",
-                fileType: "member",
                 id: uid(),
+
+                // backend-aligned fields
+                entityType: "artist",
+                entityId: String(member.artistid),
+
                 file
             });
 
             await apiFetch(
                 `/artists/${artist.artistid}/members/${member.artistid}`,
                 "PUT",
-                { image: uploaded.filename }
+                {
+                    image: uploaded.filename
+                }
             );
 
-            // Delay visual refresh
+            // refresh image after upload propagation
             setTimeout(() => {
+
                 img.src =
-                    resolveImagePath(EntityType.ARTIST, PictureType.THUMB, uploaded.filename) +
-                    `?t=${Date.now()}`;
+                    resolveImagePath(
+                        EntityType.ARTIST,
+                        PictureType.THUMB,
+                        uploaded.filename
+                    ) + `?t=${Date.now()}`;
+
             }, 800);
 
-            Notify(`${member.name}'s photo updated`, { type: "success", duration: 2500 });
+            Notify(
+                `${member.name}'s photo updated`,
+                {
+                    type: "success",
+                    duration: 2500
+                }
+            );
+
         } catch (err) {
-            Notify(`Failed to upload photo: ${err.message}`, { type: "error", duration: 2500 });
+
+            Notify(
+                `Failed to upload photo: ${err.message}`,
+                {
+                    type: "error",
+                    duration: 2500
+                }
+            );
         }
     });
 
-    return { uploadBtn, fileInput };
+    return {
+        uploadBtn,
+        fileInput
+    };
 }
-
 export function renderManageMembersButton(artistID, container) {
     return Button("👥 Manage Band Members", "", {
         click: () => {

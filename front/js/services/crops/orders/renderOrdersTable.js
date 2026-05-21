@@ -67,19 +67,19 @@ function buildOrderTableRow(order, onContact, onDelivered, onReject) {
           e.stopPropagation();
           onContact(order.contact);
         },
-      }, "small-button"),
+      }, "small-button buttonx"),
       Button("Delivered", `deliver-${order.id}`, {
         click: (e) => {
           e.stopPropagation();
           onDelivered(order.id);
         },
-      }, "small-button"),
+      }, "small-button buttonx"),
       Button("Reject", `reject-${order.id}`, {
         click: (e) => {
           e.stopPropagation();
           onReject(order.id);
         },
-      }, "small-button"),
+      }, "small-button buttonx"),
     ]),
   ]);
 }

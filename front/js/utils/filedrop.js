@@ -1,3 +1,4 @@
+/* eslint-disable no-unused-vars */
 import { apiFetch } from "../api/api";
 import { createElement } from "../components/createElement";
 import { FILEDROP_URL } from "../state/state";

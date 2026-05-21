@@ -16,7 +16,7 @@ import { MERE_URL, getState } from "../../state/state.js";
 import { uploadFile } from "../media/api/mediaApi.js";
 import { uid } from "../media/ui/mediaUploadForm.js";
 import { t } from "./i18n.js";
-import { getFileType } from "../media/mediaCommon.js";
+// import { getFileType } from "../media/mediaCommon.js";
 
 /* -------------------------
    Safe fetch
@@ -58,8 +58,8 @@ function extToMime(ext) {
 --------------------------*/
 export function sendMessage(chatid, content) {
   if (!content || !content.trim()) {
-return;
-}
+    return;
+  }
 
   const clientId = `c_${Date.now()}_${Math.random().toString(36).slice(2)}`;
 
@@ -80,7 +80,7 @@ return;
     try {
       ws.send(JSON.stringify(payload));
       return;
-    } catch {}
+    } catch { }
   }
 
   sendMessageRESTFallback(chatid, content, clientId);
@@ -103,8 +103,8 @@ async function sendMessageRESTFallback(chatid, content, clientId) {
 
 function reconcilePending(chatid, clientId, serverMsg) {
   if (!serverMsg?.messageid) {
-return;
-}
+    return;
+  }
 
   const rendered = ensureRenderedSet(chatid);
   const realId = String(serverMsg.messageid);
@@ -137,9 +137,9 @@ return;
       setTimeout(() => {
         try {
           URL.revokeObjectURL(url);
-        } catch {}
+        } catch { }
       }, 60 * 1000); // 60s
-    } catch {}
+    } catch { }
   }
 
   pendingMap.delete(clientId);
@@ -151,8 +151,8 @@ return;
 async function loadHistory(chatid) {
   const container = getMessageContainer();
   if (!container) {
-return;
-}
+    return;
+  }
 
   container.replaceChildren();
   const rendered = ensureRenderedSet(chatid);
@@ -181,96 +181,221 @@ return;
    - ensure mounted server message uses local preview immediately on success
 --------------------------*/
 async function uploadAttachment(chatid, fileInput) {
-  const file = fileInput.files?.[0];
-  if (!file) {
-return;
-}
 
-  // create a stable preview URL for local display
-  const previewUrl = URL.createObjectURL(file);
+  const file = fileInput.files?.[0];
+
+  if (!file) {
+    return;
+  }
+
+  // ---------------------------------
+  // LOCAL PREVIEW
+  // ---------------------------------
+
+  const previewUrl =
+    URL.createObjectURL(file);
 
   const mediaId = uid();
+
   const clientId = `f_${mediaId}`;
 
+  // ---------------------------------
+  // OPTIMISTIC MESSAGE
+  // ---------------------------------
+
   const optimistic = {
+
     messageid: clientId,
+
     sender: getState("user"),
+
     createdAt: new Date().toISOString(),
+
     media: {
-      // show local preview immediately
+
       url: previewUrl,
-      type: file.type.startsWith("video") ? "video" : "image",
+
+      type: file.type.startsWith("video")
+        ? "video"
+        : "image",
+
       mimeType: file.type,
-      // keep a reference to the eventual media id so server reconcile can match if needed
+
       mediaId
     }
   };
 
-  const el = mountMessage(optimistic);
-  // store previewUrl on pending so reconcile can inject it into server message
-  pendingMap.set(clientId, { el, chatid, previewUrl });
+  const el = mountMessage(
+    optimistic
+  );
+
+  // keep preview for reconciliation
+
+  pendingMap.set(
+    clientId,
+    {
+      el,
+      chatid,
+      previewUrl
+    }
+  );
 
   try {
+
+    // ---------------------------------
+    // FILEDROP UPLOAD
+    // ---------------------------------
+
     const upload = await uploadFile({
-      file,
+
       id: mediaId,
-      mediaEntity: "chat",
-      fileType: getFileType(file)
+
+      file,
+
+      entityType: "chat",
+
+      entityId: String(chatid)
     });
 
-    if (!upload?.filename || !upload?.extn) {
-      throw new Error("upload failed");
+    if (
+      !upload?.filename ||
+      !upload?.extension
+    ) {
+
+      throw new Error(
+        "upload failed"
+      );
     }
 
+    // ---------------------------------
+    // CHAT MESSAGE FORM
+    // ---------------------------------
+
     const form = new FormData();
-    form.append("mediaid", mediaId);
-    form.append("savedname", upload.filename);
-    form.append("extn", upload.extn);
-    form.append("mimeType", extToMime(upload.extn));
-    form.append("fileSize", file.size);
+
+    form.append(
+      "mediaid",
+      mediaId
+    );
+
+    form.append(
+      "savedname",
+      upload.filename
+    );
+
+    form.append(
+      "extn",
+      upload.extension
+    );
+
+    form.append(
+      "mimeType",
+      extToMime(
+        upload.extension
+      )
+    );
+
+    form.append(
+      "fileSize",
+      file.size
+    );
+
+    // ---------------------------------
+    // SEND MESSAGE
+    // ---------------------------------
 
     const res = await fetch(
       `${MERE_URL}/merechats/chat/${encodeURIComponent(chatid)}/upload`,
       {
         method: "POST",
+
         body: form,
+
         headers: {
-          Authorization: `Bearer ${getState("token") || ""}`
+          Authorization:
+            `Bearer ${getState("token") || ""}`
         }
       }
     );
 
     if (!res.ok) {
-throw new Error(await res.text());
-}
 
-    const msg = await res.json();
-
-    // When server returns the canonical message, inject the previewUrl so the mounted
-    // server message shows the local copy immediately instead of requiring a roundtrip to the server asset.
-    if (msg && msg.media && previewUrl) {
-      msg.media = msg.media || {};
-      msg.media.url = previewUrl;
-      msg.media.__local_preview = true;
+      throw new Error(
+        await res.text()
+      );
     }
 
-    reconcilePending(chatid, clientId, msg);
+    const msg =
+      await res.json();
+
+    // ---------------------------------
+    // PRESERVE LOCAL PREVIEW
+    // ---------------------------------
+
+    if (
+      msg &&
+      msg.media &&
+      previewUrl
+    ) {
+
+      msg.media =
+        msg.media || {};
+
+      msg.media.url =
+        previewUrl;
+
+      msg.media.__local_preview =
+        true;
+    }
+
+    reconcilePending(
+      chatid,
+      clientId,
+      msg
+    );
+
   } catch (e) {
-    console.error("Upload failed", e);
-    // remove optimistic element if upload failed
-    const pending = pendingMap.get(clientId);
+
+    console.error(
+      "Upload failed",
+      e
+    );
+
+    // ---------------------------------
+    // REMOVE OPTIMISTIC UI
+    // ---------------------------------
+
+    const pending =
+      pendingMap.get(
+        clientId
+      );
+
     if (pending?.el) {
+
       try {
+
         pending.el.remove();
+
       } catch {}
     }
-    pendingMap.delete(clientId);
 
-    // revoke preview URL immediately on failure
+    pendingMap.delete(
+      clientId
+    );
+
+    // ---------------------------------
+    // CLEANUP URL
+    // ---------------------------------
+
     try {
-      URL.revokeObjectURL(previewUrl);
+
+      URL.revokeObjectURL(
+        previewUrl
+      );
+
     } catch {}
   } finally {
+
     fileInput.value = "";
   }
 }
