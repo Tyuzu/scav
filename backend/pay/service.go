@@ -49,19 +49,19 @@ func (p *PaymentService) RegisterDefaultResolvers() {
 
 	p.RegisterResolver("ticket", func(ctx context.Context, id string) (int64, error) {
 		var t struct{ Price int64 }
-		err := db.FindOne(ctx, "tickets", map[string]any{"ticketid": id}, &t)
+		err := db.FindOne(ctx, ticketsCollection, map[string]any{"ticketid": id}, &t)
 		return t.Price, err
 	})
 
 	p.RegisterResolver("menu", func(ctx context.Context, id string) (int64, error) {
 		var m struct{ Price int64 }
-		err := db.FindOne(ctx, "menu", map[string]any{"menuid": id}, &m)
+		err := db.FindOne(ctx, menuCollection, map[string]any{"menuid": id}, &m)
 		return m.Price, err
 	})
 
 	p.RegisterResolver("service", func(ctx context.Context, id string) (int64, error) {
 		var s struct{ Price int64 }
-		err := db.FindOne(ctx, "services", map[string]any{"serviceid": id}, &s)
+		err := db.FindOne(ctx, serviceCollection, map[string]any{"serviceid": id}, &s)
 		return s.Price, err
 	})
 
@@ -70,13 +70,27 @@ func (p *PaymentService) RegisterDefaultResolvers() {
 		return 0, nil
 	})
 
-	// orders - fetch total from order
+	// orders - fetch total from order or farmOrders
 	p.RegisterResolver("order", func(ctx context.Context, id string) (int64, error) {
+		// Try to find in regular orders collection first
 		var o struct {
 			Total int64 `bson:"total"`
 		}
-		err := db.FindOne(ctx, "orders", map[string]any{"orderId": id}, &o)
-		return o.Total, err
+		err := db.FindOne(ctx, ordersCollection, map[string]any{"orderId": id}, &o)
+		if err == nil {
+			return o.Total, nil
+		}
+
+		// If not found, try farm orders collection
+		var fo struct {
+			PriceAtPurchase float64 `bson:"priceAtPurchase"`
+		}
+		err = db.FindOne(ctx, farmOrdersCollection, map[string]any{"orderid": id}, &fo)
+		if err != nil {
+			return 0, err
+		}
+		// Convert rupees to paise (multiply by 100)
+		return int64(fo.PriceAtPurchase * 100), nil
 	})
 
 	// cart - custom entity, no fixed price
@@ -87,28 +101,28 @@ func (p *PaymentService) RegisterDefaultResolvers() {
 	// product - treat like menu item
 	p.RegisterResolver("product", func(ctx context.Context, id string) (int64, error) {
 		var p struct{ Price int64 }
-		err := db.FindOne(ctx, "products", map[string]any{"productid": id}, &p)
+		err := db.FindOne(ctx, productCollection, map[string]any{"productid": id}, &p)
 		return p.Price, err
 	})
 
 	// booking - has a price
 	p.RegisterResolver("booking", func(ctx context.Context, id string) (int64, error) {
 		var b struct{ Price int64 }
-		err := db.FindOne(ctx, "bookings", map[string]any{"bookingid": id}, &b)
+		err := db.FindOne(ctx, bookingsCollection, map[string]any{"bookingid": id}, &b)
 		return b.Price, err
 	})
 
 	// merch - has a price
 	p.RegisterResolver("merch", func(ctx context.Context, id string) (int64, error) {
 		var m struct{ Price int64 }
-		err := db.FindOne(ctx, "merch", map[string]any{"merchid": id}, &m)
+		err := db.FindOne(ctx, merchCollection, map[string]any{"merchid": id}, &m)
 		return m.Price, err
 	})
 
 	// crop - has a price
 	p.RegisterResolver("crop", func(ctx context.Context, id string) (int64, error) {
 		var c struct{ Price int64 }
-		err := db.FindOne(ctx, "crops", map[string]any{"cropid": id}, &c)
+		err := db.FindOne(ctx, cropsCollection, map[string]any{"cropid": id}, &c)
 		return c.Price, err
 	})
 

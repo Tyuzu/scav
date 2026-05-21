@@ -33,11 +33,13 @@ export async function displayMyOrders(container, isLoggedIn) {
   try {
     const res = await apiFetch("/order/mine", "GET");
 
-    if (!res || !Array.isArray(res.orders)) {
+    // Handle both array response and wrapped object response
+    const orders = Array.isArray(res) ? res : res?.orders;
+    if (!orders || !Array.isArray(orders)) {
       throw new Error("Invalid orders response");
     }
 
-    state.orders = normalizeOrders(res.orders);
+    state.orders = normalizeOrders(orders);
     state.currentPage = 1;
     render();
   } catch (err) {

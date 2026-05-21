@@ -24,9 +24,11 @@ function createElement(tag, attributes = {}, children = []) {
             }
         } else if (key in element) {
             // Directly assign known DOM properties like `value`, `type`, etc.
-            element[key] = value;
-        } else {
-            // Fallback to setAttribute
+            if (value !== undefined && value !== null) {
+                element[key] = value;
+            }
+        } else if (value !== undefined && value !== null) {
+            // Fallback to setAttribute (skip undefined/null values)
             element.setAttribute(key, value);
         }
     }

@@ -35,12 +35,15 @@ export function WalletTransactions({ onBalanceChange }) {
         container.querySelectorAll(".txn-item, .load-more, .txn-error").forEach(el => el.remove());
         try {
             const res = await apiFetch(`/wallet/transactions?skip=${skip}&limit=${limit}`);
-            if (!res || !res.transactions) {
+            
+            // Handle both array response and wrapped object response
+            const transactions = Array.isArray(res) ? res : res?.transactions;
+            if (!transactions || !Array.isArray(transactions)) {
                 container.appendChild(createElement("div", { class: "txn-error" }, ["Error loading transactions"]));
                 return;
             }
 
-            res.transactions.forEach(txn => {
+            transactions.forEach(txn => {
                 const typeLabel = txn.type === "topup" ? "Top-up" : txn.type === "payment" ? "Payment" : txn.type.toUpperCase();
                 const typeClass = txn.type === "topup" ? "txn-topup" : txn.type === "payment" ? "txn-payment" : `txn-${txn.type}`;
 
@@ -49,7 +52,7 @@ export function WalletTransactions({ onBalanceChange }) {
                         `${typeLabel} ${formatCurrency(txn.amount)} via ${txn.method}`
                     ]),
                     createElement("div", { class: "txn-meta" }, [
-                        renderStatusBadge(txn.state),
+                        renderStatusBadge(txn.status),
                         ` ${Datex(txn.created_at)}`
                     ])
                 ]);
@@ -57,36 +60,37 @@ export function WalletTransactions({ onBalanceChange }) {
                 // Sender/recipient info
                 const accounts = [];
                 if (txn.from_account) {
-accounts.push(`From: ${txn.from_account}`);
-}
+                    accounts.push(`From: ${txn.from_account}`);
+                }
                 if (txn.to_account) {
-accounts.push(`To: ${txn.to_account}`);
-}
+                    accounts.push(`To: ${txn.to_account}`);
+                }
                 if (accounts.length) {
-txnEl.appendChild(createElement("div", { class: "txn-accounts" }, [accounts.join(" | ")]));
-}
+                    txnEl.appendChild(createElement("div", { class: "txn-accounts" }, [accounts.join(" | ")]));
+                }
                 
-                // Extra meta
-                if (txn.meta) {
-                    const metaInfo = [];
-                    if (txn.meta.note) {
-metaInfo.push(txn.meta.note);
-}
-                    if (txn.meta.entity_type && txn.meta.entity_id) {
-metaInfo.push(`${txn.meta.entity_type} (${txn.meta.entity_id})`);
-}
-                    if (metaInfo.length > 0) {
-txnEl.appendChild(createElement("div", { class: "txn-extra" }, [metaInfo.join(" | ")]));
-}
+                // Extra meta - check top-level entity info and meta object
+                const metaInfo = [];
+                if (txn.meta && txn.meta.note) {
+                    metaInfo.push(txn.meta.note);
+                }
+                // Entity type and ID can be at top level or in meta
+                const entityType = txn.entity_type || txn.meta?.entity_type;
+                const entityId = txn.entity_id || txn.meta?.entity_id;
+                if (entityType && entityId) {
+                    metaInfo.push(`${entityType} (${entityId})`);
+                }
+                if (metaInfo.length > 0) {
+                    txnEl.appendChild(createElement("div", { class: "txn-extra" }, [metaInfo.join(" | ")]));
                 }
 
                 // Refund button
-                if (txn.type === "payment" && txn.state === "success" && txn.from_account === txn.userid) {
+                if (txn.type === "payment" && txn.status === "success" && txn.from_account === txn.userid) {
                     const refundBtn = Button("Refund", "", {
                         click: async () => {
                             if (!confirm("Refund this transaction?")) {
-return;
-}
+                                return;
+                            }
                             refundBtn.disabled = true;
                             try {
                                 const idempotencyKey = uuidv4();
@@ -96,8 +100,8 @@ return;
                                 if (refundRes.success) {
                                     Notify("Refund successful", { type: "success" });
                                     if (onBalanceChange) {
-onBalanceChange();
-}
+                                        onBalanceChange();
+                                    }
                                     skip = 0;
                                     await loadTransactions();
                                 } else {
@@ -117,7 +121,7 @@ onBalanceChange();
                 container.appendChild(txnEl);
             });
 
-            if (res.transactions.length === limit) {
+            if (transactions.length === limit) {
                 const moreBtn = Button("Load More", "load-more", {
                     click: async () => {
                         moreBtn.disabled = true;

@@ -3,6 +3,7 @@ package farms
 import (
 	"context"
 	"net/http"
+	"strconv"
 	"time"
 
 	"naevis/infra"
@@ -24,6 +25,20 @@ func GetMyFarmOrders(app *infra.Deps) httprouter.Handle {
 
 		userID := utils.GetUserIDFromRequest(r)
 
+		// Parse pagination parameters
+		skip := 0
+		limit := 10
+		if s := r.URL.Query().Get("skip"); s != "" {
+			if parsed, err := strconv.Atoi(s); err == nil && parsed >= 0 {
+				skip = parsed
+			}
+		}
+		if l := r.URL.Query().Get("limit"); l != "" {
+			if parsed, err := strconv.Atoi(l); err == nil && parsed > 0 && parsed <= 100 {
+				limit = parsed
+			}
+		}
+
 		var orders []models.FarmOrder
 		if err := app.DB.FindMany(
 			ctx,
@@ -38,9 +53,25 @@ func GetMyFarmOrders(app *infra.Deps) httprouter.Handle {
 			return
 		}
 
+		// Apply pagination
+		total := len(orders)
+		start := skip
+		end := skip + limit
+		if start > total {
+			start = total
+		}
+		if end > total {
+			end = total
+		}
+
+		paginatedOrders := orders[start:end]
+
 		utils.RespondWithJSON(w, http.StatusOK, utils.M{
 			"success": true,
-			"orders":  orders,
+			"orders":  paginatedOrders,
+			"total":   total,
+			"skip":    skip,
+			"limit":   limit,
 		})
 	}
 }

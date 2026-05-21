@@ -197,15 +197,22 @@ func processFarmOrders(ctx context.Context, checkout models.CheckoutSession, app
 	var orders []models.FarmOrder
 
 	for farmID, items := range grouped {
+		// Calculate total price for this farm order
+		var farmOrderPrice int64 = 0
+		for _, item := range items {
+			farmOrderPrice += item.Price * int64(item.Quantity)
+		}
+
 		order := models.FarmOrder{
-			OrderID:    "ORD" + utils.GenerateRandomDigitString(9),
-			UserID:     checkout.UserID,
-			FarmID:     farmID,
-			Status:     "pending",
-			ApprovedBy: []string{},
-			Items:      map[string][]models.CartItem{"crops": items},
-			CreatedAt:  time.Now(),
-			Quantity:   len(items),
+			OrderID:         "ORD" + utils.GenerateRandomDigitString(9),
+			UserID:          checkout.UserID,
+			FarmID:          farmID,
+			Status:          "pending",
+			ApprovedBy:      []string{},
+			Items:           map[string][]models.CartItem{"crops": items},
+			CreatedAt:       time.Now(),
+			Quantity:        len(items),
+			PriceAtPurchase: float64(farmOrderPrice) / 100, // Convert paise to rupees
 		}
 
 		if err := app.DB.Insert(ctx, farmOrdersCollection, order); err != nil {

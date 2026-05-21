@@ -90,7 +90,7 @@ export function createFormGroup({
       inputElement = createElement("textarea", {
         id: id || undefined,
         name: inputName || undefined,
-        placeholder: placeholder || undefined
+        placeholder: placeholder || ""
       });
       if (value !== undefined && value !== null) {
         inputElement.value = String(value);
@@ -169,7 +169,7 @@ export function createFormGroup({
         type,
         id: id || undefined,
         name: inputName || undefined,
-        placeholder: placeholder || undefined,
+        placeholder: placeholder || "",
         value: (value !== null) ? String(value) : ""
       });
       if (accept) {

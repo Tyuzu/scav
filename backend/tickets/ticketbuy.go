@@ -160,12 +160,17 @@ type TicketPurchaseRequest struct {
 }
 
 func ConfirmTicketPurchase(app *infra.Deps) httprouter.Handle {
-	return func(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
+	return func(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 		var req TicketPurchaseRequest
 		if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
 			http.Error(w, "Invalid request", http.StatusBadRequest)
 			return
 		}
+
+		// Extract eventid and ticketid from URL parameters
+		req.EventID = ps.ByName("eventid")
+		req.TicketID = ps.ByName("ticketid")
+
 		buyTicket(w, r, req, app)
 	}
 }

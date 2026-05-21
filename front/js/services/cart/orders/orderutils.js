@@ -4,10 +4,18 @@ import { createElement } from "../../../components/createElement.js";
 
 export function normalizeOrders(orders) {
   return [...orders].sort((a, b) => {
-    const aTime = new Date(a.createdAt || 0).getTime();
-    const bTime = new Date(b.createdAt || 0).getTime();
+    // Handle both createdAt and created_at field names
+    const aTime = new Date(a.createdAt || a.created_at || 0).getTime();
+    const bTime = new Date(b.createdAt || b.created_at || 0).getTime();
     return bTime - aTime;
-  });
+  }).map(order => ({
+    ...order,
+    // Normalize field names: use orderId, createdAt internally
+    orderId: order.orderId || order.orderid,
+    createdAt: order.createdAt || order.created_at,
+    // Ensure total is in rupees (backend stores in paise for some types)
+    total: typeof order.total === 'string' ? parseInt(order.total) : (order.total || 0)
+  }));
 }
 
 export function getFilteredOrders(orders, filters) {
@@ -16,7 +24,7 @@ export function getFilteredOrders(orders, filters) {
 
   return orders.filter(order => {
     const orderStatus = (order.status || "").trim().toLowerCase();
-    const orderDate = toLocalDateKey(order.createdAt);
+    const orderDate = toLocalDateKey(order.createdAt || order.created_at);
 
     if (status && orderStatus !== status) {
       return false;
@@ -53,7 +61,24 @@ export function toggleExpanded(state, orderId) {
 }
 
 export function getOrderProducts(order) {
-  return Array.isArray(order?.items?.products) ? order.items.products : [];
+  // Handle both structures: items.products array or items as a map of categories
+  if (Array.isArray(order?.items?.products)) {
+    return order.items.products;
+  }
+  
+  // If items is a map (like from backend with crops, products, etc categories)
+  if (order?.items && typeof order.items === 'object' && !Array.isArray(order.items)) {
+    const allItems = [];
+    for (const category in order.items) {
+      const categoryItems = order.items[category];
+      if (Array.isArray(categoryItems)) {
+        allItems.push(...categoryItems);
+      }
+    }
+    return allItems;
+  }
+  
+  return [];
 }
 
 
@@ -76,11 +101,13 @@ export function formatDate(dateStr) {
     });
 }
 
-export function formatINR(val = 0) {
-  return Intl.NumberFormat("en-IN", {
+export function formatINR(val = 0, isPaise = false) {
+  // If value is in paise (backend storage format), convert to rupees
+  const rupees = isPaise ? val / 100 : val;
+  return new Intl.NumberFormat("en-IN", {
     style: "currency",
     currency: "INR",
-  }).format(val);
+  }).format(rupees);
 }
 
 /* ───────────────── Actions ───────────────── */
