@@ -1,16 +1,21 @@
 package droping
 
 import (
+	"context"
+	"encoding/json"
 	"fmt"
 	"log"
+	"net/http"
+	"strings"
+	"time"
+
+	"github.com/julienschmidt/httprouter"
+
+	"naevis/config/mqevent"
 	"naevis/dropify/filemgr"
 	"naevis/dropify/services"
 	"naevis/infra"
 	"naevis/utils"
-	"net/http"
-	"strings"
-
-	"github.com/julienschmidt/httprouter"
 )
 
 const maxUploadBytes = 200 << 20 // 200 MB
@@ -25,22 +30,22 @@ type Attachment struct {
 
 // valid entity types
 var validEntities = map[string]filemgr.EntityType{
-	"artist":  filemgr.EntityArtist,
-	"user":    filemgr.EntityUser,
-	"baito":   filemgr.EntityBaito,
-	"worker":  filemgr.EntityWorker,
-	"song":    filemgr.EntitySong,
-	"post":    filemgr.EntityPost,
-	"chat":    filemgr.EntityChat,
-	"event":   filemgr.EntityEvent,
-	"farm":    filemgr.EntityFarm,
-	"crop":    filemgr.EntityCrop,
-	"place":   filemgr.EntityPlace,
-	"media":   filemgr.EntityMedia,
-	"feed":    filemgr.EntityFeed,
-	"recipe":  filemgr.EntityRecipe,
-	"product": filemgr.EntityProduct,
-	"live":    filemgr.EntityLive,
+	"artist":       filemgr.EntityArtist,
+	"user":         filemgr.EntityUser,
+	"baito":        filemgr.EntityBaito,
+	"baito_worker": filemgr.EntityWorker,
+	"song":         filemgr.EntitySong,
+	"post":         filemgr.EntityPost,
+	"chat":         filemgr.EntityChat,
+	"event":        filemgr.EntityEvent,
+	"farm":         filemgr.EntityFarm,
+	"crop":         filemgr.EntityCrop,
+	"place":        filemgr.EntityPlace,
+	"media":        filemgr.EntityMedia,
+	"feedpost":     filemgr.EntityFeed,
+	"recipe":       filemgr.EntityRecipe,
+	"product":      filemgr.EntityProduct,
+	"live":         filemgr.EntityLive,
 }
 
 // FiledropHandler handles file uploads via multipart/form-data
@@ -52,7 +57,7 @@ func FiledropHandler(
 ) {
 
 	// -------------------------
-	// Validate request method + size
+	// Validate request
 	// -------------------------
 
 	if err := validateUploadRequest(w, r); err != nil {
@@ -132,7 +137,11 @@ func FiledropHandler(
 		return
 	}
 
-	log.Printf("[Filedrop] entityType=%s entityId=%s", entityType, entityId)
+	log.Printf(
+		"[Filedrop] entityType=%s entityId=%s",
+		entityType,
+		entityId,
+	)
 
 	// -------------------------
 	// Service
@@ -215,6 +224,64 @@ func FiledropHandler(
 		)
 
 		return
+	}
+
+	// -------------------------
+	// Publish media events
+	// -------------------------
+
+	for _, attachment := range attachments {
+
+		mediaPayload := mqevent.MediaUploadedPayload{
+			EntityType: entityType,
+			EntityID:   entityId,
+			Extension:  attachment.Extension,
+			FileName:   attachment.Filename,
+			FilePath:   attachment.Key,
+			Timestamp:  time.Now().UTC().UnixNano(),
+		}
+
+		mediaBytes, err := json.Marshal(mediaPayload)
+		if err != nil {
+
+			log.Printf(
+				"[Filedrop] failed to marshal media event: %v",
+				err,
+			)
+
+			continue
+		}
+
+		publishCtx, cancel := context.WithTimeout(
+			context.Background(),
+			3*time.Second,
+		)
+
+		err = app.MQ.Publish(
+			publishCtx,
+			mqevent.MediaUploaded,
+			mediaBytes,
+		)
+
+		cancel()
+
+		if err != nil {
+
+			log.Printf(
+				"[Filedrop] failed to publish media event: %v",
+				err,
+			)
+
+			continue
+		}
+
+		log.Printf(
+			"[Filedrop] published media event entity=%s id=%s file=%s path=%s",
+			entityType,
+			entityId,
+			attachment.Filename,
+			attachment.Key,
+		)
 	}
 
 	// -------------------------
