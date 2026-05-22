@@ -5,12 +5,11 @@ import (
 	"naevis/infra"
 	"naevis/middleware"
 	"naevis/pay"
-	"naevis/ratelim"
 
 	"github.com/julienschmidt/httprouter"
 )
 
-func AddPayRoutes(r *httprouter.Router, app *infra.Deps, rl *ratelim.RateLimiter) {
+func AddPayRoutes(r *httprouter.Router, app *infra.Deps, rl *middleware.RateLimiter) {
 	auth := middleware.Authenticate(app)
 
 	paySvc := pay.NewPaymentService(app)

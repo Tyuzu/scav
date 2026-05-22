@@ -18,6 +18,7 @@ require (
 )
 
 require (
+	github.com/disintegration/imaging v1.6.2
 	github.com/nats-io/nats.go v1.48.0
 	github.com/stripe/stripe-go/v83 v83.2.1
 )
@@ -34,6 +35,7 @@ require (
 	github.com/xdg-go/scram v1.1.2 // indirect
 	github.com/xdg-go/stringprep v1.0.4 // indirect
 	github.com/youmark/pkcs8 v0.0.0-20240726163527-a2c0da244d78 // indirect
+	golang.org/x/image v0.0.0-20191009234506-e7c1f5e7dbb8 // indirect
 	golang.org/x/mod v0.31.0 // indirect
 	golang.org/x/sync v0.19.0 // indirect
 	golang.org/x/sys v0.39.0 // indirect

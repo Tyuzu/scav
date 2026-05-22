@@ -3,14 +3,13 @@ package routes
 import (
 	"naevis/config"
 	"naevis/middleware"
-	"naevis/ratelim"
 	"net/http"
 	"time"
 )
 
 // SecurityMiddlewareConfig holds all security middleware instances
 type SecurityMiddlewareConfig struct {
-	RateLimiters     *ratelim.MultiLimiter
+	RateLimiters     *middleware.MultiLimiter
 	CSRFManager      *middleware.CSRFManager
 	ContentValidator *middleware.ContentTypeValidator
 	SizeValidator    *middleware.RequestSizeValidator
@@ -19,7 +18,7 @@ type SecurityMiddlewareConfig struct {
 // InitializeSecurityMiddleware creates and configures all security middleware
 func InitializeSecurityMiddleware() *SecurityMiddlewareConfig {
 	// Initialize rate limiters
-	multiLimiter := ratelim.NewMultiLimiter()
+	multiLimiter := middleware.NewMultiLimiter()
 
 	// Configure per-endpoint rate limits from config
 	for endpoint, limits := range config.RateLimitEndpoints {
@@ -75,7 +74,7 @@ func ApplyDefaultSecurityMiddleware(handler http.Handler, secConfig *SecurityMid
 }
 
 // ApplyRateLimitingMiddleware applies rate limiting to specific routes
-func ApplyRateLimitingMiddleware(endpoint string, handler http.Handler, rateLimiter *ratelim.MultiLimiter) http.Handler {
+func ApplyRateLimitingMiddleware(endpoint string, handler http.Handler, rateLimiter *middleware.MultiLimiter) http.Handler {
 	return rateLimiter.GetMultiMiddleware(endpoint)(handler)
 }
 

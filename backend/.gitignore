@@ -1,32 +1,66 @@
-# If you prefer the allow list template instead of the deny list, see community template:
-# https://github.com/github/gitignore/blob/main/community/Golang/Go.AllowList.gitignore
-#
-# Binaries for programs and plugins
+# -----------------------------------------------------------------------------
+# Go
+# -----------------------------------------------------------------------------
+
+# Binaries
 *.exe
 *.exe~
 *.dll
 *.so
 *.dylib
 
-# Test binary, built with `go test -c`
+# Test binaries
 *.test
 
-# Output of the go coverage tool, specifically when used with LiteIDE
+# Coverage / profiling
 *.out
+coverage.*
+*.coverprofile
+profile.cov
 
-# Dependency directories (remove the comment below to include it)
-# vendor/
-
-# Go workspace file
+# Workspace
 go.work
 go.work.sum
 
-# env file
+# -----------------------------------------------------------------------------
+# Environment
+# -----------------------------------------------------------------------------
+
 .env
 
-.ttf
-.md
-docs
+# -----------------------------------------------------------------------------
+# Certificates / secrets
+# -----------------------------------------------------------------------------
 
-# certs
 *.pem
+
+# -----------------------------------------------------------------------------
+# Generated / runtime directories
+# -----------------------------------------------------------------------------
+
+static/
+mediacache/
+docs/
+
+# -----------------------------------------------------------------------------
+# Optional dependency directory
+# Uncomment if you do NOT want to commit vendored dependencies
+# -----------------------------------------------------------------------------
+
+# vendor/
+
+# -----------------------------------------------------------------------------
+# Editor / IDE
+# Uncomment if needed
+# -----------------------------------------------------------------------------
+
+# .idea/
+# .vscode/
+
+# -----------------------------------------------------------------------------
+# Optional asset exclusions
+# Uncomment if generated assets should not be tracked
+# -----------------------------------------------------------------------------
+
+# *.ttf
+# *.md

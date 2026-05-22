@@ -1,4 +1,4 @@
-package ratelim
+package middleware
 
 import (
 	"net"
@@ -11,24 +11,24 @@ import (
 	"golang.org/x/time/rate"
 )
 
-// RateLimiter is a middleware struct with configuration and visitor state
-type RateLimiter struct {
-	visitors     map[string]*visitorEntry
-	mu           sync.RWMutex
-	rate         rate.Limit
-	burst        int
-	cleanupAfter time.Duration
-	maxEntries   int
-	cleanupTick  *time.Ticker
-	done         chan struct{}
-}
-
+// visitorEntry tracks a rate limiter and its last access time for TTL-based cleanup
 type visitorEntry struct {
 	limiter  *rate.Limiter
 	lastSeen time.Time
 }
 
-// NewRateLimiter initializes a new RateLimiter
+// RateLimiter is a middleware struct with configuration and visitor state
+type RateLimiter struct {
+	visitors     map[string]*visitorEntry
+	mu           sync.Mutex
+	rate         rate.Limit
+	burst        int
+	cleanupAfter time.Duration
+	maxEntries   int
+	stopChan     chan struct{}
+}
+
+// NewRateLimiter initializes a new RateLimiter with a background cleanup goroutine
 func NewRateLimiter(r rate.Limit, b int, cleanupAfter time.Duration, maxEntries int) *RateLimiter {
 	rl := &RateLimiter{
 		visitors:     make(map[string]*visitorEntry),
@@ -36,24 +36,23 @@ func NewRateLimiter(r rate.Limit, b int, cleanupAfter time.Duration, maxEntries 
 		burst:        b,
 		cleanupAfter: cleanupAfter,
 		maxEntries:   maxEntries,
-		cleanupTick:  time.NewTicker(cleanupAfter / 2),
-		done:         make(chan struct{}),
+		stopChan:     make(chan struct{}),
 	}
-
-	// Background cleanup goroutine (only one instead of unbounded)
+	// Start single cleanup goroutine instead of one per IP
 	go rl.cleanupLoop()
-
 	return rl
 }
 
-// cleanupLoop periodically removes stale entries
+// cleanupLoop periodically removes stale entries from the visitors map
 func (rl *RateLimiter) cleanupLoop() {
+	ticker := time.NewTicker(rl.cleanupAfter / 2) // cleanup twice per TTL
+	defer ticker.Stop()
+
 	for {
 		select {
-		case <-rl.done:
-			rl.cleanupTick.Stop()
+		case <-rl.stopChan:
 			return
-		case <-rl.cleanupTick.C:
+		case <-ticker.C:
 			rl.mu.Lock()
 			now := time.Now()
 			for ip, entry := range rl.visitors {
@@ -66,24 +65,16 @@ func (rl *RateLimiter) cleanupLoop() {
 	}
 }
 
-// getLimiter returns an existing limiter or creates a new one
-func (rl *RateLimiter) getLimiter(ip string) *rate.Limiter {
-	rl.mu.RLock()
-	if entry, exists := rl.visitors[ip]; exists {
-		// Update last seen time
-		rl.mu.RUnlock()
-		rl.mu.Lock()
-		entry.lastSeen = time.Now()
-		rl.mu.Unlock()
-		return entry.limiter
-	}
-	rl.mu.RUnlock()
+// Stop gracefully shuts down the cleanup goroutine
+func (rl *RateLimiter) Stop() {
+	close(rl.stopChan)
+}
 
-	// Check if we can add new entry
+// getLimiter returns an existing limiter or creates a new one, updating lastSeen time
+func (rl *RateLimiter) getLimiter(ip string) *rate.Limiter {
 	rl.mu.Lock()
 	defer rl.mu.Unlock()
 
-	// Double-check after acquiring write lock
 	if entry, exists := rl.visitors[ip]; exists {
 		entry.lastSeen = time.Now()
 		return entry.limiter
@@ -91,7 +82,7 @@ func (rl *RateLimiter) getLimiter(ip string) *rate.Limiter {
 
 	// Enforce max entries to avoid memory abuse
 	if len(rl.visitors) >= rl.maxEntries {
-		// Fallback to strict rate limiter
+		// Return a strict fallback limiter without storing it
 		return rate.NewLimiter(rate.Limit(0.1), 1)
 	}
 
@@ -104,19 +95,16 @@ func (rl *RateLimiter) getLimiter(ip string) *rate.Limiter {
 	return limiter
 }
 
-// Stop gracefully shuts down cleanup goroutine
-func (rl *RateLimiter) Stop() {
-	close(rl.done)
-}
-
-// extractClientIP tries to determine the client's real IP address
+// extractClientIP tries to determine the client's real IP address.
+// Note: X-Forwarded-For can be spoofed; only trust it if behind a trusted proxy.
 func extractClientIP(r *http.Request) string {
-	// Respect reverse proxy headers
+	// Only use X-Forwarded-For if you control the proxies. Comment out if untrusted.
 	if xff := r.Header.Get("X-Forwarded-For"); xff != "" {
 		parts := strings.Split(xff, ",")
 		return strings.TrimSpace(parts[0])
 	}
-	// Otherwise use RemoteAddr
+
+	// Fallback: use RemoteAddr
 	ip, _, err := net.SplitHostPort(r.RemoteAddr)
 	if err != nil {
 		return r.RemoteAddr
@@ -131,11 +119,34 @@ func (rl *RateLimiter) Limit(next httprouter.Handle) httprouter.Handle {
 		limiter := rl.getLimiter(ip)
 
 		if !limiter.Allow() {
-			// Optional logging could go here
+			w.Header().Set("Retry-After", "60")
 			http.Error(w, "Too many requests. Please try again later.", http.StatusTooManyRequests)
 			return
 		}
 
 		next(w, r, ps)
 	}
+}
+
+// LimitHandler adapts the Limit middleware for use with http.Handler
+func (rl *RateLimiter) LimitHandler(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		ip := extractClientIP(r)
+		limiter := rl.getLimiter(ip)
+
+		if !limiter.Allow() {
+			w.Header().Set("Retry-After", "60")
+			http.Error(w, "Too many requests. Please try again later.", http.StatusTooManyRequests)
+			return
+		}
+
+		next.ServeHTTP(w, r)
+	})
+}
+
+// Allow checks if a request is allowed based on rate limiting
+func (rl *RateLimiter) Allow(r *http.Request) bool {
+	ip := extractClientIP(r)
+	limiter := rl.getLimiter(ip)
+	return limiter.Allow()
 }

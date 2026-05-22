@@ -2,8 +2,8 @@ package routes
 
 import (
 	"naevis/infra"
+	"naevis/middleware"
 	places "naevis/places/tabs"
-	"naevis/ratelim"
 
 	"github.com/julienschmidt/httprouter"
 )
@@ -107,7 +107,7 @@ func DisplayPlaceDetailsFallback(router *httprouter.Router, app *infra.Deps) {
 	router.GET("/api/v1/place/:placeid/details", places.GetDetailsFallback)
 }
 
-func AddPlaceTabRoutes(router *httprouter.Router, app *infra.Deps, rateLimiter *ratelim.RateLimiter) {
+func AddPlaceTabRoutes(router *httprouter.Router, app *infra.Deps, rateLimiter *middleware.RateLimiter) {
 	DisplayPlaceMenu(router, app)
 	DisplayPlaceRooms(router, app)
 	DisplayPlaceFacilities(router, app)

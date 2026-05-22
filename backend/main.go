@@ -16,7 +16,6 @@ import (
 	"naevis/mechat"
 	"naevis/middleware"
 	"naevis/newchat"
-	"naevis/ratelim"
 	"naevis/routes"
 
 	"github.com/rs/cors"
@@ -43,7 +42,7 @@ func main() {
 	// =====================
 	// Rate limiter
 	// =====================
-	rateLimiter := ratelim.NewRateLimiter(
+	rateLimiter := middleware.NewRateLimiter(
 		1,
 		12,
 		10*time.Minute,

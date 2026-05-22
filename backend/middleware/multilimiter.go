@@ -1,8 +1,11 @@
-package ratelim
+package middleware
 
 import (
 	"net/http"
 	"sync"
+	"time"
+
+	"golang.org/x/time/rate"
 )
 
 // MultiLimiter manages multiple rate limiters for different endpoints
@@ -20,38 +23,57 @@ func NewMultiLimiter() *MultiLimiter {
 
 // AddLimiter adds a rate limiter for a specific endpoint
 func (ml *MultiLimiter) AddLimiter(endpoint string, requests int, window interface{}) {
-	// Note: The existing RateLimiter uses golang.org/x/time/rate.Limit
-	// This is a simplified compatibility shim
 	ml.mu.Lock()
 	defer ml.mu.Unlock()
-	// Store basic configuration
-	ml.limiters[endpoint] = nil // Placeholder for configuration
-}
 
-// Check checks if a request is allowed for the given endpoint
-func (ml *MultiLimiter) Check(endpoint string, clientID string) bool {
-	ml.mu.RLock()
-	_, exists := ml.limiters[endpoint]
-	ml.mu.RUnlock()
-
-	if !exists {
-		return true // No limit configured, allow all
+	var duration time.Duration
+	if d, ok := window.(time.Duration); ok {
+		duration = d
+	} else if d, ok := window.(int); ok {
+		duration = time.Duration(d) * time.Second
+	} else {
+		duration = 1 * time.Minute // default
 	}
 
-	// Use the main RateLimiter for checks
-	return true
+	// Create a RateLimiter with the specified requests per window
+	requestsPerSecond := float64(requests) / duration.Seconds()
+	limiter := NewRateLimiter(
+		rate.Limit(requestsPerSecond),
+		requests,
+		5*time.Minute,
+		10000,
+	)
+
+	ml.limiters[endpoint] = limiter
+}
+
+// GetLimiter retrieves the limiter for an endpoint, or returns nil if not configured
+func (ml *MultiLimiter) GetLimiter(endpoint string) *RateLimiter {
+	ml.mu.RLock()
+	defer ml.mu.RUnlock()
+	return ml.limiters[endpoint]
 }
 
 // GetMultiMiddleware returns a middleware that applies per-endpoint rate limiting
 func (ml *MultiLimiter) GetMultiMiddleware(endpoint string) func(http.Handler) http.Handler {
 	return func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			ml.mu.RLock()
+			limiter, exists := ml.limiters[endpoint]
+			ml.mu.RUnlock()
+
+			// If no limit configured for this endpoint, allow all
+			if !exists || limiter == nil {
+				next.ServeHTTP(w, r)
+				return
+			}
+
 			// Extract client IP for rate limiting
 			ip := extractClientIP(r)
+			rateLimiter := limiter.getLimiter(ip)
 
-			// Check rate limit (simplified for now)
-			// In production, use the full RateLimiter implementation
-			if !ml.Check(endpoint, ip) {
+			// Check rate limit
+			if !rateLimiter.Allow() {
 				w.Header().Set("Retry-After", "60")
 				http.Error(w, "Rate limit exceeded. Please try again later.", http.StatusTooManyRequests)
 				return

@@ -2,12 +2,12 @@ package routes
 
 import (
 	"naevis/infra"
-	"naevis/ratelim"
+	"naevis/middleware"
 
 	"github.com/julienschmidt/httprouter"
 )
 
-func RoutesWrapper(router *httprouter.Router, app *infra.Deps, rateLimiter *ratelim.RateLimiter) {
+func RoutesWrapper(router *httprouter.Router, app *infra.Deps, rateLimiter *middleware.RateLimiter) {
 	AddActivityRoutes(router, app, rateLimiter)
 	AddAdminRoutes(router, app, rateLimiter)
 	AddAdsRoutes(router, app, rateLimiter)
@@ -22,6 +22,7 @@ func RoutesWrapper(router *httprouter.Router, app *infra.Deps, rateLimiter *rate
 	// AddDiscordRoutes(router, app, rateLimiter)
 	AddEventsRoutes(router, app, rateLimiter)
 	AddFanmadeRoutes(router, app, rateLimiter)
+	AddFiledropRoutes(router, app, rateLimiter)
 	RegisterFarmRoutes(router, app, rateLimiter)
 	AddFeedRoutes(router, app, rateLimiter)
 	AddHomeRoutes(router, app, rateLimiter)

@@ -3,13 +3,13 @@ package routes
 import (
 	"fmt"
 	"naevis/infra"
-	"naevis/ratelim"
+	"naevis/middleware"
 	"net/http"
 
 	"github.com/julienschmidt/httprouter"
 )
 
-func SetupRouter(app *infra.Deps, rateLimiter *ratelim.RateLimiter) *httprouter.Router {
+func SetupRouter(app *infra.Deps, rateLimiter *middleware.RateLimiter) *httprouter.Router {
 	router := httprouter.New()
 
 	router.GET("/health", Index)

@@ -37,7 +37,6 @@ import (
 	"naevis/posts"
 	"naevis/products"
 	"naevis/profile"
-	"naevis/ratelim"
 	"naevis/recipes"
 	"naevis/reports"
 	"naevis/reviews"
@@ -50,16 +49,15 @@ import (
 	"naevis/utils"
 	"naevis/vendors"
 	"naevis/vlive"
-	"net/http"
 
 	"github.com/julienschmidt/httprouter"
 )
 
-func AddStaticRoutes(router *httprouter.Router) {
-	router.ServeFiles("/static/uploads/*filepath", http.Dir("static/uploads"))
-}
+// func AddStaticRoutes(router *httprouter.Router) {
+// 	router.ServeFiles("/static/uploads/*filepath", http.Dir("static/uploads"))
+// }
 
-func AddActivityRoutes(router *httprouter.Router, app *infra.Deps, rateLimiter *ratelim.RateLimiter) {
+func AddActivityRoutes(router *httprouter.Router, app *infra.Deps, rateLimiter *middleware.RateLimiter) {
 	// If activity log/feed is user-specific, keep auth
 	authmidware := middleware.Authenticate(app)
 	router.POST("/api/v1/activity/log", rateLimiter.Limit(authmidware(activity.LogActivities(app))))
@@ -69,7 +67,7 @@ func AddActivityRoutes(router *httprouter.Router, app *infra.Deps, rateLimiter *
 	router.POST("/api/v1/scitylana/event", activity.HandleAnalyticsEvent(app))
 }
 
-// func AddAdminRoutes(router *httprouter.Router, app *infra.Deps, rateLimiter *ratelim.RateLimiter) {
+// func AddAdminRoutes(router *httprouter.Router, app *infra.Deps, rateLimiter *middleware.RateLimiter) {
 
 // 	// Moderator-only endpoints
 // 	router.GET("/api/v1/moderator/reports",
@@ -87,7 +85,7 @@ func AddActivityRoutes(router *httprouter.Router, app *infra.Deps, rateLimiter *
 // 	)
 // }
 
-func AddAdminRoutes(router *httprouter.Router, app *infra.Deps, rateLimiter *ratelim.RateLimiter) {
+func AddAdminRoutes(router *httprouter.Router, app *infra.Deps, rateLimiter *middleware.RateLimiter) {
 	authmidware := middleware.Authenticate(app)
 
 	// Moderator-only endpoints
@@ -131,13 +129,13 @@ func AddAdminRoutes(router *httprouter.Router, app *infra.Deps, rateLimiter *rat
 	)
 }
 
-func AddJobRoutes(router *httprouter.Router, app *infra.Deps, rateLimiter *ratelim.RateLimiter) {
+func AddJobRoutes(router *httprouter.Router, app *infra.Deps, rateLimiter *middleware.RateLimiter) {
 	authmidware := middleware.Authenticate(app)
 	router.GET("/api/v1/jobs/:entitytype/:entityid", rateLimiter.Limit(jobs.GetJobsRelatedTOEntity(app)))
 	router.POST("/api/v1/jobs/:entitytype/:entityid", rateLimiter.Limit(authmidware(jobs.CreateBaitoForEntity(app))))
 }
 
-func AddBaitoRoutes(router *httprouter.Router, app *infra.Deps, rateLimiter *ratelim.RateLimiter) {
+func AddBaitoRoutes(router *httprouter.Router, app *infra.Deps, rateLimiter *middleware.RateLimiter) {
 	authmidware := middleware.Authenticate(app)
 	// Create / update jobs → require auth
 	router.POST("/api/v1/baitos/baito", rateLimiter.Limit(authmidware(baito.CreateBaito(app))))
@@ -169,7 +167,7 @@ func AddBaitoRoutes(router *httprouter.Router, app *infra.Deps, rateLimiter *rat
 	router.GET("/api/v1/baitos/worker/:workerId", rateLimiter.Limit(baito.GetWorkerById(app)))
 }
 
-func AddBeatRoutes(router *httprouter.Router, app *infra.Deps, rateLimiter *ratelim.RateLimiter) {
+func AddBeatRoutes(router *httprouter.Router, app *infra.Deps, rateLimiter *middleware.RateLimiter) {
 	authmidware := middleware.Authenticate(app)
 	// User must be logged in to like/unlike
 	router.PUT("/api/v1/likes/:entitytype/like/:entityid", rateLimiter.Limit(authmidware(beats.ToggleLike(app))))
@@ -200,7 +198,7 @@ func AddBeatRoutes(router *httprouter.Router, app *infra.Deps, rateLimiter *rate
 
 }
 
-func AddRecipeRoutes(router *httprouter.Router, app *infra.Deps, rateLimiter *ratelim.RateLimiter) {
+func AddRecipeRoutes(router *httprouter.Router, app *infra.Deps, rateLimiter *middleware.RateLimiter) {
 	authmidware := middleware.Authenticate(app)
 	router.GET("/api/v1/recipes/tags", rateLimiter.Limit(recipes.GetRecipeTags(app)))         // Public
 	router.GET("/api/v1/recipes", middleware.OptionalAuth(recipes.GetRecipes(app)))           // Public/optional
@@ -212,16 +210,16 @@ func AddRecipeRoutes(router *httprouter.Router, app *infra.Deps, rateLimiter *ra
 	router.DELETE("/api/v1/recipes/recipe/:id", authmidware(recipes.DeleteRecipe(app)))
 }
 
-func AddHomeRoutes(router *httprouter.Router, app *infra.Deps, rateLimiter *ratelim.RateLimiter) {
+func AddHomeRoutes(router *httprouter.Router, app *infra.Deps, rateLimiter *middleware.RateLimiter) {
 	// router.GET("/api/v1/home/:apiRoute", middleware.OptionalAuth(home.GetHomeContent)) // Public/optional
 	router.GET("/api/v1/homecards", middleware.OptionalAuth(home.HomeCardsHandler(app))) // Public/optional
 }
 
-func AddProductRoutes(router *httprouter.Router, app *infra.Deps, rateLimiter *ratelim.RateLimiter) {
+func AddProductRoutes(router *httprouter.Router, app *infra.Deps, rateLimiter *middleware.RateLimiter) {
 	router.GET("/api/v1/products/:entityType/:entityId", middleware.OptionalAuth(products.GetProductDetails(app)))
 }
 
-func AddReportRoutes(router *httprouter.Router, app *infra.Deps, rateLimiter *ratelim.RateLimiter) {
+func AddReportRoutes(router *httprouter.Router, app *infra.Deps, rateLimiter *middleware.RateLimiter) {
 	authmidware := middleware.Authenticate(app)
 	router.PUT("/api/v1/report/:id",
 		authmidware(
@@ -252,7 +250,7 @@ func AddReportRoutes(router *httprouter.Router, app *infra.Deps, rateLimiter *ra
 }
 
 // Routes registration
-func AddNoticesRoutes(router *httprouter.Router, app *infra.Deps, rateLimiter *ratelim.RateLimiter) {
+func AddNoticesRoutes(router *httprouter.Router, app *infra.Deps, rateLimiter *middleware.RateLimiter) {
 	authmidware := middleware.Authenticate(app)
 	// CREATE
 	router.POST("/api/v1/notices/:entitytype/:entityid", rateLimiter.Limit(authmidware(notices.CreateNotice(app))))
@@ -267,7 +265,7 @@ func AddNoticesRoutes(router *httprouter.Router, app *infra.Deps, rateLimiter *r
 }
 
 // Notifications routes
-func AddNotificationsRoutes(router *httprouter.Router, app *infra.Deps, rateLimiter *ratelim.RateLimiter) {
+func AddNotificationsRoutes(router *httprouter.Router, app *infra.Deps, rateLimiter *middleware.RateLimiter) {
 	authmidware := middleware.Authenticate(app)
 
 	// Create notification
@@ -299,7 +297,7 @@ func AddNotificationsRoutes(router *httprouter.Router, app *infra.Deps, rateLimi
 	router.PUT("/api/v1/notifs/user/:userid/preferences", rateLimiter.Limit(authmidware(notifications.UpdatePreferences(app))))
 }
 
-func AddCommentsRoutes(router *httprouter.Router, app *infra.Deps, rateLimiter *ratelim.RateLimiter) {
+func AddCommentsRoutes(router *httprouter.Router, app *infra.Deps, rateLimiter *middleware.RateLimiter) {
 	authmidware := middleware.Authenticate(app)
 	// Create comment
 	router.POST("/api/v1/comments/:entitytype/:entityid", rateLimiter.Limit(authmidware(comments.CreateComment(app))))
@@ -314,7 +312,7 @@ func AddCommentsRoutes(router *httprouter.Router, app *infra.Deps, rateLimiter *
 	router.DELETE("/api/v1/comments/:entitytype/:entityid/:commentid", rateLimiter.Limit(authmidware(comments.DeleteComment(app))))
 }
 
-func AddAuthRoutes(router *httprouter.Router, app *infra.Deps, limiter *ratelim.RateLimiter) {
+func AddAuthRoutes(router *httprouter.Router, app *infra.Deps, limiter *middleware.RateLimiter) {
 	authmid := middleware.Authenticate(app)
 	router.POST("/api/v1/auth/register", limiter.Limit(auth.Register(app)))
 	router.POST("/api/v1/auth/login", limiter.Limit(auth.Login(app)))
@@ -330,7 +328,7 @@ func AddAuthRoutes(router *httprouter.Router, app *infra.Deps, limiter *ratelim.
 	router.POST("/api/v1/auth/request-otp", limiter.Limit(auth.RequestOTPHandler(app)))
 }
 
-// func AddAuthRoutes(router *httprouter.Router, app *infra.Deps, rateLimiter *ratelim.RateLimiter) {
+// func AddAuthRoutes(router *httprouter.Router, app *infra.Deps, rateLimiter *middleware.RateLimiter) {
 // 	// Public routes
 // 	router.POST("/api/v1/auth/register", rateLimiter.Limit(auth.Register))
 // 	router.POST("/api/v1/auth/login", rateLimiter.Limit(auth.Login))
@@ -342,7 +340,7 @@ func AddAuthRoutes(router *httprouter.Router, app *infra.Deps, limiter *ratelim.
 // 	router.POST("/api/v1/auth/logout", authmidware(auth.LogoutUser))
 // }
 
-func AddBookingRoutes(router *httprouter.Router, app *infra.Deps, rateLimiter *ratelim.RateLimiter) {
+func AddBookingRoutes(router *httprouter.Router, app *infra.Deps, rateLimiter *middleware.RateLimiter) {
 	authmidware := middleware.Authenticate(app)
 	// existing routes
 	router.GET("/api/v1/bookings/slots", rateLimiter.Limit(authmidware(booking.ListSlots(app))))
@@ -366,7 +364,7 @@ func AddBookingRoutes(router *httprouter.Router, app *infra.Deps, rateLimiter *r
 	router.POST("/api/v1/bookings/tiers/:id/generate-slots", rateLimiter.Limit(authmidware(booking.GenerateSlotsFromTier(app))))
 }
 
-func AddEventsRoutes(router *httprouter.Router, app *infra.Deps, rateLimiter *ratelim.RateLimiter) {
+func AddEventsRoutes(router *httprouter.Router, app *infra.Deps, rateLimiter *middleware.RateLimiter) {
 	authmidware := middleware.Authenticate(app)
 	router.GET("/api/v1/events/events", rateLimiter.Limit(events.GetEvents(app)))            // Public
 	router.GET("/api/v1/events/events/count", rateLimiter.Limit(events.GetEventsCount(app))) // Public
@@ -379,7 +377,7 @@ func AddEventsRoutes(router *httprouter.Router, app *infra.Deps, rateLimiter *ra
 	router.POST("/api/v1/events/event/:eventid/faqs", authmidware(events.AddFAQs(app)))
 }
 
-func AddCartRoutes(router *httprouter.Router, app *infra.Deps, rateLimiter *ratelim.RateLimiter) {
+func AddCartRoutes(router *httprouter.Router, app *infra.Deps, rateLimiter *middleware.RateLimiter) {
 	authmidware := middleware.Authenticate(app)
 	// Cart operations
 	router.POST("/api/v1/cart", rateLimiter.Limit(authmidware(cart.AddToCart(app))))
@@ -401,7 +399,7 @@ func AddCartRoutes(router *httprouter.Router, app *infra.Deps, rateLimiter *rate
 
 }
 
-func RegisterFarmRoutes(router *httprouter.Router, app *infra.Deps, rateLimiter *ratelim.RateLimiter) {
+func RegisterFarmRoutes(router *httprouter.Router, app *infra.Deps, rateLimiter *middleware.RateLimiter) {
 	authmidware := middleware.Authenticate(app)
 	// 🌾 Farm CRUD
 	router.POST("/api/v1/farms", rateLimiter.Limit(authmidware(farms.CreateFarm(app))))
@@ -458,7 +456,7 @@ func RegisterFarmRoutes(router *httprouter.Router, app *infra.Deps, rateLimiter 
 	// router.POST("/api/v1/upload/images", rateLimiter.Limit(authmidware(utils.UploadImages)))
 }
 
-func AddMerchRoutes(router *httprouter.Router, app *infra.Deps, rateLimiter *ratelim.RateLimiter) {
+func AddMerchRoutes(router *httprouter.Router, app *infra.Deps, rateLimiter *middleware.RateLimiter) {
 	authmidware := middleware.Authenticate(app)
 	// Create merch
 	router.POST("/api/v1/merch/:entityType/:eventid", rateLimiter.Limit(authmidware(merch.CreateMerch(app))))
@@ -480,7 +478,7 @@ func AddMerchRoutes(router *httprouter.Router, app *infra.Deps, rateLimiter *rat
 	router.POST("/api/v1/merch/:entityType/:eventid/:merchid/confirm-purchase", rateLimiter.Limit(authmidware(merch.ConfirmMerchPurchase(app))))
 }
 
-func AddTicketRoutes(router *httprouter.Router, app *infra.Deps, rateLimiter *ratelim.RateLimiter) {
+func AddTicketRoutes(router *httprouter.Router, app *infra.Deps, rateLimiter *middleware.RateLimiter) {
 	authmidware := middleware.Authenticate(app)
 	// Ticket CRUD
 	router.POST("/api/v1/ticket/event/:eventid", rateLimiter.Limit(authmidware(tickets.CreateTicket(app))))
@@ -515,13 +513,13 @@ func AddTicketRoutes(router *httprouter.Router, app *infra.Deps, rateLimiter *ra
 	router.GET("/api/v1/ticket/event/:eventid/:ticketid/seats", rateLimiter.Limit(tickets.GetTicketSeats(app)))
 }
 
-func AddSuggestionsRoutes(router *httprouter.Router, app *infra.Deps, rateLimiter *ratelim.RateLimiter) {
+func AddSuggestionsRoutes(router *httprouter.Router, app *infra.Deps, rateLimiter *middleware.RateLimiter) {
 	authmidware := middleware.Authenticate(app)
 	router.GET("/api/v1/suggestions/places/nearby", rateLimiter.Limit(suggestions.GetNearbyPlaces(app)))
 	router.GET("/api/v1/suggestions/follow", rateLimiter.Limit(authmidware(suggestions.SuggestFollowers(app))))
 }
 
-func AddReviewsRoutes(router *httprouter.Router, app *infra.Deps, rateLimiter *ratelim.RateLimiter) {
+func AddReviewsRoutes(router *httprouter.Router, app *infra.Deps, rateLimiter *middleware.RateLimiter) {
 	authmidware := middleware.Authenticate(app)
 	// Public view, but rate-limited
 	router.GET("/api/v1/reviews/:entityType/:entityId", rateLimiter.Limit(reviews.GetReviews(app)))
@@ -533,7 +531,7 @@ func AddReviewsRoutes(router *httprouter.Router, app *infra.Deps, rateLimiter *r
 	router.DELETE("/api/v1/reviews/:entityType/:entityId/:reviewId", rateLimiter.Limit(authmidware(reviews.DeleteReview(app))))
 }
 
-func AddMediaRoutes(router *httprouter.Router, app *infra.Deps, rateLimiter *ratelim.RateLimiter) {
+func AddMediaRoutes(router *httprouter.Router, app *infra.Deps, rateLimiter *middleware.RateLimiter) {
 	authmidware := middleware.Authenticate(app)
 	// Public view, but rate-limited
 	router.GET("/api/v1/media/:entitytype/:entityid/:id", rateLimiter.Limit(media.GetMedia(app)))
@@ -545,7 +543,7 @@ func AddMediaRoutes(router *httprouter.Router, app *infra.Deps, rateLimiter *rat
 	router.DELETE("/api/v1/media/:entitytype/:entityid/:id", rateLimiter.Limit(authmidware(media.DeleteMedia(app))))
 }
 
-func AddFanmadeRoutes(router *httprouter.Router, app *infra.Deps, rateLimiter *ratelim.RateLimiter) {
+func AddFanmadeRoutes(router *httprouter.Router, app *infra.Deps, rateLimiter *middleware.RateLimiter) {
 	authmidware := middleware.Authenticate(app)
 	router.GET("/api/v1/fanmade/:entitytype/:entityid/:id", rateLimiter.Limit(fanmade.GetMedia(app)))
 	router.GET("/api/v1/fanmade/:entitytype/:entityid", rateLimiter.Limit(fanmade.GetMedias(app)))
@@ -555,7 +553,7 @@ func AddFanmadeRoutes(router *httprouter.Router, app *infra.Deps, rateLimiter *r
 	router.DELETE("/api/v1/fanmade/:entitytype/:entityid/:id", rateLimiter.Limit(authmidware(fanmade.DeleteMedia(app))))
 }
 
-func AddPostRoutes(router *httprouter.Router, app *infra.Deps, rateLimiter *ratelim.RateLimiter) {
+func AddPostRoutes(router *httprouter.Router, app *infra.Deps, rateLimiter *middleware.RateLimiter) {
 	authmidware := middleware.Authenticate(app)
 	// Public read
 	router.GET("/api/v1/posts/post/:id", rateLimiter.Limit(posts.GetPost(app)))
@@ -571,7 +569,7 @@ func AddPostRoutes(router *httprouter.Router, app *infra.Deps, rateLimiter *rate
 
 }
 
-func AddPlaceRoutes(router *httprouter.Router, app *infra.Deps, rateLimiter *ratelim.RateLimiter) {
+func AddPlaceRoutes(router *httprouter.Router, app *infra.Deps, rateLimiter *middleware.RateLimiter) {
 	authmidware := middleware.Authenticate(app)
 	// Public
 	router.GET("/api/v1/places/places", rateLimiter.Limit(places.GetPlaces(app)))
@@ -599,7 +597,7 @@ func AddPlaceRoutes(router *httprouter.Router, app *infra.Deps, rateLimiter *rat
 	router.POST("/api/v1/places/menu/:placeid/:menuid/confirm-purchase", rateLimiter.Limit(authmidware(menu.ConfirmMenuPurchase(app))))
 }
 
-func AddProfileRoutes(router *httprouter.Router, app *infra.Deps, rateLimiter *ratelim.RateLimiter) {
+func AddProfileRoutes(router *httprouter.Router, app *infra.Deps, rateLimiter *middleware.RateLimiter) {
 	authmidware := middleware.Authenticate(app)
 	// Own profile
 	router.GET("/api/v1/profile/profile", rateLimiter.Limit(authmidware(profile.GetProfile(app))))
@@ -615,7 +613,7 @@ func AddProfileRoutes(router *httprouter.Router, app *infra.Deps, rateLimiter *r
 
 }
 
-func AddArtistRoutes(router *httprouter.Router, app *infra.Deps, rateLimiter *ratelim.RateLimiter) {
+func AddArtistRoutes(router *httprouter.Router, app *infra.Deps, rateLimiter *middleware.RateLimiter) {
 	authmidware := middleware.Authenticate(app)
 	// Public read
 	router.GET("/api/v1/artists", rateLimiter.Limit(artists.GetAllArtists(app)))
@@ -656,7 +654,7 @@ func AddArtistRoutes(router *httprouter.Router, app *infra.Deps, rateLimiter *ra
 }
 
 // AddMapRoutes binds routes to the provided router and rate limiter
-func AddMapRoutes(router *httprouter.Router, app *infra.Deps, rateLimiter *ratelim.RateLimiter) {
+func AddMapRoutes(router *httprouter.Router, app *infra.Deps, rateLimiter *middleware.RateLimiter) {
 	// entity-specific endpoints
 	router.GET("/api/v1/maps/config/:entity", rateLimiter.Limit(maps.GetMapConfig))
 	router.GET("/api/v1/maps/markers/:entity", rateLimiter.Limit(maps.GetMapMarkers))
@@ -666,7 +664,7 @@ func AddMapRoutes(router *httprouter.Router, app *infra.Deps, rateLimiter *ratel
 	router.GET("/api/v1/player/progress", rateLimiter.Limit(maps.GetPlayerProgress))
 }
 
-func AddItineraryRoutes(router *httprouter.Router, app *infra.Deps, rateLimiter *ratelim.RateLimiter) {
+func AddItineraryRoutes(router *httprouter.Router, app *infra.Deps, rateLimiter *middleware.RateLimiter) {
 	authmidware := middleware.Authenticate(app)
 	// Public
 	router.GET("/api/v1/itineraries", rateLimiter.Limit(itinerary.GetItineraries(app)))
@@ -681,12 +679,12 @@ func AddItineraryRoutes(router *httprouter.Router, app *infra.Deps, rateLimiter 
 	router.PUT("/api/v1/itineraries/:id/publish", rateLimiter.Limit(authmidware(itinerary.PublishItinerary(app))))
 }
 
-func AddUtilityRoutes(router *httprouter.Router, app *infra.Deps, rateLimiter *ratelim.RateLimiter) {
+func AddUtilityRoutes(router *httprouter.Router, app *infra.Deps, rateLimiter *middleware.RateLimiter) {
 	authmidware := middleware.Authenticate(app)
 	router.GET("/api/v1/csrf", rateLimiter.Limit(authmidware(utils.CSRF)))
 }
 
-func AddFeedRoutes(router *httprouter.Router, app *infra.Deps, rateLimiter *ratelim.RateLimiter) {
+func AddFeedRoutes(router *httprouter.Router, app *infra.Deps, rateLimiter *middleware.RateLimiter) {
 	authmidware := middleware.Authenticate(app)
 	// Public viewing
 	router.GET("/api/v1/feed/post/:postid", rateLimiter.Limit(feed.GetPost(app)))
@@ -704,7 +702,7 @@ func AddFeedRoutes(router *httprouter.Router, app *infra.Deps, rateLimiter *rate
 	// router.POST("/api/v1/feed/post/:postid/subtitles/:lang", rateLimiter.Limit(authmidware(filedrop.UploadSubtitle)))
 }
 
-//	func AddSettingsRoutes(router *httprouter.Router, app *infra.Deps, rateLimiter *ratelim.RateLimiter) {
+//	func AddSettingsRoutes(router *httprouter.Router, app *infra.Deps, rateLimiter *middleware.RateLimiter) {
 //		router.GET("/api/v1/settings/init/:userid", rateLimiter.Limit(authmidware(settings.InitUserSettings(app))))
 //		router.GET("/api/v1/settings/all", rateLimiter.Limit(authmidware(settings.GetUserSettings(app))))
 //		router.PUT("/api/v1/settings/setting/:type", rateLimiter.Limit(authmidware(settings.UpdateUserSetting(app))))
@@ -712,7 +710,7 @@ func AddFeedRoutes(router *httprouter.Router, app *infra.Deps, rateLimiter *rate
 func AddSettingsRoutes(
 	router *httprouter.Router,
 	app *infra.Deps,
-	rateLimiter *ratelim.RateLimiter,
+	rateLimiter *middleware.RateLimiter,
 ) {
 	authmidware := middleware.Authenticate(app)
 
@@ -732,11 +730,11 @@ func AddSettingsRoutes(
 	)
 }
 
-func AddAdsRoutes(router *httprouter.Router, app *infra.Deps, rateLimiter *ratelim.RateLimiter) {
+func AddAdsRoutes(router *httprouter.Router, app *infra.Deps, rateLimiter *middleware.RateLimiter) {
 	router.GET("/api/v1/sda/sda", rateLimiter.Limit(middleware.OptionalAuth(ads.GetAds)))
 }
 
-func AddHashtagRoutes(router *httprouter.Router, app *infra.Deps, rateLimiter *ratelim.RateLimiter) {
+func AddHashtagRoutes(router *httprouter.Router, app *infra.Deps, rateLimiter *middleware.RateLimiter) {
 	router.GET("/api/v1/hashtags/hashtag/:tag", hashtags.GetHashtagPosts)
 	router.GET("/api/v1/hashtags/hashtag/:tag/top", hashtags.GetTopHashtagPosts)
 	router.GET("/api/v1/hashtags/hashtag/:tag/latest", hashtags.GetLatestHashtagPosts)
@@ -747,12 +745,12 @@ func AddHashtagRoutes(router *httprouter.Router, app *infra.Deps, rateLimiter *r
 	// router.GET("/api/v1/hashtags/hashtags/trending", hashtags.GetTrendingHashtags)
 }
 
-func AddAnalyticsRoutes(router *httprouter.Router, app *infra.Deps, rateLimiter *ratelim.RateLimiter) {
+func AddAnalyticsRoutes(router *httprouter.Router, app *infra.Deps, rateLimiter *middleware.RateLimiter) {
 	// Example: /api/v1/antics/events/123 or /api/v1/analytics/places/456
 	router.GET("/api/v1/antics/:entityType/:entityId", rateLimiter.Limit(analytics.GetEntityAnalytics))
 }
 
-func AddMiscRoutes(router *httprouter.Router, app *infra.Deps, rateLimiter *ratelim.RateLimiter) {
+func AddMiscRoutes(router *httprouter.Router, app *infra.Deps, rateLimiter *middleware.RateLimiter) {
 	router.GET("/api/v1/users/meta", rateLimiter.Limit(metadata.GetUsersMeta(app)))
 
 	// router.POST("/api/v1/check-file", rateLimiter.Limit(filecheck.CheckFileExists))
@@ -762,14 +760,14 @@ func AddMiscRoutes(router *httprouter.Router, app *infra.Deps, rateLimiter *rate
 
 }
 
-func AddStripeRoutes(router *httprouter.Router, app *infra.Deps, rateLimiter *ratelim.RateLimiter) {
+func AddStripeRoutes(router *httprouter.Router, app *infra.Deps, rateLimiter *middleware.RateLimiter) {
 	authmidware := middleware.Authenticate(app)
 	router.POST("/api/v1/stripe/create-payment-intent", rateLimiter.Limit(authmidware(stripe.CreatePaymentIntent(app))))
 	router.POST("/api/v1/stripe/payment-success", rateLimiter.Limit(authmidware(stripe.PaymentSuccess(app))))
 	router.POST("/api/v1/stripe/webhook", rateLimiter.Limit(authmidware(stripe.StripeWebhook(app))))
 }
 
-func AddMusicRoutes(router *httprouter.Router, app *infra.Deps, rateLimiter *ratelim.RateLimiter) {
+func AddMusicRoutes(router *httprouter.Router, app *infra.Deps, rateLimiter *middleware.RateLimiter) {
 	authmidware := middleware.Authenticate(app)
 
 	// --------------------------- PLAYLISTS ---------------------------
@@ -864,7 +862,7 @@ func AddMusicRoutes(router *httprouter.Router, app *infra.Deps, rateLimiter *rat
 	)
 }
 
-/* func AddMusicRoutes(router *httprouter.Router, app *infra.Deps, rateLimiter *ratelim.RateLimiter) {
+/* func AddMusicRoutes(router *httprouter.Router, app *infra.Deps, rateLimiter *middleware.RateLimiter) {
 	authmidware := middleware.Authenticate(app)
 	--------------------------- PLAYLISTS ---------------------------
 	router.GET("/api/v1/musicon/user/playlists", rateLimiter.Limit(middleware.OptionalAuth(musicon.GetUserPlaylists(app))))
@@ -899,12 +897,12 @@ func AddMusicRoutes(router *httprouter.Router, app *infra.Deps, rateLimiter *rat
 	router.GET("/api/v1/musicon/recommendations", rateLimiter.Limit(middleware.OptionalAuth(musicon.GetRecommendations(app))))
 } */
 
-// func AddDiscordRoutes(router *httprouter.Router, app *infra.Deps, rateLimiter *ratelim.RateLimiter) {
+// func AddDiscordRoutes(router *httprouter.Router, app *infra.Deps, rateLimiter *middleware.RateLimiter) {
 // 	// authmidware := middleware.Authenticate(app)
 
 // }
 
-func AddMeChatRoutes(router *httprouter.Router, hub *mechat.Hub, app *infra.Deps, rateLimiter *ratelim.RateLimiter) {
+func AddMeChatRoutes(router *httprouter.Router, hub *mechat.Hub, app *infra.Deps, rateLimiter *middleware.RateLimiter) {
 	authmidware := middleware.Authenticate(app)
 	router.GET("/api/v1/merechats/all", authmidware(mechat.GetUserChats(app)))
 	router.POST("/api/v1/merechats/start", authmidware(mechat.StartNewChat(app)))
@@ -929,7 +927,7 @@ func AddMeChatRoutes(router *httprouter.Router, hub *mechat.Hub, app *infra.Deps
 	router.POST("/api/v1/merechats/messages/:messageid/read", authmidware(mechat.MarkAsRead(app)))
 }
 
-func AddNewChatRoutes(router *httprouter.Router, hub *newchat.Hub, app *infra.Deps, rateLimiter *ratelim.RateLimiter) {
+func AddNewChatRoutes(router *httprouter.Router, hub *newchat.Hub, app *infra.Deps, rateLimiter *middleware.RateLimiter) {
 	authmidware := middleware.Authenticate(app)
 	router.GET("/api/v1/newchats/all", authmidware(newchat.GetUserChats(app)))
 	router.POST("/api/v1/newchats/init", authmidware(newchat.InitChat(app)))
@@ -956,7 +954,7 @@ func AddNewChatRoutes(router *httprouter.Router, hub *newchat.Hub, app *infra.De
 
 // ----------------------- ROUTES -----------------------
 
-func AddVliveRoutes(r *httprouter.Router, app *infra.Deps, rateLimiter *ratelim.RateLimiter) {
+func AddVliveRoutes(r *httprouter.Router, app *infra.Deps, rateLimiter *middleware.RateLimiter) {
 	auth := middleware.Authenticate(app)
 
 	// Streams collection
@@ -1002,7 +1000,7 @@ func AddDiscordRoutes(router *httprouter.Router, hubs *discord.HubManager, app *
 }
 
 // Vendor Routes
-func AddVendorRoutes(router *httprouter.Router, app *infra.Deps, rateLimiter *ratelim.RateLimiter) {
+func AddVendorRoutes(router *httprouter.Router, app *infra.Deps, rateLimiter *middleware.RateLimiter) {
 	authmidware := middleware.Authenticate(app)
 
 	// Vendor management - registration and profile
@@ -1018,7 +1016,7 @@ func AddVendorRoutes(router *httprouter.Router, app *infra.Deps, rateLimiter *ra
 }
 
 // Search Routes - Public endpoints for search functionality
-func AddSearchRoutes(router *httprouter.Router, app *infra.Deps, rateLimiter *ratelim.RateLimiter) {
+func AddSearchRoutes(router *httprouter.Router, app *infra.Deps, rateLimiter *middleware.RateLimiter) {
 	// Autocomplete suggestions - public, rate-limited
 	router.GET("/api/v1/ac", rateLimiter.Limit(search.SearchAutocomplete(app)))
 
