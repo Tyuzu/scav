@@ -32,7 +32,7 @@ func GetPostsMetadata(app *infra.Deps) httprouter.Handle {
 			return
 		}
 
-		userID, _ := r.Context().Value("userId").(string)
+		userID, _ := r.Context().Value("userid").(string)
 		postIDs := req.IDs
 
 		// --- Aggregate likes ---

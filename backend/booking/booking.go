@@ -34,7 +34,7 @@ func CreateBooking(app *infra.Deps) httprouter.Handle {
 		count, err := app.DB.CountDocuments(ctx, bookingsCollection, bson.M{
 			"entityType": p.EntityType,
 			"entityId":   p.EntityId,
-			"userId":     p.UserId,
+			"userid":     p.UserId,
 			"date":       p.Date,
 			"status":     bson.M{"$ne": "cancelled"},
 		})

@@ -5,7 +5,7 @@ import "time"
 // AuditLog tracks sensitive operations for compliance and security
 type AuditLog struct {
 	ID         string                 `bson:"_id,omitempty" json:"id"`
-	UserID     string                 `bson:"userId" json:"userId"`
+	UserID     string                 `bson:"userid" json:"userid"`
 	Action     string                 `bson:"action" json:"action"` // e.g., "TICKET_PURCHASE", "MERCH_DELETE", "ORDER_MARK_PAID"
 	EntityType string                 `bson:"entityType" json:"entityType"`
 	EntityID   string                 `bson:"entityId" json:"entityId"`

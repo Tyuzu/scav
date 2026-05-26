@@ -21,7 +21,7 @@ func CreateMessageHTTP(
 		ctx := r.Context()
 
 		roomID := ps.ByName("room")
-		userID := ctx.Value("userID").(string)
+		userID := ctx.Value("userid").(string)
 
 		var req CreateMessageRequest
 		if err := json.NewDecoder(r.Body).Decode(&req); err != nil {

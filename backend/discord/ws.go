@@ -14,7 +14,7 @@ var upgrader = websocket.Upgrader{
 func WebSocketHandler(hubs *HubManager) httprouter.Handle {
 	return func(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 		room := ps.ByName("room")
-		user := r.Context().Value("userID").(string)
+		user := r.Context().Value("userid").(string)
 
 		conn, _ := upgrader.Upgrade(w, r, nil)
 

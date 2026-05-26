@@ -16,7 +16,7 @@ import (
 ------------------------- */
 
 type UserSettings struct {
-	UserID        string `json:"userID,omitempty" bson:"userID"`
+	UserID        string `json:"userID,omitempty" bson:"userid"`
 	Theme         string `json:"theme" bson:"theme"`
 	Notifications bool   `json:"notifications" bson:"notifications"`
 	PrivacyMode   bool   `json:"privacy_mode" bson:"privacy_mode"`
@@ -66,7 +66,7 @@ func GetUserSettings(app *infra.Deps) httprouter.Handle {
 		err := app.DB.FindOne(
 			ctx,
 			settingsCollection,
-			bson.M{"userID": userID},
+			bson.M{"userid": userID},
 			&settings,
 		)
 
@@ -127,7 +127,7 @@ func UpdateUserSetting(app *infra.Deps) httprouter.Handle {
 			return
 		}
 
-		filter := bson.M{"userID": userID}
+		filter := bson.M{"userid": userID}
 		update := bson.M{
 			settingType: payload.Value,
 		}
@@ -176,7 +176,7 @@ func InitUserSettings(app *infra.Deps) httprouter.Handle {
 		err := app.DB.FindOne(
 			ctx,
 			settingsCollection,
-			bson.M{"userID": userID},
+			bson.M{"userid": userID},
 			&existing,
 		)
 

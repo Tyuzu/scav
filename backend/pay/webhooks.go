@@ -33,7 +33,7 @@ type PaymentWebhookPayload struct {
 	EventID          string                 `json:"eventId"`
 	TransactionID    string                 `json:"transactionId"`
 	OrderID          string                 `json:"orderId"`
-	UserID           string                 `json:"userId"`
+	UserID           string                 `json:"userid"`
 	Amount           float64                `json:"amount"`
 	Currency         string                 `json:"currency"`
 	Status           string                 `json:"status"` // "success", "failed", "pending"
@@ -136,7 +136,7 @@ func (p *PaymentService) HandlePaymentWebhook(w http.ResponseWriter, r *http.Req
 	if err := p.app.DB.InsertOne(ctx, webhookCollection, bson.M{
 		"transactionId": payload.TransactionID,
 		"orderId":       payload.OrderID,
-		"userId":        payload.UserID,
+		"userid":        payload.UserID,
 		"status":        payload.Status,
 		"amount":        payload.Amount,
 		"processedAt":   time.Now(),

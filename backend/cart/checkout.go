@@ -143,7 +143,7 @@ func PlaceOrder(app *infra.Deps) httprouter.Handle {
 			return
 		}
 
-		if _, err := app.DB.Delete(ctx, cartCollection, bson.M{"userId": userID}); err != nil {
+		if _, err := app.DB.Delete(ctx, cartCollection, bson.M{"userid": userID}); err != nil {
 			log.Println("Cart cleanup error:", err)
 		}
 
@@ -269,7 +269,7 @@ func InitiateCheckout(app *infra.Deps) httprouter.Handle {
 		err := app.DB.FindMany(
 			ctx,
 			cartCollection,
-			bson.M{"userId": userID},
+			bson.M{"userid": userID},
 			&items,
 		)
 		if err != nil {

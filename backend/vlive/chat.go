@@ -21,10 +21,10 @@ var upgrader = websocket.Upgrader{
 }
 
 type ChatMessage struct {
-	LiveID  string    `json:"liveId" bson:"live_id"`
-	UserID  string    `json:"userId" bson:"user_id"`
+	LiveID  string    `json:"liveId" bson:"liveid"`
+	UserID  string    `json:"userid" bson:"userid"`
 	Message string    `json:"message" bson:"message"`
-	SentAt  time.Time `json:"sentAt" bson:"sent_at"`
+	SentAt  time.Time `json:"sentAt" bson:"sentat"`
 }
 
 // ----------------------- CHAT -----------------------

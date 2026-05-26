@@ -15,7 +15,7 @@ import (
 
 type ModeratorApplication struct {
 	ID        string    `bson:"id" json:"id"`
-	UserID    string    `bson:"userId" json:"userId"`
+	UserID    string    `bson:"userid" json:"userid"`
 	Reason    string    `bson:"reason" json:"reason"`
 	Status    string    `bson:"status" json:"status"` // pending, approved, rejected
 	CreatedAt time.Time `bson:"createdAt" json:"createdAt"`
@@ -26,7 +26,7 @@ func ApplyModerator(app *infra.Deps) httprouter.Handle {
 		ctx := r.Context()
 
 		var payload struct {
-			UserID string `json:"userId"`
+			UserID string `json:"userid"`
 			Reason string `json:"reason"`
 		}
 
@@ -48,7 +48,7 @@ func ApplyModerator(app *infra.Deps) httprouter.Handle {
 		err := app.DB.FindOne(
 			ctx,
 			moderatorAppsCollection,
-			bson.M{"userId": payload.UserID},
+			bson.M{"userid": payload.UserID},
 			&existing,
 		)
 		if err == nil {

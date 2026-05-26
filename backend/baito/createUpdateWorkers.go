@@ -92,7 +92,7 @@ func CreateWorkerProfile(app *infra.Deps) httprouter.Handle {
 		err := app.DB.FindOne(
 			ctx,
 			BaitoWorkersCollection,
-			bson.M{"userId": userID},
+			bson.M{"userid": userID},
 			&existing,
 		)
 		if err == nil {
@@ -167,7 +167,7 @@ func UpdateWorkerProfile(app *infra.Deps) httprouter.Handle {
 
 		filter := bson.M{
 			"baitoUserId": workerID,
-			"userId":      userID,
+			"userid":      userID,
 		}
 
 		err = app.DB.UpdateOne(ctx, BaitoWorkersCollection, filter, update)

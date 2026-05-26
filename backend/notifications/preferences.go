@@ -29,7 +29,7 @@ func GetPreferences(app *infra.Deps) httprouter.Handle {
 			return
 		}
 
-		filter := bson.M{"userId": userID}
+		filter := bson.M{"userid": userID}
 		var preference models.NotificationPreference
 
 		err := app.DB.FindOne(ctx, notificationsPreferencesCollection, filter, &preference)
@@ -112,7 +112,7 @@ func UpdatePreferences(app *infra.Deps) httprouter.Handle {
 			}
 		}
 
-		filter := bson.M{"userId": userID}
+		filter := bson.M{"userid": userID}
 		update := bson.M{
 			"$set": updates,
 		}

@@ -12,7 +12,6 @@ import (
 	"naevis/utils"
 
 	"github.com/julienschmidt/httprouter"
-	"go.mongodb.org/mongo-driver/bson"
 )
 
 // -------------------- Log Activities --------------------
@@ -57,8 +56,6 @@ func LogActivities(app *infra.Deps) httprouter.Handle {
 
 // -------------------- Activity Feed --------------------
 
-// -------------------- Activity Feed --------------------
-
 func GetActivityFeed(app *infra.Deps) httprouter.Handle {
 	return func(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
 		userID := utils.GetUserIDFromRequest(r)
@@ -69,19 +66,21 @@ func GetActivityFeed(app *infra.Deps) httprouter.Handle {
 
 		cursor, limit := parseCursor(r) // cursor is time.Time
 
-		filter := bson.M{
+		filter := map[string]any{
 			"userid": userID,
 		}
 
 		if !cursor.IsZero() {
-			filter["timestamp"] = bson.M{
+			filter["timestamp"] = map[string]any{
 				"$lt": cursor,
 			}
 		}
 
 		opts := db.FindManyOptions{
 			Limit: limit,
-			Sort:  bson.D{{Key: "timestamp", Value: -1}},
+			Sort: map[string]any{
+				"timestamp": -1,
+			},
 		}
 
 		var activities []models.Activity
@@ -138,7 +137,7 @@ func HandleAnalyticsEvent(app *infra.Deps) httprouter.Handle {
 					continue
 				}
 
-				doc := bson.M{
+				doc := map[string]any{
 					"type":      ev["type"],
 					"data":      ev["data"],
 					"url":       ev["url"],

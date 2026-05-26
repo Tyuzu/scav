@@ -17,7 +17,7 @@ const (
 type Event struct {
 	Type      EventType `json:"type"`
 	RoomID    string    `json:"roomId"`
-	UserID    string    `json:"userId"`
+	UserID    string    `json:"userid"`
 	Payload   any       `json:"payload"`
 	Timestamp time.Time `json:"ts"`
 }

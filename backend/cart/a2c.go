@@ -123,7 +123,7 @@ func AddToCart(app *infra.Deps) httprouter.Handle {
 
 		// Build filter: match by userId, itemId, AND entity if provided
 		filter := bson.M{
-			"userId": userID,
+			"userid": userID,
 			"itemId": item.ItemID,
 		}
 
@@ -203,7 +203,7 @@ func UpdateCart(app *infra.Deps) httprouter.Handle {
 		}
 
 		// Clear existing cart
-		if _, err := app.DB.Delete(ctx, cartCollection, bson.M{"userId": userID}); err != nil {
+		if _, err := app.DB.Delete(ctx, cartCollection, bson.M{"userid": userID}); err != nil {
 			http.Error(w, "Failed to clear cart", http.StatusInternalServerError)
 			return
 		}
@@ -254,7 +254,7 @@ func UpdateCart(app *infra.Deps) httprouter.Handle {
 
 		// Return fresh cart
 		var updated []models.CartItem
-		err := app.DB.FindMany(ctx, cartCollection, bson.M{"userId": userID}, &updated)
+		err := app.DB.FindMany(ctx, cartCollection, bson.M{"userid": userID}, &updated)
 		if err != nil {
 			http.Error(w, "Failed to fetch updated cart", http.StatusInternalServerError)
 			return
@@ -273,7 +273,7 @@ func getGroupedCart(
 	app *infra.Deps,
 ) (map[string][]models.CartItem, error) {
 
-	filter := bson.M{"userId": userID}
+	filter := bson.M{"userid": userID}
 	if category != "" {
 		filter["category"] = category
 	}
@@ -324,7 +324,7 @@ func GetMyOrders(app *infra.Deps) httprouter.Handle {
 		err := app.DB.FindMany(
 			ctx,
 			ordersCollection,
-			bson.M{"userId": userID},
+			bson.M{"userid": userID},
 			&regularOrders,
 		)
 		if err != nil {
@@ -350,7 +350,7 @@ func GetMyOrders(app *infra.Deps) httprouter.Handle {
 		type CombinedOrder struct {
 			OrderID       string                       `bson:"orderId" json:"orderId"`
 			OrderType     string                       `json:"orderType"` // "regular" or "farm"
-			UserID        string                       `bson:"userId" json:"userId"`
+			UserID        string                       `bson:"userid" json:"userid"`
 			FarmID        string                       `json:"farmId,omitempty"`
 			Items         map[string][]models.CartItem `bson:"items" json:"items,omitempty"`
 			Address       string                       `bson:"address" json:"address,omitempty"`

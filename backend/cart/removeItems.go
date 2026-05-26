@@ -47,7 +47,7 @@ func RemoveFromCart(app *infra.Deps) httprouter.Handle {
 		}
 
 		filter := bson.M{
-			"userId":   userID,
+			"userid":   userID,
 			"itemId":   payload.ItemID,
 			"category": payload.Category,
 		}
@@ -90,7 +90,7 @@ func ClearCart(app *infra.Deps) httprouter.Handle {
 			return
 		}
 
-		if _, err := app.DB.Delete(ctx, cartCollection, bson.M{"userId": userID}); err != nil {
+		if _, err := app.DB.Delete(ctx, cartCollection, bson.M{"userid": userID}); err != nil {
 			log.Println("ClearCart Delete error:", err)
 			http.Error(w, "Failed to clear cart", http.StatusInternalServerError)
 			return
@@ -154,7 +154,7 @@ func UpdateItemQuantity(app *infra.Deps) httprouter.Handle {
 		}
 
 		filter := bson.M{
-			"userId":   userID,
+			"userid":   userID,
 			"itemId":   payload.ItemID,
 			"category": payload.Category,
 		}
