@@ -3,7 +3,7 @@ import { apiFetch } from "../../../api/api"; // fixed import
 import { guessCategoryFromName } from "./displayCropshelpers";
 import { renderCropInterface } from "./displayCropsUI";
 
-export async function displayCrops(content, isLoggedIn) {
+export async function displayCrops(content, _isLoggedIn) {
   const contentContainer = createElement("div", { class: "cropspage" });
   content.replaceChildren(contentContainer);
 
