@@ -30,19 +30,27 @@ func GetLatestBaitos(app *infra.Deps) httprouter.Handle {
 		ctx := r.Context()
 
 		var baitos []models.BaitosResponse
+
 		err := app.DB.FindManyWithOptions(
 			ctx,
 			BaitoCollection,
 			bson.M{},
 			db.FindManyOptions{
 				Limit: 20,
-				Sort:  bson.D{{Key: "createdAt", Value: -1}},
+				Sort: map[string]any{
+					"createdAt": -1,
+				},
 			},
 			&baitos,
 		)
+
 		if err != nil {
 			log.Printf("DB error: %v", err)
-			utils.RespondWithError(w, http.StatusInternalServerError, "Database error")
+			utils.RespondWithError(
+				w,
+				http.StatusInternalServerError,
+				"Database error",
+			)
 			return
 		}
 
@@ -72,7 +80,9 @@ func GetRelatedBaitos(app *infra.Deps) httprouter.Handle {
 			filter,
 			db.FindManyOptions{
 				Limit: 10,
-				Sort:  bson.D{{Key: "createdAt", Value: -1}},
+				Sort: map[string]any{
+					"createdAt": -1,
+				},
 			},
 			&baitos,
 		)
@@ -95,7 +105,9 @@ func GetRelatedBaitos(app *infra.Deps) httprouter.Handle {
 				fallback,
 				db.FindManyOptions{
 					Limit: 10,
-					Sort:  bson.D{{Key: "createdAt", Value: -1}},
+					Sort: map[string]any{
+						"createdAt": -1,
+					},
 				},
 				&baitos,
 			)
@@ -137,7 +149,9 @@ func GetMyBaitos(app *infra.Deps) httprouter.Handle {
 			BaitoCollection,
 			bson.M{"ownerId": userID},
 			db.FindManyOptions{
-				Sort: bson.D{{Key: "createdAt", Value: -1}},
+				Sort: map[string]any{
+					"createdAt": -1,
+				},
 			},
 			&baitos,
 		)

@@ -12,7 +12,6 @@ import (
 	"time"
 
 	"github.com/julienschmidt/httprouter"
-	"go.mongodb.org/mongo-driver/bson"
 )
 
 // GetEvent fetches a single event with its tickets, media, and merch
@@ -105,7 +104,9 @@ func GetEvents(app *infra.Deps) httprouter.Handle {
 		opts := db.FindManyOptions{
 			Limit: limit,
 			Skip:  skip,
-			Sort:  bson.D{{Key: "createdAt", Value: -1}},
+			Sort: map[string]any{
+				"createdAt": -1,
+			},
 		}
 
 		var rawEvents []models.Event

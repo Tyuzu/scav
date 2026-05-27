@@ -151,16 +151,14 @@ func ListStreams(app *infra.Deps) httprouter.Handle {
 				{"entity_id": entityID},
 			}
 		}
-
 		opts := db.FindManyOptions{
-			Sort: bson.D{
-				{Key: "state", Value: 1},
-				{Key: "scheduled_at", Value: 1},
-				{Key: "started_at", Value: -1},
-				{Key: "created_at", Value: -1},
+			Sort: map[string]any{
+				"state":        1,
+				"scheduled_at": 1,
+				"started_at":   -1,
+				"created_at":   -1,
 			},
 		}
-
 		var streams []models.LiveStream
 		err := app.DB.FindManyWithOptions(
 			r.Context(),

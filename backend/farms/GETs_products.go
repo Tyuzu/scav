@@ -17,7 +17,6 @@ import (
 // --------------------------------------------------
 // Items
 // --------------------------------------------------
-
 func GetItems(app *infra.Deps) httprouter.Handle {
 	return func(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
 		ctx, cancel := context.WithTimeout(r.Context(), 5*time.Second)
@@ -28,28 +27,39 @@ func GetItems(app *infra.Deps) httprouter.Handle {
 		if t := r.URL.Query().Get("type"); t != "" {
 			filter["type"] = t
 		}
+
 		if c := r.URL.Query().Get("category"); c != "" {
 			filter["category"] = c
 		}
+
 		if s := r.URL.Query().Get("search"); s != "" {
 			filter["name"] = utils.RegexFilter("name", s)["name"]
 		}
 
 		skip, limit := utils.ParsePagination(r, 10, 100)
-		var sortMap bson.D
+
+		var sortMap map[string]any
 
 		switch r.URL.Query().Get("sort") {
 		case "price_asc":
-			sortMap = bson.D{{Key: "price", Value: 1}}
+			sortMap = map[string]any{
+				"price": 1,
+			}
 
 		case "price_desc":
-			sortMap = bson.D{{Key: "price", Value: -1}}
+			sortMap = map[string]any{
+				"price": -1,
+			}
 
 		case "name_desc":
-			sortMap = bson.D{{Key: "name", Value: -1}}
+			sortMap = map[string]any{
+				"name": -1,
+			}
 
 		default:
-			sortMap = bson.D{{Key: "name", Value: 1}}
+			sortMap = map[string]any{
+				"name": 1,
+			}
 		}
 
 		opts := db.FindManyOptions{
@@ -59,14 +69,33 @@ func GetItems(app *infra.Deps) httprouter.Handle {
 		}
 
 		var items []models.Product
-		if err := app.DB.FindManyWithOptions(ctx, productsCollection, filter, opts, &items); err != nil {
-			utils.RespondWithError(w, http.StatusInternalServerError, "Failed to fetch items")
+
+		if err := app.DB.FindManyWithOptions(
+			ctx,
+			productsCollection,
+			filter,
+			opts,
+			&items,
+		); err != nil {
+			utils.RespondWithError(
+				w,
+				http.StatusInternalServerError,
+				"Failed to fetch items",
+			)
 			return
 		}
 
-		total, err := app.DB.CountDocuments(ctx, productsCollection, filter)
+		total, err := app.DB.CountDocuments(
+			ctx,
+			productsCollection,
+			filter,
+		)
 		if err != nil {
-			utils.RespondWithError(w, http.StatusInternalServerError, "Failed to count items")
+			utils.RespondWithError(
+				w,
+				http.StatusInternalServerError,
+				"Failed to count items",
+			)
 			return
 		}
 

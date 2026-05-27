@@ -61,16 +61,23 @@ func GetComments(app *infra.Deps) httprouter.Handle {
 		entityID := ps.ByName("entityid")
 
 		if entityID == "" {
-			utils.RespondWithError(w, http.StatusBadRequest, "Entity ID is required")
+			utils.RespondWithError(
+				w,
+				http.StatusBadRequest,
+				"Entity ID is required",
+			)
 			return
 		}
 
 		if !isValidEntityType(entityType) {
-			utils.RespondWithError(w, http.StatusBadRequest, "Invalid entity type")
+			utils.RespondWithError(
+				w,
+				http.StatusBadRequest,
+				"Invalid entity type",
+			)
 			return
 		}
 
-		/* ---------- Pagination ---------- */
 		page := 1
 		limit := 10
 
@@ -87,29 +94,29 @@ func GetComments(app *infra.Deps) httprouter.Handle {
 		}
 
 		skip := (page - 1) * limit
-		sortBy := r.URL.Query().Get("sort") // new | old | likes
+		sortBy := r.URL.Query().Get("sort")
 
 		filter := bson.M{
 			"entity_type": entityType,
 			"entity_id":   entityID,
 		}
 
-		/* ---------- Sorting (ORDERED) ---------- */
-		sort := bson.D{
-			{Key: "created_at", Value: -1},
-			{Key: "commentid", Value: -1},
+		sort := map[string]any{
+			"created_at": -1,
+			"commentid":  -1,
 		}
 
 		switch sortBy {
 		case "old":
-			sort = bson.D{
-				{Key: "created_at", Value: 1},
-				{Key: "commentid", Value: 1},
+			sort = map[string]any{
+				"created_at": 1,
+				"commentid":  1,
 			}
+
 		case "likes":
-			sort = bson.D{
-				{Key: "likes", Value: -1},
-				{Key: "created_at", Value: -1},
+			sort = map[string]any{
+				"likes":      -1,
+				"created_at": -1,
 			}
 		}
 
@@ -120,12 +127,22 @@ func GetComments(app *infra.Deps) httprouter.Handle {
 		}
 
 		var comments []models.Comment
-		if err := app.DB.FindManyWithOptions(ctx, commentsCollection, filter, opts, &comments); err != nil {
-			utils.RespondWithError(w, http.StatusInternalServerError, "Failed to fetch comments")
+
+		if err := app.DB.FindManyWithOptions(
+			ctx,
+			commentsCollection,
+			filter,
+			opts,
+			&comments,
+		); err != nil {
+			utils.RespondWithError(
+				w,
+				http.StatusInternalServerError,
+				"Failed to fetch comments",
+			)
 			return
 		}
 
-		// Always return array (never null)
 		if comments == nil {
 			comments = []models.Comment{}
 		}

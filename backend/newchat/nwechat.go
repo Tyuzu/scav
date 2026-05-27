@@ -14,7 +14,6 @@ import (
 
 	"github.com/gorilla/websocket"
 	"github.com/julienschmidt/httprouter"
-	"go.mongodb.org/mongo-driver/bson"
 )
 
 // ------------------------- Helpers -------------------------
@@ -181,7 +180,9 @@ func WebSocketHandler(hub *Hub, app *infra.Deps) httprouter.Handle {
 		// send history
 		go func() {
 			opts := db.FindManyOptions{
-				Sort:  bson.D{{Key: "timestamp", Value: -1}},
+				Sort: map[string]any{
+					"timestamp": -1,
+				},
 				Limit: 20,
 			}
 

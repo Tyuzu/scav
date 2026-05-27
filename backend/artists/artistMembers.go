@@ -9,7 +9,6 @@ import (
 	"strings"
 
 	"github.com/julienschmidt/httprouter"
-	"go.mongodb.org/mongo-driver/bson"
 )
 
 func AddArtistMember(app *infra.Deps) httprouter.Handle {
@@ -17,18 +16,32 @@ func AddArtistMember(app *infra.Deps) httprouter.Handle {
 		ctx := r.Context()
 		artistID := ps.ByName("id")
 
-		// Ensure artist exists
 		var artist models.Artist
-		if err := app.DB.FindOne(ctx, ArtistsCollection, bson.M{
-			"artistid": artistID,
-		}, &artist); err != nil {
-			utils.RespondWithError(w, http.StatusNotFound, "Artist not found")
+
+		if err := app.DB.FindOne(
+			ctx,
+			ArtistsCollection,
+			map[string]any{
+				"artistid": artistID,
+			},
+			&artist,
+		); err != nil {
+			utils.RespondWithError(
+				w,
+				http.StatusNotFound,
+				"Artist not found",
+			)
 			return
 		}
 
 		var m models.BandMember
+
 		if err := json.NewDecoder(r.Body).Decode(&m); err != nil {
-			utils.RespondWithError(w, http.StatusBadRequest, "Invalid JSON body")
+			utils.RespondWithError(
+				w,
+				http.StatusBadRequest,
+				"Invalid JSON body",
+			)
 			return
 		}
 
@@ -39,7 +52,11 @@ func AddArtistMember(app *infra.Deps) httprouter.Handle {
 		m.ReferenceArtist = strings.TrimSpace(m.ReferenceArtist)
 
 		if m.Name == "" {
-			utils.RespondWithError(w, http.StatusBadRequest, "Member name is required")
+			utils.RespondWithError(
+				w,
+				http.StatusBadRequest,
+				"Member name is required",
+			)
 			return
 		}
 
@@ -47,27 +64,38 @@ func AddArtistMember(app *infra.Deps) httprouter.Handle {
 			m.MemberID = utils.GenerateRandomString(12)
 		}
 
-		// Prevent duplicate by referenced artist
 		if m.ReferenceArtist != "" {
 			for _, existing := range artist.Members {
 				if existing.ReferenceArtist == m.ReferenceArtist {
-					utils.RespondWithError(w, http.StatusConflict, "Referenced artist already added")
+					utils.RespondWithError(
+						w,
+						http.StatusConflict,
+						"Referenced artist already added",
+					)
 					return
 				}
 			}
 		}
 
-		update := bson.M{
-			"$push": bson.M{"members": m},
+		update := map[string]any{
+			"$push": map[string]any{
+				"members": m,
+			},
 		}
 
 		if err := app.DB.Update(
 			ctx,
 			ArtistsCollection,
-			bson.M{"artistid": artistID},
+			map[string]any{
+				"artistid": artistID,
+			},
 			update,
 		); err != nil {
-			utils.RespondWithError(w, http.StatusInternalServerError, "Failed to add member")
+			utils.RespondWithError(
+				w,
+				http.StatusInternalServerError,
+				"Failed to add member",
+			)
 			return
 		}
 
@@ -83,32 +111,44 @@ func UpdateArtistMember(app *infra.Deps) httprouter.Handle {
 		memberID := ps.ByName("memberId")
 
 		var payload map[string]string
+
 		if err := json.NewDecoder(r.Body).Decode(&payload); err != nil {
-			utils.RespondWithError(w, http.StatusBadRequest, "Invalid JSON body")
+			utils.RespondWithError(
+				w,
+				http.StatusBadRequest,
+				"Invalid JSON body",
+			)
 			return
 		}
 
-		updates := bson.M{}
+		updates := map[string]any{}
 
 		if v, ok := payload["name"]; ok {
 			updates["members.$.name"] = strings.TrimSpace(v)
 		}
+
 		if v, ok := payload["role"]; ok {
 			updates["members.$.role"] = strings.TrimSpace(v)
 		}
+
 		if v, ok := payload["dob"]; ok {
 			updates["members.$.dob"] = strings.TrimSpace(v)
 		}
+
 		if v, ok := payload["image"]; ok {
 			updates["members.$.image"] = strings.TrimSpace(v)
 		}
 
 		if len(updates) == 0 {
-			utils.RespondWithError(w, http.StatusBadRequest, "No valid fields to update")
+			utils.RespondWithError(
+				w,
+				http.StatusBadRequest,
+				"No valid fields to update",
+			)
 			return
 		}
 
-		filter := bson.M{
+		filter := map[string]any{
 			"artistid":         artistID,
 			"members.memberid": memberID,
 		}
@@ -117,15 +157,21 @@ func UpdateArtistMember(app *infra.Deps) httprouter.Handle {
 			ctx,
 			ArtistsCollection,
 			filter,
-			bson.M{"$set": updates},
+			map[string]any{
+				"$set": updates,
+			},
 		)
 
 		if err != nil {
-			utils.RespondWithError(w, http.StatusInternalServerError, "Failed to update member")
+			utils.RespondWithError(
+				w,
+				http.StatusInternalServerError,
+				"Failed to update member",
+			)
 			return
 		}
 
-		utils.RespondWithJSON(w, http.StatusOK, bson.M{
+		utils.RespondWithJSON(w, http.StatusOK, map[string]any{
 			"message": "Member updated",
 		})
 	}
@@ -138,23 +184,31 @@ func DeleteArtistMember(app *infra.Deps) httprouter.Handle {
 		artistID := ps.ByName("id")
 		memberID := ps.ByName("memberId")
 
-		update := bson.M{
-			"$pull": bson.M{
-				"members": bson.M{"memberid": memberID},
+		update := map[string]any{
+			"$pull": map[string]any{
+				"members": map[string]any{
+					"memberid": memberID,
+				},
 			},
 		}
 
 		if err := app.DB.Update(
 			ctx,
 			ArtistsCollection,
-			bson.M{"artistid": artistID},
+			map[string]any{
+				"artistid": artistID,
+			},
 			update,
 		); err != nil {
-			utils.RespondWithError(w, http.StatusInternalServerError, "Failed to delete member")
+			utils.RespondWithError(
+				w,
+				http.StatusInternalServerError,
+				"Failed to delete member",
+			)
 			return
 		}
 
-		utils.RespondWithJSON(w, http.StatusOK, bson.M{
+		utils.RespondWithJSON(w, http.StatusOK, map[string]any{
 			"message": "Member deleted",
 		})
 	}

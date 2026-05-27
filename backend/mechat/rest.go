@@ -14,7 +14,6 @@ import (
 	"naevis/utils"
 
 	"github.com/julienschmidt/httprouter"
-	"go.mongodb.org/mongo-driver/bson"
 )
 
 //
@@ -80,65 +79,6 @@ func StartNewChat(app *infra.Deps) httprouter.Handle {
 	}
 }
 
-func GetChatMessages(app *infra.Deps) httprouter.Handle {
-	return func(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
-		ctx := r.Context()
-		user := utils.GetUserIDFromRequest(r)
-
-		chatID := strings.TrimSpace(ps.ByName("chatid"))
-		if chatID == "" {
-			writeErr(w, 400, "missing chat id")
-			return
-		}
-
-		// access check
-		if err := app.DB.FindOne(ctx, MereChatCollection, map[string]any{
-			"chatid":       chatID,
-			"participants": user,
-		}, &struct{}{}); err != nil {
-			writeErr(w, 404, "not found or access denied")
-			return
-		}
-
-		limit := 50
-		if l := r.URL.Query().Get("limit"); l != "" {
-			if v, err := strconv.Atoi(l); err == nil && v > 0 {
-				limit = v
-			}
-		}
-
-		skip := 0
-		if s := r.URL.Query().Get("skip"); s != "" {
-			if v, err := strconv.Atoi(s); err == nil && v >= 0 {
-				skip = v
-			}
-		}
-
-		filter := map[string]any{
-			"chatid":     chatID,
-			"deleted_ne": true,
-		}
-
-		opts := db.FindManyOptions{
-			Limit: limit,
-			Skip:  skip,
-			Sort:  bson.D{{Key: "createdAt", Value: -1}},
-		}
-
-		var msgs []models.Message
-		if err := app.DB.FindManyWithOptions(ctx, MessagesCollection, filter, opts, &msgs); err != nil {
-			writeErr(w, 500, "failed to load messages")
-			return
-		}
-
-		if msgs == nil {
-			msgs = make([]models.Message, 0)
-		}
-
-		writeJSON(w, 200, msgs)
-	}
-}
-
 func GetChatByID(app *infra.Deps) httprouter.Handle {
 	return func(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 		ctx := r.Context()
@@ -156,51 +96,6 @@ func GetChatByID(app *infra.Deps) httprouter.Handle {
 		}
 
 		writeJSON(w, 200, chat)
-	}
-}
-
-func GetUserChats(app *infra.Deps) httprouter.Handle {
-	return func(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
-		ctx := r.Context()
-		user := utils.GetUserIDFromRequest(r)
-
-		skip := 0
-		limit := 20
-
-		if v := r.URL.Query().Get("skip"); v != "" {
-			if i, err := strconv.Atoi(v); err == nil && i >= 0 {
-				skip = i
-			}
-		}
-		if v := r.URL.Query().Get("limit"); v != "" {
-			if i, err := strconv.Atoi(v); err == nil && i > 0 {
-				limit = i
-			}
-		}
-
-		opts := db.FindManyOptions{
-			Skip:  skip,
-			Limit: limit,
-			Sort:  bson.D{{Key: "updatedAt", Value: -1}},
-		}
-
-		var chats []models.Chat
-		if err := app.DB.FindManyWithOptions(
-			ctx,
-			MereChatCollection,
-			map[string]any{"participants": user},
-			opts,
-			&chats,
-		); err != nil {
-			writeErr(w, 500, "failed to load chats")
-			return
-		}
-
-		if chats == nil {
-			chats = make([]models.Chat, 0)
-		}
-
-		writeJSON(w, 200, chats)
 	}
 }
 
@@ -286,5 +181,129 @@ func UploadAttachment(app *infra.Deps) httprouter.Handle {
 		)
 
 		writeJSON(w, 200, msg)
+	}
+}
+func GetUserChats(app *infra.Deps) httprouter.Handle {
+	return func(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
+		ctx := r.Context()
+		user := utils.GetUserIDFromRequest(r)
+
+		skip := 0
+		limit := 20
+
+		if v := r.URL.Query().Get("skip"); v != "" {
+			if i, err := strconv.Atoi(v); err == nil && i >= 0 {
+				skip = i
+			}
+		}
+
+		if v := r.URL.Query().Get("limit"); v != "" {
+			if i, err := strconv.Atoi(v); err == nil && i > 0 {
+				limit = i
+			}
+		}
+
+		opts := db.FindManyOptions{
+			Skip:  skip,
+			Limit: limit,
+			Sort: map[string]any{
+				"updatedAt": -1,
+			},
+		}
+
+		var chats []models.Chat
+
+		if err := app.DB.FindManyWithOptions(
+			ctx,
+			MereChatCollection,
+			map[string]any{
+				"participants": user,
+			},
+			opts,
+			&chats,
+		); err != nil {
+			writeErr(w, 500, "failed to load chats")
+			return
+		}
+
+		if chats == nil {
+			chats = make([]models.Chat, 0)
+		}
+
+		writeJSON(w, 200, chats)
+	}
+}
+
+func GetChatMessages(app *infra.Deps) httprouter.Handle {
+	return func(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
+		ctx := r.Context()
+		user := utils.GetUserIDFromRequest(r)
+
+		chatID := strings.TrimSpace(ps.ByName("chatid"))
+		if chatID == "" {
+			writeErr(w, 400, "missing chat id")
+			return
+		}
+
+		if err := app.DB.FindOne(
+			ctx,
+			MereChatCollection,
+			map[string]any{
+				"chatid":       chatID,
+				"participants": user,
+			},
+			&struct{}{},
+		); err != nil {
+			writeErr(w, 404, "not found or access denied")
+			return
+		}
+
+		limit := 50
+
+		if l := r.URL.Query().Get("limit"); l != "" {
+			if v, err := strconv.Atoi(l); err == nil && v > 0 {
+				limit = v
+			}
+		}
+
+		skip := 0
+
+		if s := r.URL.Query().Get("skip"); s != "" {
+			if v, err := strconv.Atoi(s); err == nil && v >= 0 {
+				skip = v
+			}
+		}
+
+		filter := map[string]any{
+			"chatid":     chatID,
+			"deleted_ne": true,
+		}
+
+		opts := db.FindManyOptions{
+			Limit: limit,
+			Skip:  skip,
+			Sort: map[string]any{
+				"createdAt": -1,
+			},
+		}
+
+		var msgs []models.Message
+
+		if err := app.DB.FindManyWithOptions(
+			ctx,
+			MessagesCollection,
+			filter,
+			opts,
+			&msgs,
+		); err != nil {
+			writeErr(w, 500, "failed to load messages")
+			return
+		}
+
+		if msgs == nil {
+			msgs = make([]models.Message, 0)
+		}
+
+		writeJSON(w, 200, msgs)
 	}
 }

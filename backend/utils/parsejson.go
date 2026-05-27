@@ -39,3 +39,15 @@ func ParseJSON(r *http.Request, target interface{}) error {
 
 	return nil
 }
+
+func ParseSort(
+	value string,
+	defaultSort map[string]any,
+	allowed map[string]map[string]any,
+) map[string]any {
+	if sort, ok := allowed[value]; ok {
+		return sort
+	}
+
+	return defaultSort
+}

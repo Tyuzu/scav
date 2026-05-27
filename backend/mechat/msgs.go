@@ -14,7 +14,6 @@ import (
 	"naevis/utils"
 
 	"github.com/julienschmidt/httprouter"
-	"go.mongodb.org/mongo-driver/bson"
 )
 
 //
@@ -281,7 +280,6 @@ func GetUnreadCount(app *infra.Deps) httprouter.Handle {
 		writeJSON(w, 200, out)
 	}
 }
-
 func SearchMessages(app *infra.Deps) httprouter.Handle {
 	return func(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 		ctx := r.Context()
@@ -296,6 +294,7 @@ func SearchMessages(app *infra.Deps) httprouter.Handle {
 		term := strings.TrimSpace(r.URL.Query().Get("term"))
 
 		limit := 50
+
 		if l := r.URL.Query().Get("limit"); l != "" {
 			if v, err := parseInt(l); err == nil && v > 0 {
 				limit = v
@@ -303,6 +302,7 @@ func SearchMessages(app *infra.Deps) httprouter.Handle {
 		}
 
 		skip := 0
+
 		if s := r.URL.Query().Get("skip"); s != "" {
 			if v, err := parseInt(s); err == nil && v >= 0 {
 				skip = v
@@ -313,6 +313,7 @@ func SearchMessages(app *infra.Deps) httprouter.Handle {
 			"chatid":     chatID,
 			"deleted_ne": true,
 		}
+
 		if term != "" {
 			filter["content_contains"] = term
 		}
@@ -320,11 +321,20 @@ func SearchMessages(app *infra.Deps) httprouter.Handle {
 		opts := db.FindManyOptions{
 			Limit: limit,
 			Skip:  skip,
-			Sort:  bson.D{{Key: "createdAt", Value: -1}},
+			Sort: map[string]any{
+				"createdAt": -1,
+			},
 		}
 
 		var msgs []models.Message
-		if err := app.DB.FindManyWithOptions(ctx, MessagesCollection, filter, opts, &msgs); err != nil {
+
+		if err := app.DB.FindManyWithOptions(
+			ctx,
+			MessagesCollection,
+			filter,
+			opts,
+			&msgs,
+		); err != nil {
 			writeErr(w, 500, "internal error")
 			return
 		}

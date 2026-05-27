@@ -161,18 +161,35 @@ func GetArtistsSongs(app *infra.Deps) httprouter.Handle {
 		opts := db.FindManyOptions{
 			Limit: limit,
 			Skip:  skip,
-			Sort: bson.D{{
-				Key: "uploadedAt", Value: -1,
-			}},
+			Sort: map[string]any{
+				"uploadedAt": -1,
+			},
 		}
 
 		var songs []Song
-		if err := app.DB.FindManyWithOptions(ctx, songsCollection, filter, opts, &songs); err != nil {
+
+		if err := app.DB.FindManyWithOptions(
+			ctx,
+			songsCollection,
+			filter,
+			opts,
+			&songs,
+		); err != nil {
 			log.Printf("GetArtistsSongs error: %v", err)
-			respondError(w, http.StatusInternalServerError, "Failed to fetch artist songs")
+
+			respondError(
+				w,
+				http.StatusInternalServerError,
+				"Failed to fetch artist songs",
+			)
 			return
 		}
 
-		respondJSON(w, http.StatusOK, songs, fmt.Sprintf("Songs for artist %s fetched", artistID))
+		respondJSON(
+			w,
+			http.StatusOK,
+			songs,
+			fmt.Sprintf("Songs for artist %s fetched", artistID),
+		)
 	}
 }

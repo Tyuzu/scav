@@ -106,7 +106,9 @@ func GetWorkers(app *infra.Deps) httprouter.Handle {
 		opts := db.FindManyOptions{
 			Skip:  skip,
 			Limit: limit,
-			Sort:  bson.D{{Key: "createdAt", Value: -1}},
+			Sort: map[string]any{
+				"createdAt": -1,
+			},
 		}
 
 		var workers []models.BaitoWorkersResponse

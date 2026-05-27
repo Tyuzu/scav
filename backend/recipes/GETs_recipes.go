@@ -14,7 +14,6 @@ import (
 	"naevis/utils"
 
 	"github.com/julienschmidt/httprouter"
-	"go.mongodb.org/mongo-driver/bson"
 )
 
 // --- Get single recipe ---
@@ -38,7 +37,6 @@ func GetRecipe(app *infra.Deps) httprouter.Handle {
 }
 
 // --- List Recipes ---
-
 func GetRecipes(app *infra.Deps) httprouter.Handle {
 	return func(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
 		ctx, cancel := context.WithTimeout(r.Context(), 5*time.Second)
@@ -61,18 +59,31 @@ func GetRecipes(app *infra.Deps) httprouter.Handle {
 		}
 
 		if tags := r.URL.Query().Get("tags"); tags != "" {
-			filter["tags"] = map[string]any{"$all": strings.Split(tags, ",")}
+			filter["tags"] = map[string]any{
+				"$all": strings.Split(tags, ","),
+			}
 		}
 
 		skip, limit := utils.ParsePagination(r, 10, 100)
+
 		sort := utils.ParseSort(
 			r.URL.Query().Get("sort"),
-			bson.D{{Key: "createdAt", Value: -1}},
-			map[string]bson.D{
-				"newest":   {{Key: "createdAt", Value: -1}},
-				"oldest":   {{Key: "createdAt", Value: 1}},
-				"views":    {{Key: "views", Value: -1}},
-				"prepTime": {{Key: "prepTime", Value: 1}},
+			map[string]any{
+				"createdAt": -1,
+			},
+			map[string]map[string]any{
+				"newest": {
+					"createdAt": -1,
+				},
+				"oldest": {
+					"createdAt": 1,
+				},
+				"views": {
+					"views": -1,
+				},
+				"prepTime": {
+					"prepTime": 1,
+				},
 			},
 		)
 
@@ -83,8 +94,19 @@ func GetRecipes(app *infra.Deps) httprouter.Handle {
 		}
 
 		var recipes []models.Recipe
-		if err := app.DB.FindManyWithOptions(ctx, recipeCollection, filter, opts, &recipes); err != nil {
-			utils.RespondWithError(w, http.StatusInternalServerError, "Failed to fetch recipes")
+
+		if err := app.DB.FindManyWithOptions(
+			ctx,
+			recipeCollection,
+			filter,
+			opts,
+			&recipes,
+		); err != nil {
+			utils.RespondWithError(
+				w,
+				http.StatusInternalServerError,
+				"Failed to fetch recipes",
+			)
 			return
 		}
 
@@ -92,9 +114,17 @@ func GetRecipes(app *infra.Deps) httprouter.Handle {
 			normalizeRecipeSlices(&recipes[i])
 		}
 
-		totalCount, err := app.DB.CountDocuments(ctx, recipeCollection, filter)
+		totalCount, err := app.DB.CountDocuments(
+			ctx,
+			recipeCollection,
+			filter,
+		)
 		if err != nil {
-			utils.RespondWithError(w, http.StatusInternalServerError, "Failed to count recipes")
+			utils.RespondWithError(
+				w,
+				http.StatusInternalServerError,
+				"Failed to count recipes",
+			)
 			return
 		}
 

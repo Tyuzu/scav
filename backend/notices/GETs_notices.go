@@ -28,20 +28,27 @@ func GetNotices(app *infra.Deps) httprouter.Handle {
 
 		page := 1
 		limit := 10
+
 		if p, err := strconv.Atoi(r.URL.Query().Get("page")); err == nil && p > 0 {
 			page = p
 		}
+
 		if l, err := strconv.Atoi(r.URL.Query().Get("limit")); err == nil && l > 0 {
 			limit = l
 		}
 
 		sortBy := r.URL.Query().Get("sort")
-		var sort bson.D
+
+		var sort map[string]any
 
 		if sortBy == "old" {
-			sort = bson.D{{Key: "createdAt", Value: 1}}
+			sort = map[string]any{
+				"createdAt": 1,
+			}
 		} else {
-			sort = bson.D{{Key: "createdAt", Value: -1}}
+			sort = map[string]any{
+				"createdAt": -1,
+			}
 		}
 
 		filter := bson.M{
@@ -56,12 +63,22 @@ func GetNotices(app *infra.Deps) httprouter.Handle {
 		}
 
 		var notices []models.Notice
-		if err := app.DB.FindManyWithOptions(ctx, noticesCollection, filter, opts, &notices); err != nil {
-			utils.RespondWithError(w, http.StatusInternalServerError, "Failed to fetch notices")
+
+		if err := app.DB.FindManyWithOptions(
+			ctx,
+			noticesCollection,
+			filter,
+			opts,
+			&notices,
+		); err != nil {
+			utils.RespondWithError(
+				w,
+				http.StatusInternalServerError,
+				"Failed to fetch notices",
+			)
 			return
 		}
 
-		// Only return summary fields
 		type NoticeSummary struct {
 			ID        string    `json:"noticeid"`
 			Title     string    `json:"title"`
@@ -71,9 +88,10 @@ func GetNotices(app *infra.Deps) httprouter.Handle {
 		}
 
 		resp := make([]NoticeSummary, len(notices))
+
 		for i, n := range notices {
 			resp[i] = NoticeSummary{
-				ID:        n.NoticeID, // string ID
+				ID:        n.NoticeID,
 				Title:     n.Title,
 				Summary:   n.Summary,
 				CreatedBy: n.CreatedBy,

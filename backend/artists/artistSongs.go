@@ -13,7 +13,6 @@ import (
 	_ "net/http/pprof"
 
 	"github.com/julienschmidt/httprouter"
-	"go.mongodb.org/mongo-driver/bson"
 )
 
 func PostNewSong(app *infra.Deps) httprouter.Handle {
@@ -33,12 +32,23 @@ func PostNewSong(app *infra.Deps) httprouter.Handle {
 		}
 
 		if err := json.NewDecoder(r.Body).Decode(&payload); err != nil {
-			utils.RespondWithError(w, http.StatusBadRequest, "Invalid JSON body")
+			utils.RespondWithError(
+				w,
+				http.StatusBadRequest,
+				"Invalid JSON body",
+			)
 			return
 		}
 
-		if payload.Title == "" || payload.Genre == "" || payload.Duration == "" {
-			utils.RespondWithError(w, http.StatusBadRequest, "Missing required fields: title, genre, duration")
+		if payload.Title == "" ||
+			payload.Genre == "" ||
+			payload.Duration == "" {
+
+			utils.RespondWithError(
+				w,
+				http.StatusBadRequest,
+				"Missing required fields: title, genre, duration",
+			)
 			return
 		}
 
@@ -58,12 +68,19 @@ func PostNewSong(app *infra.Deps) httprouter.Handle {
 			PosterExtn:  payload.PosterExtn,
 		}
 
-		if err := app.DB.Insert(ctx, SongsCollection, newSong); err != nil {
-			utils.RespondWithError(w, http.StatusInternalServerError, "Failed to save song")
+		if err := app.DB.Insert(
+			ctx,
+			SongsCollection,
+			newSong,
+		); err != nil {
+			utils.RespondWithError(
+				w,
+				http.StatusInternalServerError,
+				"Failed to save song",
+			)
 			return
 		}
 
-		/* -------- Publish SongCreated Event -------- */
 		songPayload := mqevent.SongCreatedPayload{
 			SongID:     newSong.SongID,
 			ArtistID:   artistID,
@@ -72,6 +89,7 @@ func PostNewSong(app *infra.Deps) httprouter.Handle {
 		}
 
 		songBytes, err := json.Marshal(songPayload)
+
 		if err == nil {
 			publishCtx, cancel := context.WithTimeout(
 				context.Background(),
@@ -89,14 +107,20 @@ func PostNewSong(app *infra.Deps) httprouter.Handle {
 		utils.RespondWithJSON(w, http.StatusCreated, newSong)
 	}
 }
+
 func EditSong(app *infra.Deps) httprouter.Handle {
 	return func(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 		ctx := r.Context()
+
 		artistID := ps.ByName("id")
 		songID := ps.ByName("songId")
 
 		if songID == "" {
-			utils.RespondWithError(w, http.StatusBadRequest, "songId is required")
+			utils.RespondWithError(
+				w,
+				http.StatusBadRequest,
+				"songId is required",
+			)
 			return
 		}
 
@@ -112,53 +136,83 @@ func EditSong(app *infra.Deps) httprouter.Handle {
 		}
 
 		if err := json.NewDecoder(r.Body).Decode(&payload); err != nil {
-			utils.RespondWithError(w, http.StatusBadRequest, "Invalid JSON body")
+			utils.RespondWithError(
+				w,
+				http.StatusBadRequest,
+				"Invalid JSON body",
+			)
 			return
 		}
 
-		updateFields := bson.M{}
+		updateFields := map[string]any{}
+
 		if payload.Title != "" {
 			updateFields["title"] = payload.Title
 		}
+
 		if payload.Genre != "" {
 			updateFields["genre"] = payload.Genre
 		}
+
 		if payload.Duration != "" {
 			updateFields["duration"] = payload.Duration
 		}
+
 		if payload.Description != "" {
 			updateFields["description"] = payload.Description
 		}
+
 		if payload.Audio != "" {
 			updateFields["audioUrl"] = payload.Audio
 		}
+
 		if payload.AudioExtn != "" {
 			updateFields["audioextn"] = payload.AudioExtn
 		}
+
 		if payload.Poster != "" {
 			updateFields["poster"] = payload.Poster
 		}
+
 		if payload.PosterExtn != "" {
 			updateFields["posterextn"] = payload.PosterExtn
 		}
 
 		if len(updateFields) == 0 {
-			utils.RespondWithError(w, http.StatusBadRequest, "No fields to update")
+			utils.RespondWithError(
+				w,
+				http.StatusBadRequest,
+				"No fields to update",
+			)
 			return
 		}
 
 		updateFields["updatedAt"] = time.Now()
 
-		filter := bson.M{"songid": songID, "artistid": artistID}
-		update := bson.M{"$set": updateFields}
+		filter := map[string]any{
+			"songid":   songID,
+			"artistid": artistID,
+		}
 
-		err := app.DB.Update(ctx, SongsCollection, filter, update)
+		update := map[string]any{
+			"$set": updateFields,
+		}
+
+		err := app.DB.Update(
+			ctx,
+			SongsCollection,
+			filter,
+			update,
+		)
 		if err != nil {
-			utils.RespondWithError(w, http.StatusInternalServerError, "Failed to update song")
+			utils.RespondWithError(
+				w,
+				http.StatusInternalServerError,
+				"Failed to update song",
+			)
 			return
 		}
 
-		/* -------- Publish SongUpdated Event -------- */
 		songUpdatePayload := mqevent.SongUpdatedPayload{
 			SongID:     songID,
 			ArtistID:   artistID,
@@ -166,6 +220,7 @@ func EditSong(app *infra.Deps) httprouter.Handle {
 		}
 
 		songUpdateBytes, err := json.Marshal(songUpdatePayload)
+
 		if err == nil {
 			publishCtx, cancel := context.WithTimeout(
 				context.Background(),
@@ -180,28 +235,49 @@ func EditSong(app *infra.Deps) httprouter.Handle {
 			)
 		}
 
-		utils.RespondWithJSON(w, http.StatusOK, bson.M{"message": "Song updated successfully"})
+		utils.RespondWithJSON(w, http.StatusOK, map[string]any{
+			"message": "Song updated successfully",
+		})
 	}
 }
+
 func DeleteSong(app *infra.Deps) httprouter.Handle {
 	return func(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 		ctx := r.Context()
+
 		artistID := ps.ByName("id")
 		songID := ps.ByName("songId")
 
 		if songID == "" {
-			utils.RespondWithError(w, http.StatusBadRequest, "songId is required")
+			utils.RespondWithError(
+				w,
+				http.StatusBadRequest,
+				"songId is required",
+			)
 			return
 		}
 
-		filter := bson.M{"artistid": artistID, "songid": songID}
+		filter := map[string]any{
+			"artistid": artistID,
+			"songid":   songID,
+		}
 
-		_, err := app.DB.Delete(ctx, SongsCollection, filter)
+		_, err := app.DB.Delete(
+			ctx,
+			SongsCollection,
+			filter,
+		)
 		if err != nil {
-			utils.RespondWithError(w, http.StatusInternalServerError, "Failed to delete song")
+			utils.RespondWithError(
+				w,
+				http.StatusInternalServerError,
+				"Failed to delete song",
+			)
 			return
 		}
 
-		utils.RespondWithJSON(w, http.StatusOK, bson.M{"message": "Song deleted successfully"})
+		utils.RespondWithJSON(w, http.StatusOK, map[string]any{
+			"message": "Song deleted successfully",
+		})
 	}
 }

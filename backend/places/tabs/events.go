@@ -11,7 +11,6 @@ import (
 	"time"
 
 	"github.com/julienschmidt/httprouter"
-	"go.mongodb.org/mongo-driver/bson"
 )
 
 // 🏟️ Events
@@ -94,8 +93,9 @@ func GetEvents(app *infra.Deps) httprouter.Handle {
 		// Fetch events
 		opts := db.FindManyOptions{
 			Limit: limit,
-			Skip:  skip,
-			Sort:  bson.D{{Key: "date", Value: 1}},
+			Skip:  skip, Sort: map[string]any{
+				"date": 1,
+			},
 			Projection: []string{
 				"eventid",
 				"title",

@@ -12,7 +12,6 @@ import (
 	"naevis/infra/db"
 
 	"github.com/julienschmidt/httprouter"
-	"go.mongodb.org/mongo-driver/bson"
 )
 
 // GetPost returns a single post enriched with like count
@@ -60,17 +59,34 @@ func GetPost(app *infra.Deps) httprouter.Handle {
 // GetPosts returns a list of posts with usernames populated from Cache
 func GetPosts(app *infra.Deps) httprouter.Handle {
 	return func(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
-		ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+		ctx, cancel := context.WithTimeout(
+			context.Background(),
+			10*time.Second,
+		)
 		defer cancel()
 
 		opts := db.FindManyOptions{
 			Limit: 100,
-			Sort:  bson.D{{Key: "timestamp", Value: -1}},
 			Skip:  0,
+			Sort: map[string]any{
+				"timestamp": -1,
+			},
 		}
+
 		var posts []models.FeedPost
-		if err := app.DB.FindManyWithOptions(ctx, feedpostsCollection, map[string]any{}, opts, &posts); err != nil {
-			http.Error(w, "Failed to fetch posts", http.StatusInternalServerError)
+
+		if err := app.DB.FindManyWithOptions(
+			ctx,
+			feedpostsCollection,
+			map[string]any{},
+			opts,
+			&posts,
+		); err != nil {
+			http.Error(
+				w,
+				"Failed to fetch posts",
+				http.StatusInternalServerError,
+			)
 			return
 		}
 
@@ -78,14 +94,14 @@ func GetPosts(app *infra.Deps) httprouter.Handle {
 			posts = []models.FeedPost{}
 		}
 
-		// collect unique user IDs
 		userIDs := map[string]struct{}{}
+
 		for _, p := range posts {
 			userIDs[p.UserID] = struct{}{}
 		}
 
-		// fetch usernames from Cache
 		usernameMap := map[string]string{}
+
 		for id := range userIDs {
 			if data, err := app.Cache.HGet(ctx, "users", id); err == nil && data != nil {
 				usernameMap[id] = string(data)
@@ -94,7 +110,6 @@ func GetPosts(app *infra.Deps) httprouter.Handle {
 			}
 		}
 
-		// populate posts
 		for i := range posts {
 			if uname, ok := usernameMap[posts[i].UserID]; ok && uname != "" {
 				posts[i].Username = uname
@@ -104,6 +119,7 @@ func GetPosts(app *infra.Deps) httprouter.Handle {
 		}
 
 		w.Header().Set("Content-Type", "application/json")
+
 		json.NewEncoder(w).Encode(map[string]any{
 			"ok":   true,
 			"data": posts,

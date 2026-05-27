@@ -41,9 +41,11 @@ func GetRecommendedSongs(app *infra.Deps) httprouter.Handle {
 		opts := db.FindManyOptions{
 			Limit: limit,
 			Skip:  (page - 1) * limit,
-			Sort:  bson.D{{Key: "plays", Value: -1}, {Key: "_id", Value: -1}},
+			Sort: map[string]any{
+				"plays": -1,
+				"_id":   -1,
+			},
 		}
-
 		filter := bson.M{"published": true}
 
 		songs := []Song{}
@@ -68,9 +70,11 @@ func GetRecommendedAlbums(app *infra.Deps) httprouter.Handle {
 		opts := db.FindManyOptions{
 			Limit: limit,
 			Skip:  (page - 1) * limit,
-			Sort:  bson.D{{Key: "release_date", Value: -1}, {Key: "_id", Value: -1}},
+			Sort: map[string]any{
+				"release_date": -1,
+				"_id":          -1,
+			},
 		}
-
 		filter := bson.M{"published": true}
 
 		albums := []Album{}
@@ -82,23 +86,37 @@ func GetRecommendedAlbums(app *infra.Deps) httprouter.Handle {
 		respondJSON(w, http.StatusOK, albums, "Recommended albums fetched")
 	}
 }
-
 func GetRecommendations(app *infra.Deps) httprouter.Handle {
 	return func(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
 
 		ctx, cancel := context.WithTimeout(r.Context(), 5*time.Second)
 		defer cancel()
 
-		basedOn := strings.ToLower(strings.TrimSpace(r.URL.Query().Get("based_on")))
+		basedOn := strings.ToLower(
+			strings.TrimSpace(
+				r.URL.Query().Get("based_on"),
+			),
+		)
 
-		filter := bson.M{"published": true}
-		sort := bson.D{{Key: "_id", Value: -1}} // default stable sort
+		filter := bson.M{
+			"published": true,
+		}
+
+		sort := map[string]any{
+			"_id": -1,
+		}
 
 		switch basedOn {
 
 		case "recently_played":
-			filter["plays"] = bson.M{"$gt": 0}
-			sort = bson.D{{Key: "plays", Value: -1}, {Key: "_id", Value: -1}}
+			filter["plays"] = bson.M{
+				"$gt": 0,
+			}
+
+			sort = map[string]any{
+				"plays": -1,
+				"_id":   -1,
+			}
 
 		case "language_en":
 			filter["language"] = "en"
@@ -117,11 +135,27 @@ func GetRecommendations(app *infra.Deps) httprouter.Handle {
 		}
 
 		songs := []Song{}
-		if err := app.DB.FindManyWithOptions(ctx, songsCollection, filter, opts, &songs); err != nil {
-			respondError(w, http.StatusInternalServerError, "Failed to fetch recommendations")
+
+		if err := app.DB.FindManyWithOptions(
+			ctx,
+			songsCollection,
+			filter,
+			opts,
+			&songs,
+		); err != nil {
+			respondError(
+				w,
+				http.StatusInternalServerError,
+				"Failed to fetch recommendations",
+			)
 			return
 		}
 
-		respondJSON(w, http.StatusOK, songs, "Personalized recommendations fetched")
+		respondJSON(
+			w,
+			http.StatusOK,
+			songs,
+			"Personalized recommendations fetched",
+		)
 	}
 }
