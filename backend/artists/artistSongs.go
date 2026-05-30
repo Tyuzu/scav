@@ -1,12 +1,10 @@
 package artists
 
 import (
-	"context"
 	"encoding/json"
 	"net/http"
 	"time"
 
-	"naevis/config/mqevent"
 	"naevis/infra"
 	"naevis/models"
 	"naevis/utils"
@@ -64,27 +62,6 @@ func PostNewSong(app *infra.Deps) httprouter.Handle {
 		}
 
 		/* -------- Publish SongCreated Event -------- */
-		songPayload := mqevent.SongCreatedPayload{
-			SongID:     newSong.SongID,
-			ArtistID:   artistID,
-			SongTitle:  newSong.Title,
-			OccurredAt: time.Now(),
-		}
-
-		songBytes, err := json.Marshal(songPayload)
-		if err == nil {
-			publishCtx, cancel := context.WithTimeout(
-				context.Background(),
-				3*time.Second,
-			)
-			defer cancel()
-
-			_ = app.MQ.Publish(
-				publishCtx,
-				mqevent.SongCreated,
-				songBytes,
-			)
-		}
 
 		utils.RespondWithJSON(w, http.StatusCreated, newSong)
 	}
@@ -159,26 +136,6 @@ func EditSong(app *infra.Deps) httprouter.Handle {
 		}
 
 		/* -------- Publish SongUpdated Event -------- */
-		songUpdatePayload := mqevent.SongUpdatedPayload{
-			SongID:     songID,
-			ArtistID:   artistID,
-			OccurredAt: time.Now(),
-		}
-
-		songUpdateBytes, err := json.Marshal(songUpdatePayload)
-		if err == nil {
-			publishCtx, cancel := context.WithTimeout(
-				context.Background(),
-				3*time.Second,
-			)
-			defer cancel()
-
-			_ = app.MQ.Publish(
-				publishCtx,
-				mqevent.SongUpdated,
-				songUpdateBytes,
-			)
-		}
 
 		utils.RespondWithJSON(w, http.StatusOK, bson.M{"message": "Song updated successfully"})
 	}

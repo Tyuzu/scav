@@ -4,7 +4,6 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"naevis/config/mqevent"
 	"naevis/infra"
 	"naevis/models"
 	"naevis/utils"
@@ -58,27 +57,6 @@ func createItem(w http.ResponseWriter, r *http.Request, itemType string, app *in
 	}
 
 	/* -------- Publish ProductCreated Event -------- */
-	productPayload := mqevent.ProductCreatedPayload{
-		ProductID:   item.ProductID,
-		UserID:      userID,
-		ProductName: item.Name,
-		OccurredAt:  time.Now(),
-	}
-
-	productBytes, err := json.Marshal(productPayload)
-	if err == nil {
-		publishCtx, cancel := context.WithTimeout(
-			context.Background(),
-			3*time.Second,
-		)
-		defer cancel()
-
-		_ = app.MQ.Publish(
-			publishCtx,
-			mqevent.ProductCreated,
-			productBytes,
-		)
-	}
 
 	w.Header().Set("Content-Type", "application/json")
 	_ = json.NewEncoder(w).Encode(item)
@@ -152,26 +130,6 @@ func updateItem(
 	}
 
 	/* -------- Publish ProductUpdated Event -------- */
-	productUpdatePayload := mqevent.ProductUpdatedPayload{
-		ProductID:  id,
-		UserID:     userID,
-		OccurredAt: time.Now(),
-	}
-
-	productUpdateBytes, err := json.Marshal(productUpdatePayload)
-	if err == nil {
-		publishCtx, cancel := context.WithTimeout(
-			context.Background(),
-			3*time.Second,
-		)
-		defer cancel()
-
-		_ = app.MQ.Publish(
-			publishCtx,
-			mqevent.ProductUpdated,
-			productUpdateBytes,
-		)
-	}
 
 	w.Header().Set("Content-Type", "application/json")
 	_ = json.NewEncoder(w).Encode(utils.M{"status": "updated"})

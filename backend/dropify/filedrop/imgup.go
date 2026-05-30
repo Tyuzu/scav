@@ -29,9 +29,6 @@ func saveUploadedFiles(r *http.Request, formKey, fileType string, entitytype fil
 		ids = append(ids, origName)
 	}
 
-	NotifyEvent("postpics-uploaded", map[string]string{"fileType": fileType})
-	NotifyEvent("thumbnail-created", map[string]string{"fileType": fileType})
-
 	return ids, nil
 }
 

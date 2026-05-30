@@ -2,10 +2,8 @@ package feed
 
 import (
 	"context"
-	"encoding/json"
 	"errors"
 	"log"
-	"naevis/config/mqevent"
 	"naevis/infra"
 	"naevis/models"
 	"naevis/userdata"
@@ -81,26 +79,6 @@ func editExistingPost(ctx context.Context, claims *models.Claims, payload PostPa
 	}
 
 	/* -------- Publish PostUpdated Event -------- */
-	updatePayload := mqevent.PostUpdatedPayload{
-		PostID:     post.PostID,
-		UserID:     claims.UserID,
-		OccurredAt: time.Now(),
-	}
-
-	updateBytes, err := json.Marshal(updatePayload)
-	if err == nil {
-		publishCtx, cancel := context.WithTimeout(
-			context.Background(),
-			3*time.Second,
-		)
-		defer cancel()
-
-		_ = app.MQ.Publish(
-			publishCtx,
-			mqevent.PostUpdated,
-			updateBytes,
-		)
-	}
 
 	return post, nil
 }
@@ -163,28 +141,6 @@ func insertNewPost(ctx context.Context, claims *models.Claims, payload PostPaylo
 	userdata.SetUserData("feedpost", post.PostID, claims.UserID, "", "", app)
 
 	/* -------- Publish PostCreated Event -------- */
-	createPayload := mqevent.PostCreatedPayload{
-		PostID:     post.PostID,
-		UserID:     claims.UserID,
-		Username:   claims.Username,
-		PostType:   post.Type,
-		OccurredAt: time.Now(),
-	}
-
-	createBytes, err := json.Marshal(createPayload)
-	if err == nil {
-		publishCtx, cancel := context.WithTimeout(
-			context.Background(),
-			3*time.Second,
-		)
-		defer cancel()
-
-		_ = app.MQ.Publish(
-			publishCtx,
-			mqevent.PostCreated,
-			createBytes,
-		)
-	}
 
 	return post, nil
 }

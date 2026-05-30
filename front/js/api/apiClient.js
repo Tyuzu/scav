@@ -54,12 +54,28 @@ async function apixFetch(endpoint, method = "GET", body = null, options = {}, re
 
         const res = await fetch(endpoint, fetchOptions);
 
+        // if (res.status === 401 && !retry && !nearExpiry) {
+        //     const refreshed = await refreshToken();
+        //     if (refreshed) {
+        //         return apixFetch(endpoint, method, body, options, true);
+        //     }
+        //     return { success: false, error: "Unauthorized" };
+        // }
+
         if (res.status === 401 && !retry && !nearExpiry) {
             const refreshed = await refreshToken();
+
             if (refreshed) {
-                return apixFetch(endpoint, method, body, options, true);
+                return apixFetch(
+                    endpoint,
+                    method,
+                    body,
+                    options,
+                    true
+                );
             }
-            return { success: false, error: "Unauthorized" };
+
+            throw new Error("Unauthorized");
         }
 
         let data = null;
@@ -73,21 +89,31 @@ async function apixFetch(endpoint, method = "GET", body = null, options = {}, re
             return { success: false, error: "Invalid JSON response" };
         }
 
+        // if (!res.ok) {
+        //     return {
+        //         success: false,
+        //         error: data?.message || `HTTP ${res.status}`,
+        //         status: res.status
+        //     };
+        // }
         if (!res.ok) {
-            return {
-                success: false,
-                error: data?.message || `HTTP ${res.status}`,
-                status: res.status
-            };
+            throw new Error(
+                data?.error ||
+                data?.message ||
+                `HTTP ${res.status}`
+            );
         }
 
         return data ?? { success: true };
 
+        // } catch (err) {
+        //     return {
+        //         success: false,
+        //         error: err?.message || "Network failure"
+        //     };
+        // }
     } catch (err) {
-        return {
-            success: false,
-            error: err?.message || "Network failure"
-        };
+        throw err;
     }
 }
 

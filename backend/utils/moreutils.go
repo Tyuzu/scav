@@ -103,8 +103,19 @@ func RespondWithJSON(w http.ResponseWriter, statusCode int, data interface{}) {
 	}
 }
 
-func RespondWithError(w http.ResponseWriter, code int, msg string) {
-	RespondWithJSON(w, code, map[string]string{"error": msg})
+func RespondWithError(
+	w http.ResponseWriter,
+	code int,
+	msg string,
+) {
+	RespondWithJSON(
+		w,
+		code,
+		map[string]any{
+			"message": msg,
+			"error":   msg,
+		},
+	)
 }
 
 type M map[string]interface{}

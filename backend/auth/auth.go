@@ -9,7 +9,6 @@ import (
 	"strings"
 	"time"
 
-	"naevis/config/mqevent"
 	"naevis/infra"
 	"naevis/models"
 	"naevis/utils"
@@ -89,37 +88,6 @@ func Register(app *infra.Deps) httprouter.Handle {
 
 		/* ---------------- Event Payload ---------------- */
 
-		payload := mqevent.UserRegisteredPayload{
-			UserID:    user.UserID,
-			Username:  user.Username,
-			Email:     user.Email,
-			CreatedAt: user.CreatedAt,
-		}
-
-		payloadBytes, err := json.Marshal(payload)
-		if err != nil {
-			utils.RespondWithError(w, http.StatusInternalServerError, "Event serialization failed")
-			return
-		}
-
-		/* ---------------- Publish Event ---------------- */
-
-		publishCtx, publishCancel := context.WithTimeout(
-			context.Background(),
-			3*time.Second,
-		)
-		defer publishCancel()
-
-		if err := app.MQ.Publish(
-			publishCtx,
-			mqevent.UserRegistered,
-			payloadBytes,
-		); err != nil {
-
-			utils.RespondWithError(w, http.StatusInternalServerError, "Event publish failed")
-			return
-		}
-
 		utils.RespondWithJSON(w, http.StatusCreated, map[string]any{
 			"message": "User registered successfully",
 			"userid":  user.UserID,
@@ -147,7 +115,7 @@ func Login(app *infra.Deps) httprouter.Handle {
 		}
 
 		creds.Username = strings.TrimSpace(creds.Username)
-		creds.Password = strings.TrimSpace(creds.Password)
+		// creds.Password = strings.TrimSpace(creds.Password)
 
 		ip := clientIP(r)
 		failKey := fmt.Sprintf("auth:fail:%s:%s", creds.Username, ipPrefix(ip))
@@ -264,29 +232,6 @@ func Login(app *infra.Deps) httprouter.Handle {
 
 		/* ---------------- Publish Login Event ---------------- */
 
-		loginPayload := mqevent.UserLoggedInPayload{
-			UserID:     user.UserID,
-			Username:   user.Username,
-			OccurredAt: time.Now(),
-			IP:         ipPrefix(ip),
-		}
-
-		loginBytes, err := json.Marshal(loginPayload)
-		if err == nil {
-			publishCtx, cancel := context.WithTimeout(
-				context.Background(),
-				3*time.Second,
-			)
-
-			defer cancel()
-
-			_ = app.MQ.Publish(
-				publishCtx,
-				mqevent.UserLoggedIn,
-				loginBytes,
-			)
-		}
-
 		utils.RespondWithJSON(w, http.StatusOK, map[string]any{
 			"message": "Login successful",
 			"data": map[string]string{
@@ -341,27 +286,7 @@ func LogoutUser(app *infra.Deps) httprouter.Handle {
 			)
 
 			/* -------- Publish Logout Event -------- */
-			if user.UserID != "" {
-				logoutPayload := mqevent.UserLoggedOutPayload{
-					UserID:     user.UserID,
-					OccurredAt: time.Now(),
-				}
 
-				logoutBytes, err := json.Marshal(logoutPayload)
-				if err == nil {
-					publishCtx, cancel := context.WithTimeout(
-						context.Background(),
-						3*time.Second,
-					)
-					defer cancel()
-
-					_ = app.MQ.Publish(
-						publishCtx,
-						mqevent.UserLoggedOut,
-						logoutBytes,
-					)
-				}
-			}
 		}
 
 		clearRefreshCookie(w)
@@ -421,25 +346,6 @@ func LogoutAllSessions(app *infra.Deps) httprouter.Handle {
 		}
 
 		/* -------- Publish Logout Event -------- */
-		logoutPayload := mqevent.UserLoggedOutPayload{
-			UserID:     claims.UserID,
-			OccurredAt: time.Now(),
-		}
-
-		logoutBytes, err := json.Marshal(logoutPayload)
-		if err == nil {
-			publishCtx, cancel := context.WithTimeout(
-				context.Background(),
-				3*time.Second,
-			)
-			defer cancel()
-
-			_ = app.MQ.Publish(
-				publishCtx,
-				mqevent.UserLoggedOut,
-				logoutBytes,
-			)
-		}
 
 		clearRefreshCookie(w)
 

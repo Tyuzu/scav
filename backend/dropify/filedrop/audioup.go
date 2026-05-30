@@ -20,7 +20,6 @@ func processAudio(savedPath, uploadDir, uniqueID string, entitytype filemgr.Enti
 	}
 
 	go createSubtitleFile(uniqueID)
-	NotifyEvent("postaudio-uploaded", map[string]string{"id": uniqueID})
 
 	return resolutions, paths
 }

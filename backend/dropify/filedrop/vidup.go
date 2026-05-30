@@ -82,7 +82,6 @@ func ProcessVideo(r *http.Request, savedPath, uploadDir, uniqueID string, entity
 	}
 
 	go createSubtitleFile(uniqueID)
-	NotifyEvent("postpics-uploaded", map[string]string{"id": uniqueID})
 
 	return resolutions, outputPaths, nil
 }

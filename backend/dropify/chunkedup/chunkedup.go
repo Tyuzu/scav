@@ -1,7 +1,6 @@
 package chunkedup
 
 import (
-	"context"
 	"encoding/json"
 	"fmt"
 	"io"
@@ -154,32 +153,6 @@ func allChunksUploaded(tempFileDir string, totalChunks int) bool {
 	return true
 }
 
-// publishUploadEvent publishes a media.uploaded event to notify backends
-func publishUploadEvent(meta ChunkMeta, finalPath string) {
-	go func() {
-		if globalApp == nil || globalApp.MQ == nil {
-			fmt.Printf("[%s] MQ not available, skipping event\n", time.Now().Format(time.RFC3339))
-			return
-		}
-
-		ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
-		defer cancel()
-
-		event := map[string]interface{}{
-			"entityType": string(meta.EntityType),
-			"entityID":   meta.EntityID,
-			"filePath":   finalPath,
-			"fileName":   meta.FileName,
-			"timestamp":  time.Now().Unix(),
-		}
-
-		eventJSON, _ := json.Marshal(event)
-		if err := globalApp.MQ.Publish(ctx, "media.uploaded", eventJSON); err != nil {
-			fmt.Printf("[%s] Failed to publish event: %v\n", time.Now().Format(time.RFC3339), err)
-		}
-	}()
-}
-
 // validateFileType reads first bytes and validates MIME type
 func validateFileType(file io.ReadSeeker) error {
 	header := make([]byte, 512)
@@ -272,7 +245,6 @@ func ChunkedUploads(w http.ResponseWriter, r *http.Request, ps httprouter.Params
 		})
 
 		// Publish event to notify backends of upload
-		publishUploadEvent(meta, finalPath)
 	}
 	lock.Unlock()
 

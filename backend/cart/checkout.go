@@ -4,7 +4,6 @@ import (
 	"context"
 	"encoding/json"
 	"log"
-	"naevis/config/mqevent"
 	"naevis/infra"
 	"naevis/models"
 	"naevis/utils"
@@ -148,26 +147,6 @@ func PlaceOrder(app *infra.Deps) httprouter.Handle {
 		}
 
 		/* -------- Publish CheckoutStarted Event -------- */
-		checkoutPayload := mqevent.CheckoutStartedPayload{
-			CheckoutID: "CHK" + utils.GenerateRandomDigitString(12),
-			UserID:     userID,
-			OccurredAt: time.Now(),
-		}
-
-		checkoutBytes, err := json.Marshal(checkoutPayload)
-		if err == nil {
-			publishCtx, cancel := context.WithTimeout(
-				context.Background(),
-				3*time.Second,
-			)
-			defer cancel()
-
-			_ = app.MQ.Publish(
-				publishCtx,
-				mqevent.CheckoutStarted,
-				checkoutBytes,
-			)
-		}
 
 		resp := map[string]any{
 			"success":    true,
