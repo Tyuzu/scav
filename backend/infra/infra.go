@@ -6,7 +6,6 @@ import (
 	"os"
 	"time"
 
-	"github.com/nats-io/nats.go"
 	"github.com/redis/go-redis/v9"
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
@@ -50,24 +49,24 @@ func New(cfg *config.Config) (*Deps, error) {
 
 	/* -------- NATS JetStream -------- */
 
-	natsURL := env("NATS_URL", nats.DefaultURL)
-	_, js, err := NewJetStream(natsURL)
-	if err != nil {
-		return nil, err
-	}
+	// natsURL := env("NATS_URL", nats.DefaultURL)
+	// _, js, err := NewJetStream(natsURL)
+	// if err != nil {
+	// 	return nil, err
+	// }
 
-	mqLayer := mq.NewJetStreamMQ(js, "naevis-consumer")
+	// mqLayer := mq.NewJetStreamMQ(js, "naevis-consumer")
 
-	err = mq.EnsureStreams(js)
-	if err != nil {
-		return nil, err
-	}
+	// err = mq.EnsureStreams(js)
+	// if err != nil {
+	// 	return nil, err
+	// }
 	log.Println("infra initialized")
 
 	return &Deps{
-		DB:     dbLayer,
-		Cache:  cacheLayer,
-		MQ:     mqLayer,
+		DB:    dbLayer,
+		Cache: cacheLayer,
+		// MQ:     mqLayer,
 		Config: *cfg,
 	}, nil
 }
@@ -118,17 +117,17 @@ func NewRedis(addr string, password string, dbIndex int) *redis.Client {
 
 /* -------------------- NATS -------------------- */
 
-func NewJetStream(url string) (*nats.Conn, nats.JetStreamContext, error) {
-	nc, err := nats.Connect(url)
-	if err != nil {
-		return nil, nil, err
-	}
+// func NewJetStream(url string) (*nats.Conn, nats.JetStreamContext, error) {
+// 	nc, err := nats.Connect(url)
+// 	if err != nil {
+// 		return nil, nil, err
+// 	}
 
-	js, err := nc.JetStream()
-	if err != nil {
-		_ = nc.Drain()
-		return nil, nil, err
-	}
+// 	js, err := nc.JetStream()
+// 	if err != nil {
+// 		_ = nc.Drain()
+// 		return nil, nil, err
+// 	}
 
-	return nc, js, nil
-}
+// 	return nc, js, nil
+// }

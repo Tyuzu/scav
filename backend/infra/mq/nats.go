@@ -7,24 +7,34 @@ import (
 )
 
 type JetStreamMQ struct {
-	js       nats.JetStreamContext
-	consumer string
+	js nats.JetStreamContext
 }
 
-func NewJetStreamMQ(js nats.JetStreamContext, consumer string) *JetStreamMQ {
+func NewJetStreamMQ(js nats.JetStreamContext) *JetStreamMQ {
 	return &JetStreamMQ{
-		js:       js,
-		consumer: consumer,
+		js: js,
 	}
 }
 
-func (j *JetStreamMQ) Emit(ctx context.Context, subject string, data []byte) error {
-	_, err := j.js.Publish(subject, data)
-	return err
+type jetStreamSubscription struct {
+	sub *nats.Subscription
 }
 
-func (j *JetStreamMQ) Publish(ctx context.Context, subject string, data []byte) error {
-	_, err := j.js.Publish(subject, data)
+func (s *jetStreamSubscription) Unsubscribe() error {
+	return s.sub.Unsubscribe()
+}
+
+func (j *JetStreamMQ) Publish(
+	ctx context.Context,
+	subject string,
+	data []byte,
+) error {
+	msg := &nats.Msg{
+		Subject: subject,
+		Data:    data,
+	}
+
+	_, err := j.js.PublishMsg(msg, nats.Context(ctx))
 	return err
 }
 
@@ -32,22 +42,29 @@ func (j *JetStreamMQ) Subscribe(
 	ctx context.Context,
 	subject string,
 	handler MessageHandler,
-) error {
+) (Subscription, error) {
+
 	sub, err := j.js.Subscribe(
 		subject,
 		func(msg *nats.Msg) {
-			if err := handler(ctx, msg.Data); err != nil {
+			m := Message{
+				Subject: msg.Subject,
+				Data:    msg.Data,
+			}
+
+			if err := handler(ctx, m); err != nil {
 				_ = msg.Nak()
 				return
 			}
+
 			_ = msg.Ack()
 		},
-		nats.Durable(j.consumer),
 		nats.ManualAck(),
 		nats.AckExplicit(),
 	)
+
 	if err != nil {
-		return err
+		return nil, err
 	}
 
 	go func() {
@@ -55,7 +72,9 @@ func (j *JetStreamMQ) Subscribe(
 		_ = sub.Unsubscribe()
 	}()
 
-	return nil
+	return &jetStreamSubscription{
+		sub: sub,
+	}, nil
 }
 
 func (j *JetStreamMQ) QueueSubscribe(
@@ -63,26 +82,30 @@ func (j *JetStreamMQ) QueueSubscribe(
 	subject string,
 	queue string,
 	handler MessageHandler,
-) error {
+) (Subscription, error) {
 
 	sub, err := j.js.QueueSubscribe(
 		subject,
 		queue,
 		func(msg *nats.Msg) {
-			if err := handler(ctx, msg.Data); err != nil {
+			m := Message{
+				Subject: msg.Subject,
+				Data:    msg.Data,
+			}
+
+			if err := handler(ctx, m); err != nil {
 				_ = msg.Nak()
 				return
 			}
 
 			_ = msg.Ack()
 		},
-		nats.Durable(queue),
 		nats.ManualAck(),
 		nats.AckExplicit(),
 	)
 
 	if err != nil {
-		return err
+		return nil, err
 	}
 
 	go func() {
@@ -90,5 +113,7 @@ func (j *JetStreamMQ) QueueSubscribe(
 		_ = sub.Unsubscribe()
 	}()
 
-	return nil
+	return &jetStreamSubscription{
+		sub: sub,
+	}, nil
 }

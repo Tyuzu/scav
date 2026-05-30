@@ -12,7 +12,6 @@ import (
 	"naevis/config"
 	"naevis/discord"
 	"naevis/infra"
-	"naevis/infra/mq/bootstrap"
 	"naevis/mechat"
 	"naevis/middleware"
 	"naevis/newchat"
@@ -30,14 +29,14 @@ func main() {
 		log.Fatalf("Failed to initialize infrastructure: %v", err)
 	}
 
-	subscriberCtx := context.Background()
+	// subscriberCtx := context.Background()
 
-	if err := bootstrap.RegisterSubscribers(
-		subscriberCtx,
-		app,
-	); err != nil {
-		log.Fatalf("subscriber bootstrap failed: %v", err)
-	}
+	// if err := bootstrap.RegisterSubscribers(
+	// 	subscriberCtx,
+	// 	app,
+	// ); err != nil {
+	// 	log.Fatalf("subscriber bootstrap failed: %v", err)
+	// }
 
 	// =====================
 	// Rate limiter
@@ -59,12 +58,12 @@ func main() {
 
 	hubs := discord.NewHubManager(8)
 
-	go discord.StartConsumer(
-		context.Background(),
-		app.MQ,
-		hubs.ForRoom("*"),
-		"chat.*.events",
-	)
+	// go discord.StartConsumer(
+	// 	context.Background(),
+	// 	app.MQ,
+	// 	hubs.ForRoom("*"),
+	// 	"chat.*.events",
+	// )
 	// =====================
 	// Router & middleware
 	// =====================
