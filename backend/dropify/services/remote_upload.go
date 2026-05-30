@@ -5,13 +5,88 @@ import (
 	"io"
 	"mime/multipart"
 	"naevis/dropify/filemgr"
+	"net"
 	"net/http"
 	"net/textproto"
 	"net/url"
 	"os"
 	"path/filepath"
 	"strings"
+	"time"
 )
+
+// ----------------------------------------------------
+// SSRF Protection
+// ----------------------------------------------------
+
+func isPrivateIP(ip net.IP) bool {
+	if ip == nil {
+		return true
+	}
+
+	if ip.IsLoopback() ||
+		ip.IsPrivate() ||
+		ip.IsLinkLocalUnicast() ||
+		ip.IsLinkLocalMulticast() ||
+		ip.IsMulticast() ||
+		ip.IsUnspecified() {
+		return true
+	}
+
+	// IPv6 localhost
+	if ip.String() == "::1" {
+		return true
+	}
+
+	return false
+}
+
+func validateRemoteHost(rawURL string) error {
+	parsed, err := url.Parse(rawURL)
+	if err != nil {
+		return fmt.Errorf("invalid remote URL")
+	}
+
+	host := parsed.Hostname()
+	if host == "" {
+		return fmt.Errorf("invalid host")
+	}
+
+	switch strings.ToLower(host) {
+	case "localhost", "localhost.localdomain":
+		return fmt.Errorf("localhost addresses are not allowed")
+	}
+
+	// Direct IP address
+	if ip := net.ParseIP(host); ip != nil {
+		if isPrivateIP(ip) {
+			return fmt.Errorf("private network addresses are not allowed")
+		}
+		return nil
+	}
+
+	// DNS resolution
+	ips, err := net.LookupIP(host)
+	if err != nil {
+		return fmt.Errorf("unable to resolve host")
+	}
+
+	if len(ips) == 0 {
+		return fmt.Errorf("host has no valid addresses")
+	}
+
+	for _, ip := range ips {
+		if isPrivateIP(ip) {
+			return fmt.Errorf("host resolves to a private address")
+		}
+	}
+
+	return nil
+}
+
+// ----------------------------------------------------
+// Remote Upload Processing
+// ----------------------------------------------------
 
 // ProcessRemoteFile downloads and stores a remote image
 func (s *FileService) ProcessRemoteFile(
@@ -37,10 +112,34 @@ func (s *FileService) ProcessRemoteFile(
 	}
 
 	// -------------------------
+	// SSRF Protection
+	// -------------------------
+
+	if err := validateRemoteHost(remoteURL); err != nil {
+		return nil, err
+	}
+
+	// -------------------------
 	// Download file
 	// -------------------------
 
-	resp, err := http.Get(remoteURL)
+	client := &http.Client{
+		Timeout: 30 * time.Second,
+		CheckRedirect: func(req *http.Request, via []*http.Request) error {
+
+			if len(via) > 10 {
+				return fmt.Errorf("too many redirects")
+			}
+
+			if err := validateRemoteHost(req.URL.String()); err != nil {
+				return err
+			}
+
+			return nil
+		},
+	}
+
+	resp, err := client.Get(remoteURL)
 	if err != nil {
 		return nil, fmt.Errorf("failed to download remote file")
 	}
@@ -66,7 +165,6 @@ func (s *FileService) ProcessRemoteFile(
 	}
 	defer os.Remove(tmpFile.Name())
 
-	// copy body
 	if _, err := io.Copy(tmpFile, resp.Body); err != nil {
 		tmpFile.Close()
 		return nil, fmt.Errorf("failed to save remote file")
@@ -101,7 +199,7 @@ func (s *FileService) ProcessRemoteFile(
 		"photo":   filemgr.PicPhoto,
 		"avatar":  filemgr.PicPhoto,
 		"seating": filemgr.PicSeating,
-	}[key]
+	}[strings.ToLower(key)]
 
 	if !ok {
 		return nil, fmt.Errorf("invalid picture key")
@@ -135,7 +233,6 @@ func (s *FileService) ProcessRemoteFile(
 		entity,
 		picType,
 	)
-
 	if err != nil {
 		return nil, err
 	}
@@ -144,7 +241,7 @@ func (s *FileService) ProcessRemoteFile(
 		{
 			Filename:  savedName + ext,
 			Extension: ext,
-			Key:       key,
+			Key:       strings.ToLower(key),
 		},
 	}, nil
 }

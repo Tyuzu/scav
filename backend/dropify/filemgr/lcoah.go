@@ -1,6 +1,7 @@
 package filemgr
 
 import (
+	"context"
 	"fmt"
 	"image"
 	"image/jpeg"
@@ -30,7 +31,6 @@ const (
 // -------------------------
 
 func SaveFileForEntity(file multipart.File, header *multipart.FileHeader, entity EntityType, picType PictureType) (string, string, error) {
-	defer file.Close()
 	log.Println("->[SaveFileForEntity] : no error yet")
 	filename, ext, err := saveFileAndProcess(file, header, entity, picType, defaultThumbWidth, "")
 	log.Println("[SaveFileForEntity]->")
@@ -38,7 +38,6 @@ func SaveFileForEntity(file multipart.File, header *multipart.FileHeader, entity
 }
 
 func SaveImageWithThumb(file multipart.File, header *multipart.FileHeader, entity EntityType, picType PictureType, thumbWidth int, userid string) (string, string, error) {
-	defer file.Close()
 	filename, ext, err := saveFileAndProcess(file, header, entity, picType, thumbWidth, userid)
 	if err != nil {
 		return filename + ext, "", err
@@ -187,42 +186,77 @@ func saveFileAndProcess(file multipart.File, header *multipart.FileHeader, entit
 
 func processImage(fullPath string, entity EntityType, picType PictureType, thumbWidth int, filename, ext string) error {
 	_ = picType
+
 	img, _, err := openImage(fullPath)
 	if err != nil {
 		if LogFunc != nil {
 			LogFunc(fullPath, 0, "unknown")
 		}
-		return nil // best-effort
+		return nil
 	}
 
 	newPath, err := normalizeImageFormat(fullPath, ext, img)
 	if err != nil {
 		return err
 	}
+
 	if newPath != fullPath {
 		fullPath = newPath
+		ext = ".png"
 	}
 
-	// Thumbnail
 	imgCopy := imaging.Clone(img)
+
 	go func() {
-		// thumbName := filepath.Base(fullPath)
 		thumbName := filename + ".jpg"
-		if err := generateThumbnail(imgCopy, entity, thumbName, thumbWidth); err != nil && LogFunc != nil {
-			LogFunc(fmt.Sprintf("warning: thumbnail failed for %s: %v", thumbName, err), 0, "")
+
+		if err := generateThumbnail(
+			imgCopy,
+			entity,
+			thumbName,
+			thumbWidth,
+		); err != nil && LogFunc != nil {
+
+			LogFunc(
+				fmt.Sprintf(
+					"warning: thumbnail failed for %s: %v",
+					thumbName,
+					err,
+				),
+				0,
+				"",
+			)
 		}
 	}()
 
-	// Metadata extraction
+	metaImg := imaging.Clone(img)
+
 	go func() {
-		if err := ExtractImageMetadata(imaging.Clone(img), generateUniqueID()); err != nil && LogFunc != nil {
-			LogFunc(fmt.Sprintf("warning: metadata extraction failed for %s: %v", filepath.Base(fullPath), err), 0, "")
+		if err := ExtractImageMetadata(
+			metaImg,
+			generateUniqueID(),
+		); err != nil && LogFunc != nil {
+
+			LogFunc(
+				fmt.Sprintf(
+					"warning: metadata extraction failed for %s: %v",
+					filepath.Base(fullPath),
+					err,
+				),
+				0,
+				"",
+			)
 		}
 	}()
 
 	if LogFunc != nil {
-		LogFunc(filepath.Base(fullPath), 0, "image/png")
+		LogFunc(
+			filepath.Base(fullPath),
+			0,
+			"image/png",
+		)
 	}
+
 	return nil
 }
 
@@ -262,20 +296,67 @@ func generateThumbnail(img image.Image, entity EntityType, baseFilename string, 
 	return nil
 }
 
-func generateVideoPoster(videoPath string, entity EntityType, baseFilename string) (string, error) {
-	thumbName := strings.TrimSuffix(baseFilename, filepath.Ext(baseFilename)) + ".jpg"
+func generateVideoPoster(
+	videoPath string,
+	entity EntityType,
+	baseFilename string,
+) (string, error) {
+
+	thumbName :=
+		strings.TrimSuffix(
+			baseFilename,
+			filepath.Ext(baseFilename),
+		) + ".jpg"
+
 	thumbDir := ResolvePath(entity, PicThumb)
-	thumbPath := filepath.Join(thumbDir, thumbName)
-	if err := os.MkdirAll(thumbDir, 0o755); err != nil {
-		return "", fmt.Errorf("mkdir %s: %w", thumbDir, err)
+
+	thumbPath :=
+		filepath.Join(
+			thumbDir,
+			thumbName,
+		)
+
+	if err := os.MkdirAll(
+		thumbDir,
+		0o755,
+	); err != nil {
+
+		return "", fmt.Errorf(
+			"mkdir %s: %w",
+			thumbDir,
+			err,
+		)
 	}
 
 	ts := 0.5
-	if out, err := exec.Command("ffprobe", "-v", "error", "-show_entries", "format=duration",
-		"-of", "default=noprint_wrappers=1:nokey=1", videoPath).Output(); err == nil {
-		if d, err := strconv.ParseFloat(strings.TrimSpace(string(out)), 64); err == nil && d > 0 {
+
+	probeCtx, probeCancel :=
+		context.WithTimeout(
+			context.Background(),
+			30*time.Second,
+		)
+
+	defer probeCancel()
+
+	if out, err := exec.CommandContext(
+		probeCtx,
+		"ffprobe",
+		"-v",
+		"error",
+		"-show_entries",
+		"format=duration",
+		"-of",
+		"default=noprint_wrappers=1:nokey=1",
+		videoPath,
+	).Output(); err == nil {
+
+		if d, err := strconv.ParseFloat(
+			strings.TrimSpace(string(out)),
+			64,
+		); err == nil && d > 0 {
+
 			if d >= 0.5 {
-				ts = d / 2.0
+				ts = d / 2
 			} else {
 				ts = 0
 			}
@@ -283,17 +364,70 @@ func generateVideoPoster(videoPath string, entity EntityType, baseFilename strin
 	}
 
 	ss := fmt.Sprintf("%.3f", ts)
-	cmd := exec.Command("ffmpeg", "-y", "-i", videoPath, "-ss", ss, "-vframes", "1", thumbPath)
+
+	ffmpegCtx, ffmpegCancel :=
+		context.WithTimeout(
+			context.Background(),
+			2*time.Minute,
+		)
+
+	defer ffmpegCancel()
+
+	cmd := exec.CommandContext(
+		ffmpegCtx,
+		"ffmpeg",
+		"-y",
+		"-i",
+		videoPath,
+		"-ss",
+		ss,
+		"-vframes",
+		"1",
+		thumbPath,
+	)
+
 	if err := cmd.Run(); err != nil {
-		fallback := exec.Command("ffmpeg", "-y", "-i", videoPath, "-ss", "0", "-vframes", "1", thumbPath)
+
+		fallbackCtx, fallbackCancel :=
+			context.WithTimeout(
+				context.Background(),
+				2*time.Minute,
+			)
+
+		defer fallbackCancel()
+
+		fallback := exec.CommandContext(
+			fallbackCtx,
+			"ffmpeg",
+			"-y",
+			"-i",
+			videoPath,
+			"-ss",
+			"0",
+			"-vframes",
+			"1",
+			thumbPath,
+		)
+
 		if ferr := fallback.Run(); ferr != nil {
-			return "", fmt.Errorf("ffmpeg poster generation failed (primary: %v, fallback: %v)", err, ferr)
+
+			return "",
+				fmt.Errorf(
+					"ffmpeg poster generation failed (primary: %v, fallback: %v)",
+					err,
+					ferr,
+				)
 		}
 	}
 
 	if LogFunc != nil {
-		LogFunc(thumbPath, 0, "image/jpeg")
+		LogFunc(
+			thumbPath,
+			0,
+			"image/jpeg",
+		)
 	}
+
 	return thumbName, nil
 }
 
@@ -371,7 +505,15 @@ func writeValidatedFile(reader io.Reader, header *multipart.FileHeader, destDir 
 	if _, err := out.Write(buf[:n]); err != nil {
 		return "", "", "", fmt.Errorf("write header: %w", err)
 	}
-	written, err := io.Copy(out, io.LimitReader(reader, maxSize-int64(n)))
+	limit := maxSize - int64(n) + 1
+
+	written, err := io.Copy(
+		out,
+		io.LimitReader(
+			reader,
+			limit,
+		),
+	)
 	if err != nil {
 		return "", "", "", fmt.Errorf("write body: %w", err)
 	}
@@ -389,7 +531,11 @@ func writeValidatedFile(reader io.Reader, header *multipart.FileHeader, destDir 
 	if LogFunc != nil {
 		LogFunc(filenameOnly+safeExt, totalWritten, mimeType)
 	}
-	log.Println("\t-------------------\t------------------\t--------------\t---------", filenameOnly, safeExt, fullPath)
+	log.Printf(
+		"saved file: %s%s",
+		filenameOnly,
+		safeExt,
+	)
 	return filenameOnly, safeExt, fullPath, nil
 }
 

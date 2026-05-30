@@ -7,21 +7,62 @@ import (
 	"strings"
 )
 
-// DeleteFile deletes a saved file and its thumbnail (if exists)
+// DeleteFile deletes a file.
+// Thumbnail deletion should be handled separately when the
+// caller knows the entity type and thumbnail location.
 func DeleteFile(filePath string) error {
+
 	if filePath == "" {
 		return nil
 	}
-	if err := os.Remove(filePath); err != nil && !os.IsNotExist(err) {
-		return fmt.Errorf("delete %s: %w", filePath, err)
+
+	if err := os.Remove(filePath); err != nil &&
+		!os.IsNotExist(err) {
+
+		return fmt.Errorf(
+			"delete %s: %w",
+			filePath,
+			err,
+		)
 	}
 
-	// Delete thumbnail if exists
-	dir := filepath.Dir(filePath)
-	base := strings.TrimSuffix(filepath.Base(filePath), filepath.Ext(filePath))
-	thumbPath := filepath.Join(dir, base+".jpg")
-	if _, err := os.Stat(thumbPath); err == nil {
-		_ = os.Remove(thumbPath)
+	return nil
+}
+
+func DeleteFileWithThumb(
+	entity EntityType,
+	pictureType PictureType,
+	filename string,
+) error {
+
+	filePath := filepath.Join(
+		ResolvePath(entity, pictureType),
+		filename,
+	)
+
+	if err := DeleteFile(filePath); err != nil {
+		return err
 	}
+
+	base := strings.TrimSuffix(
+		filename,
+		filepath.Ext(filename),
+	)
+
+	thumbPath := filepath.Join(
+		ResolvePath(entity, PicThumb),
+		base+".jpg",
+	)
+
+	if err := os.Remove(thumbPath); err != nil &&
+		!os.IsNotExist(err) {
+
+		return fmt.Errorf(
+			"delete thumbnail %s: %w",
+			thumbPath,
+			err,
+		)
+	}
+
 	return nil
 }
