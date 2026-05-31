@@ -1,12 +1,14 @@
 package droping
 
 import (
+	"context"
 	"fmt"
 	"log"
 	"net/http"
 	"strings"
 
 	"github.com/julienschmidt/httprouter"
+	"go.mongodb.org/mongo-driver/bson"
 
 	"naevis/dropify/filemgr"
 	"naevis/dropify/services"
@@ -44,26 +46,86 @@ var validEntities = map[string]filemgr.EntityType{
 	"live":         filemgr.EntityLive,
 }
 
-// FiledropHandler handles file uploads via multipart/form-data
-func FiledropHandler(
-	app *infra.Deps,
-	w http.ResponseWriter,
-	r *http.Request,
-	_ httprouter.Params,
-) {
+type EntityMeta struct {
+	Collection string
+	IDField    string
+}
 
+var entityMeta = map[string]EntityMeta{
+	"user": {
+		Collection: "users",
+		IDField:    "userid",
+	},
+	"artist": {
+		Collection: "artists",
+		IDField:    "artistid",
+	},
+	"event": {
+		Collection: "events",
+		IDField:    "eventid",
+	},
+	"place": {
+		Collection: "places",
+		IDField:    "placeid",
+	},
+	"farm": {
+		Collection: "farms",
+		IDField:    "farmid",
+	},
+	"crop": {
+		Collection: "crops",
+		IDField:    "cropid",
+	},
+	"recipe": {
+		Collection: "recipes",
+		IDField:    "recipeid",
+	},
+	"product": {
+		Collection: "products",
+		IDField:    "productid",
+	},
+	"baito": {
+		Collection: "baitos",
+		IDField:    "baitoid",
+	},
+	"baito_worker": {
+		Collection: "baito_workers",
+		IDField:    "baito_worker_id",
+	},
+	"post": {
+		Collection: "posts",
+		IDField:    "postid",
+	},
+	"feedpost": {
+		Collection: "feedposts",
+		IDField:    "feedpostid",
+	},
+	"song": {
+		Collection: "songs",
+		IDField:    "songid",
+	},
+	"chat": {
+		Collection: "chats",
+		IDField:    "chatid",
+	},
+	"live": {
+		Collection: "lives",
+		IDField:    "liveid",
+	},
+	"media": {
+		Collection: "media",
+		IDField:    "mediaid",
+	},
+}
+
+// FiledropHandler handles file uploads via multipart/form-data
+func FiledropHandler(app *infra.Deps, w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
 	// -------------------------
 	// Validate request
 	// -------------------------
 
 	if err := validateUploadRequest(w, r); err != nil {
-
-		utils.RespondWithError(
-			w,
-			http.StatusBadRequest,
-			err.Error(),
-		)
-
+		utils.RespondWithError(w, http.StatusBadRequest, err.Error())
 		return
 	}
 
@@ -72,13 +134,7 @@ func FiledropHandler(
 	// -------------------------
 
 	if err := r.ParseMultipartForm(maxUploadBytes); err != nil {
-
-		utils.RespondWithError(
-			w,
-			http.StatusBadRequest,
-			"failed to parse multipart form: "+err.Error(),
-		)
-
+		utils.RespondWithError(w, http.StatusBadRequest, "failed to parse multipart form: "+err.Error())
 		return
 	}
 
@@ -112,32 +168,16 @@ func FiledropHandler(
 	// -------------------------
 
 	if entityType == "" {
-
-		utils.RespondWithError(
-			w,
-			http.StatusBadRequest,
-			"entityType is required",
-		)
-
+		utils.RespondWithError(w, http.StatusBadRequest, "entityType is required")
 		return
 	}
 
 	if _, ok := validEntities[entityType]; !ok {
-
-		utils.RespondWithError(
-			w,
-			http.StatusBadRequest,
-			"invalid entityType",
-		)
-
+		utils.RespondWithError(w, http.StatusBadRequest, "invalid entityType")
 		return
 	}
 
-	log.Printf(
-		"[Filedrop] entityType=%s entityId=%s",
-		entityType,
-		entityId,
-	)
+	log.Printf("[Filedrop] entityType=%s entityId=%s", entityType, entityId)
 
 	// -------------------------
 	// Service
@@ -155,19 +195,10 @@ func FiledropHandler(
 	// -------------------------
 
 	if remoteURL != "" {
-
 		switch remoteKey {
-
 		case "banner", "photo", "avatar", "seating":
-
 		default:
-
-			utils.RespondWithError(
-				w,
-				http.StatusBadRequest,
-				"invalid remoteKey",
-			)
-
+			utils.RespondWithError(w, http.StatusBadRequest, "invalid remoteKey")
 			return
 		}
 
@@ -177,29 +208,17 @@ func FiledropHandler(
 			entityType,
 			entityId,
 		)
-
 	} else {
-
 		// -------------------------
 		// Multipart upload
 		// -------------------------
 
 		if r.MultipartForm == nil || len(r.MultipartForm.File) == 0 {
-
-			utils.RespondWithError(
-				w,
-				http.StatusBadRequest,
-				"no files uploaded",
-			)
-
+			utils.RespondWithError(w, http.StatusBadRequest, "no files uploaded")
 			return
 		}
 
-		attachments, err = fileService.ProcessUploadedFiles(
-			r,
-			entityType,
-			entityId,
-		)
+		attachments, err = fileService.ProcessUploadedFiles(r, entityType, entityId)
 	}
 
 	// -------------------------
@@ -207,19 +226,33 @@ func FiledropHandler(
 	// -------------------------
 
 	if err != nil {
-
 		log.Printf(
 			"[Filedrop] processing error: %v",
 			err,
 		)
 
-		utils.RespondWithError(
-			w,
-			http.StatusInternalServerError,
-			"failed to process files: "+err.Error(),
-		)
-
+		utils.RespondWithError(w, http.StatusInternalServerError, "failed to process files: "+err.Error())
 		return
+	}
+
+	// -------------------------
+	// Update entity document
+	// -------------------------
+
+	if entityId != "" {
+		if err := updateEntityMedia(app, entityType, entityId, attachments); err != nil {
+			log.Printf(
+				"[Filedrop] failed updating entity media: %v",
+				err,
+			)
+
+			utils.RespondWithError(
+				w,
+				http.StatusInternalServerError,
+				"failed to update entity media: "+err.Error(),
+			)
+			return
+		}
 	}
 
 	// -------------------------
@@ -231,26 +264,13 @@ func FiledropHandler(
 	// -------------------------
 
 	response := convertToAttachments(attachments)
-
-	utils.RespondWithJSON(
-		w,
-		http.StatusOK,
-		response,
-	)
+	utils.RespondWithJSON(w, http.StatusOK, response)
 }
 
 // validateUploadRequest validates upload request basics
-func validateUploadRequest(
-	w http.ResponseWriter,
-	r *http.Request,
-) error {
-
+func validateUploadRequest(w http.ResponseWriter, r *http.Request) error {
 	// limit body size
-	r.Body = http.MaxBytesReader(
-		w,
-		r.Body,
-		maxUploadBytes,
-	)
+	r.Body = http.MaxBytesReader(w, r.Body, maxUploadBytes)
 
 	// only POST allowed
 	if r.Method != http.MethodPost {
@@ -266,7 +286,6 @@ func validateUploadRequest(
 
 	if remoteURL == "" &&
 		!strings.HasPrefix(contentType, "multipart/") {
-
 		return fmt.Errorf(
 			"content-type must be multipart/form-data",
 		)
@@ -279,14 +298,12 @@ func validateUploadRequest(
 func convertToAttachments(
 	serviceAttachments []services.Attachment,
 ) []Attachment {
-
 	attachments := make(
 		[]Attachment,
 		len(serviceAttachments),
 	)
 
 	for i, sa := range serviceAttachments {
-
 		attachments[i] = Attachment{
 			Filename:    sa.Filename,
 			Extension:   sa.Extension,
@@ -298,27 +315,69 @@ func convertToAttachments(
 	return attachments
 }
 
-// OptionsHandler handles CORS preflight requests
-func OptionsHandler(
-	w http.ResponseWriter,
-	r *http.Request,
-	_ httprouter.Params,
-) {
+// updateEntityMedia updates the mongo document for the entity
+func updateEntityMedia(
+	app *infra.Deps,
+	entityType string,
+	entityId string,
+	attachments []services.Attachment,
+) error {
+	meta, ok := entityMeta[entityType]
+	if !ok {
+		return fmt.Errorf("unsupported entity type: %s", entityType)
+	}
 
-	w.Header().Set(
-		"Access-Control-Allow-Origin",
-		"*",
+	filter := bson.M{
+		meta.IDField: entityId,
+	}
+
+	setFields := bson.M{}
+	var photos []string
+
+	for _, attachment := range attachments {
+		switch strings.ToLower(strings.TrimSpace(attachment.Key)) {
+		case "banner":
+			setFields["banner"] = attachment.Filename
+
+		case "avatar":
+			setFields["avatar"] = attachment.Filename
+
+		case "poster":
+			setFields["poster"] = attachment.Filename
+
+		case "thumb":
+			setFields["thumb"] = attachment.Filename
+
+		case "seating":
+			setFields["seating"] = attachment.Filename
+
+		case "photo":
+			photos = append(photos, attachment.Filename)
+		}
+	}
+
+	update := bson.M{}
+
+	if len(setFields) > 0 {
+		update["$set"] = setFields
+	}
+
+	if len(photos) > 0 {
+		update["$push"] = bson.M{
+			"photos": bson.M{
+				"$each": photos,
+			},
+		}
+	}
+
+	if len(update) == 0 {
+		return nil
+	}
+
+	return app.DB.UpdateOne(
+		context.Background(),
+		meta.Collection,
+		filter,
+		update,
 	)
-
-	w.Header().Set(
-		"Access-Control-Allow-Methods",
-		"GET, POST, PUT, DELETE, OPTIONS",
-	)
-
-	w.Header().Set(
-		"Access-Control-Allow-Headers",
-		"Content-Type, Authorization",
-	)
-
-	w.WriteHeader(http.StatusNoContent)
 }

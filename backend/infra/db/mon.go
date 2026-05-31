@@ -63,6 +63,7 @@ func (m *MongoDatabase) WithDB(ctx context.Context, op func(ctx context.Context)
 
 		return err
 	}
+
 	return err
 }
 
@@ -94,6 +95,7 @@ func (m *MongoDatabase) InsertMany(ctx context.Context, collection string, docum
 	if len(documents) == 0 {
 		return nil
 	}
+
 	_, err := m.collection(collection).InsertMany(ctx, documents)
 	return err
 }
@@ -122,10 +124,12 @@ func (m *MongoDatabase) BulkWrite(ctx context.Context, collection string, operat
 
 func (m *MongoDatabase) FindOne(ctx context.Context, collection string, filter any, result any) error {
 	filter = m.normalizeFilter(filter)
+
 	res := m.collection(collection).FindOne(ctx, filter)
 	if err := res.Err(); err != nil {
 		return err
 	}
+
 	return res.Decode(result)
 }
 
@@ -141,16 +145,19 @@ func (m *MongoDatabase) FindOneWithProjection(ctx context.Context, collection st
 	if err := res.Err(); err != nil {
 		return err
 	}
+
 	return res.Decode(result)
 }
 
 func (m *MongoDatabase) FindMany(ctx context.Context, collection string, filter any, result any) error {
 	filter = m.normalizeFilter(filter)
+
 	cur, err := m.collection(collection).Find(ctx, filter)
 	if err != nil {
 		return err
 	}
 	defer cur.Close(ctx)
+
 	return cur.All(ctx, result)
 }
 
@@ -199,18 +206,23 @@ func (m *MongoDatabase) FindManyWithProjection(
 	opts FindManyOptions,
 	result any,
 ) error {
+
 	filter = m.normalizeFilter(filter)
 
 	findOpts := options.Find()
+
 	if opts.Limit > 0 {
 		findOpts.SetLimit(int64(opts.Limit))
 	}
+
 	if opts.Skip > 0 {
 		findOpts.SetSkip(int64(opts.Skip))
 	}
+
 	if len(opts.Sort) > 0 {
 		findOpts.SetSort(opts.Sort)
 	}
+
 	if len(projection) > 0 {
 		findOpts.SetProjection(buildProjection(projection))
 	}
@@ -220,15 +232,18 @@ func (m *MongoDatabase) FindManyWithProjection(
 		return err
 	}
 	defer cur.Close(ctx)
+
 	return cur.All(ctx, result)
 }
 
 func (m *MongoDatabase) Distinct(ctx context.Context, collection string, field string, filter any, result any) error {
 	filter = m.normalizeFilter(filter)
+
 	values, err := m.collection(collection).Distinct(ctx, field, filter)
 	if err != nil {
 		return err
 	}
+
 	bsonBytes, _ := bson.Marshal(values)
 	return bson.Unmarshal(bsonBytes, result)
 }
@@ -241,21 +256,23 @@ func (m *MongoDatabase) Update(ctx context.Context, collection string, filter an
 
 func (m *MongoDatabase) UpdateOne(ctx context.Context, collection string, filter any, update any) error {
 	filter = m.normalizeFilter(filter)
-	_, err := m.collection(collection).
-		UpdateOne(ctx, filter, update)
+	update = normalizeUpdateDocument(update)
+
+	_, err := m.collection(collection).UpdateOne(ctx, filter, update)
 	return err
 }
 
 func (m *MongoDatabase) UpdateMany(ctx context.Context, collection string, filter any, update any) error {
 	filter = m.normalizeFilter(filter)
-	_, err := m.collection(collection).
-		UpdateMany(ctx, filter, bson.M{"$set": update})
+	update = normalizeUpdateDocument(update)
+
+	_, err := m.collection(collection).UpdateMany(ctx, filter, update)
 	return err
 }
 
 func (m *MongoDatabase) Upsert(ctx context.Context, collection string, filter any, update any) error {
-
 	filter = m.normalizeFilter(filter)
+	update = normalizeUpdateDocument(update)
 
 	opts := options.Update().SetUpsert(true)
 
@@ -271,15 +288,19 @@ func (m *MongoDatabase) Upsert(ctx context.Context, collection string, filter an
 
 func (m *MongoDatabase) Inc(ctx context.Context, collection string, filter any, field string, value int64) error {
 	filter = m.normalizeFilter(filter)
+
 	_, err := m.collection(collection).
 		UpdateOne(ctx, filter, bson.M{"$inc": bson.M{field: value}})
+
 	return err
 }
 
 func (m *MongoDatabase) AddToSet(ctx context.Context, collection string, filter any, field string, value any) error {
 	filter = m.normalizeFilter(filter)
+
 	_, err := m.collection(collection).
 		UpdateOne(ctx, filter, bson.M{"$addToSet": bson.M{field: value}})
+
 	return err
 }
 
@@ -302,6 +323,7 @@ func (m *MongoDatabase) DeleteOne(ctx context.Context, collection string, filter
 
 func (m *MongoDatabase) DeleteMany(ctx context.Context, collection string, filter any) error {
 	filter = m.normalizeFilter(filter)
+
 	_, err := m.collection(collection).DeleteMany(ctx, filter)
 	return err
 }
@@ -310,15 +332,19 @@ func (m *MongoDatabase) DeleteMany(ctx context.Context, collection string, filte
 
 func (m *MongoDatabase) FindOneAndUpdate(ctx context.Context, collection string, filter any, update any, result any) error {
 	filter = m.normalizeFilter(filter)
+	update = normalizeUpdateDocument(update)
+
 	res := m.collection(collection).FindOneAndUpdate(
 		ctx,
 		filter,
-		bson.M{"$set": update},
+		update,
 		options.FindOneAndUpdate().SetReturnDocument(options.After),
 	)
+
 	if err := res.Err(); err != nil {
 		return err
 	}
+
 	return res.Decode(result)
 }
 
@@ -330,6 +356,7 @@ func (m *MongoDatabase) Aggregate(ctx context.Context, collection string, pipeli
 		return err
 	}
 	defer cur.Close(ctx)
+
 	return cur.All(ctx, result)
 }
 
@@ -352,24 +379,31 @@ func (m *MongoDatabase) normalizeFilter(filter any) any {
 	if mf, ok := filter.(map[string]any); ok {
 		return m.translateFilter(mf)
 	}
+	if mf, ok := filter.(bson.M); ok {
+		return m.translateFilter(map[string]any(mf))
+	}
 	return filter
 }
 
 func (m *MongoDatabase) translateFilter(filter map[string]any) bson.M {
 	out := bson.M{}
+
 	for k, v := range filter {
 		switch {
 		case strings.HasSuffix(k, "_ne"):
 			out[strings.TrimSuffix(k, "_ne")] = bson.M{"$ne": v}
+
 		case strings.HasSuffix(k, "_contains"):
 			out[strings.TrimSuffix(k, "_contains")] = bson.M{
 				"$regex":   v,
 				"$options": "i",
 			}
+
 		default:
 			out[k] = v
 		}
 	}
+
 	return out
 }
 
@@ -379,4 +413,38 @@ func buildProjection(fields []string) bson.M {
 		p[f] = 1
 	}
 	return p
+}
+
+func normalizeUpdateDocument(update any) any {
+	switch u := update.(type) {
+	case bson.M:
+		if hasMongoUpdateOperator(u) {
+			return u
+		}
+		return bson.M{"$set": u}
+
+	case map[string]any:
+		if hasMongoUpdateOperator(u) {
+			return bson.M(u)
+		}
+		return bson.M{"$set": bson.M(u)}
+
+	case bson.D:
+		if len(u) > 0 && strings.HasPrefix(u[0].Key, "$") {
+			return u
+		}
+		return bson.M{"$set": u}
+
+	default:
+		return bson.M{"$set": update}
+	}
+}
+
+func hasMongoUpdateOperator(m map[string]any) bool {
+	for k := range m {
+		if strings.HasPrefix(k, "$") {
+			return true
+		}
+	}
+	return false
 }

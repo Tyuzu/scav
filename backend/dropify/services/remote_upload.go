@@ -239,7 +239,7 @@ func (s *FileService) ProcessRemoteFile(
 
 	return []Attachment{
 		{
-			Filename:  savedName + ext,
+			Filename:  savedName,
 			Extension: ext,
 			Key:       strings.ToLower(key),
 		},

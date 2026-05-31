@@ -117,7 +117,7 @@ export function createAvatar(profile) {
     const thumbSrc = resolveImagePath(
         EntityType.USER,
         PictureType.THUMB,
-        `${profile.userid}.jpg`
+        `${profile.avatar}`
     );
 
     const fullSrc = resolveImagePath(

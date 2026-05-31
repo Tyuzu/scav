@@ -21,7 +21,7 @@ import {
   handleFileUpload
 } from "./tumblrUploader.js";
 
-const MEDIA_ENTITY = "feed";
+const MEDIA_ENTITY = "feedpost";
 
 /* =========================
    STATE
@@ -119,11 +119,11 @@ export function displayTumblr(isLoggedIn, root) {
       container.append(input, preview);
 
       if (cfg.type === "image") {
-wireImageUpload(input, preview);
-}
+        wireImageUpload(input, preview);
+      }
       if (cfg.type === "video") {
-wireVideoUpload(input, preview);
-}
+        wireVideoUpload(input, preview);
+      }
     }
 
     cfg.fields.forEach(field => {
@@ -208,8 +208,8 @@ wireVideoUpload(input, preview);
     input.addEventListener("change", async () => {
       const files = Array.from(input.files);
       if (!files.length) {
-return;
-}
+        return;
+      }
 
       state.uploading.image = true;
       updatePublishState();
@@ -239,8 +239,8 @@ return;
     input.addEventListener("change", async () => {
       const file = input.files[0];
       if (!file) {
-return;
-}
+        return;
+      }
 
       if (state.videoObjectUrl) {
         URL.revokeObjectURL(state.videoObjectUrl);

@@ -24,17 +24,40 @@ function getCategory(itemType = "", entityType = "") {
   const type = normalize(itemType);
   const entity = normalize(entityType);
 
-  if (type && TYPE_MAP[type]) {
+  if (TYPE_MAP[type]) {
     return TYPE_MAP[type];
   }
+
+  if (TYPE_MAP[entity]) {
+    return TYPE_MAP[entity];
+  }
+
   return entity || "general";
 }
 
-function validateInput({ itemId, quantity }) {
+function validateInput({
+  itemId,
+  itemType,
+  entityType,
+  entityId,
+  quantity
+}) {
   const qty = Number(quantity);
 
   if (!itemId || typeof itemId !== "string") {
     return "Invalid item ID";
+  }
+
+  if (!itemType || typeof itemType !== "string") {
+    return "Invalid item type";
+  }
+
+  if (!entityType || typeof entityType !== "string") {
+    return "Invalid entity type";
+  }
+
+  if (!entityId || typeof entityId !== "string") {
+    return "Invalid entity ID";
   }
 
   if (!Number.isFinite(qty) || qty <= 0) {
@@ -47,8 +70,8 @@ function validateInput({ itemId, quantity }) {
 function buildPayload(options) {
   const {
     itemId,
-    quantity,
     itemType,
+    quantity,
     itemName,
     entityType,
     entityId,
@@ -57,23 +80,20 @@ function buildPayload(options) {
 
   const payload = {
     itemId,
+    itemType: normalize(itemType),
+    entityType: normalize(entityType),
+    entityId,
     quantity: Number(quantity),
     category: getCategory(itemType, entityType)
   };
 
-  const optionalFields = {
-    itemType,
-    itemName,
-    entityType: normalize(entityType),
-    entityId,
-    entityName
-  };
+  if (itemName) {
+    payload.itemName = itemName;
+  }
 
-  Object.entries(optionalFields).forEach(([key, value]) => {
-    if (value) {
-      payload[key] = value;
-    }
-  });
+  if (entityName) {
+    payload.entityName = entityName;
+  }
 
   return payload;
 }
@@ -82,9 +102,7 @@ function buildPayload(options) {
  * Add item to cart
  */
 export async function addToCart(options = {}) {
-  const {
-    isLoggedIn = false
-  } = options;
+  const { isLoggedIn = false } = options;
 
   if (!isLoggedIn) {
     Notify("Please log in to add items to your cart", {
@@ -95,8 +113,12 @@ export async function addToCart(options = {}) {
   }
 
   const error = validateInput(options);
+
   if (error) {
-    Notify(error, { type: "warning", duration: 3000 });
+    Notify(error, {
+      type: "warning",
+      duration: 3000
+    });
     return false;
   }
 
@@ -114,10 +136,13 @@ export async function addToCart(options = {}) {
   } catch (err) {
     console.error("Add to cart failed:", err);
 
-    Notify(err?.message || "Failed to add item to cart", {
-      type: "error",
-      duration: 3000
-    });
+    Notify(
+      err?.message || "Failed to add item to cart",
+      {
+        type: "error",
+        duration: 3000
+      }
+    );
 
     return false;
   }

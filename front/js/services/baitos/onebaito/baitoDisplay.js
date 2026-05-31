@@ -5,7 +5,6 @@ import { navigate } from "../../../routes/index.js";
 import { createOrEditBaito } from "../create/createOrEditBaito.js";
 import Button from "../../../components/base/Button.js";
 import { showApplicantsModal } from "../dash/BaitoDash.js";
-import { ImageGallery } from "../../../components/ui/IMageGallery.mjs";
 import { displayReviews } from "../../reviews/displayReviews.js";
 import Notify from "../../../components/ui/Notify.mjs";
 import { meChat } from "../../mechat/plugnplay.js";
@@ -15,7 +14,6 @@ import { resolveImagePath, EntityType, PictureType } from "../../../utils/imageP
 // import Sightbox from "../../../components/ui/SightBox.mjs";
 import Imagex from "../../../components/base/Imagex.js";
 import Bannerx from "../../../components/base/Bannerx.js";
-import { baitoAddImages } from "../create/AddBaitoImages.js";
 import Datex from "../../../components/base/Datex.js";
 
 /** Open chat with employer */
@@ -303,17 +301,6 @@ export async function displayBaito(isLoggedIn, baitoid, contentContainer) {
     }
 
     // section.appendChild(createBannerSection(baito, isOwner));
-
-    const cleanImageNames = baito.images?.filter(Boolean) || [];
-    section.appendChild(Button("Add images", "", {
-      click: () => {
-        baitoAddImages({ isLoggedIn, contentContainer, baito, mode: "edit" })
-      }
-    }));
-    if (cleanImageNames.length) {
-      const fullURLs = cleanImageNames.map(name => resolveImagePath(EntityType.BAITO, PictureType.PHOTO, name));
-      section.appendChild(ImageGallery(fullURLs));
-    }
 
     // Review container
     const reviewSec = createElement("div", {}, []);

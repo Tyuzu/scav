@@ -1,0 +1,226 @@
+/* ===========================
+   Post type
+   =========================== */
+
+.postpage .post-header-meta {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin: 0.5rem 0;
+}
+
+.postpage .post-type {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.2rem 0.6rem;
+  border-radius: 999px;
+  border: 1px solid var(--color-border);
+  background: var(--color-surface);
+  font-size: 0.75rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+/* ===========================
+   Reference section
+   =========================== */
+
+.postpage .post-reference {
+  margin: 1rem 0;
+  padding: 0.75rem 1rem;
+  border-left: 4px solid var(--color-primary);
+  background: var(--color-surface);
+  border-radius: var(--radius);
+  word-break: break-word;
+}
+
+/* ===========================
+   Tags
+   =========================== */
+
+.postpage .post-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin: 1.25rem 0;
+}
+
+.postpage .tag {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.3rem 0.7rem;
+  border-radius: 999px;
+  border: 1px solid var(--color-border);
+  background: var(--color-surface);
+  font-size: 0.85rem;
+  white-space: nowrap;
+}
+
+/* ===========================
+   Code blocks
+   =========================== */
+
+.postpage .post-code {
+  overflow-x: auto;
+  margin: 1rem 0;
+  padding: 1rem;
+  border-radius: var(--radius);
+  border: 1px solid var(--color-border);
+  background: var(--color-surface);
+  font-size: 0.9rem;
+  line-height: 1.5;
+}
+
+.postpage .post-code code {
+  display: block;
+  white-space: pre;
+  font-family:
+    ui-monospace,
+    SFMono-Regular,
+    Menlo,
+    Monaco,
+    Consolas,
+    "Liberation Mono",
+    monospace;
+}
+
+/* ===========================
+   Video blocks
+   =========================== */
+
+.postpage .post-video {
+  margin: 1.25rem 0;
+  text-align: center;
+}
+
+.postpage .post-video video {
+  width: 100%;
+  max-width: 100%;
+  border-radius: var(--radius);
+  display: block;
+}
+
+.postpage .video-caption {
+  margin-top: 0.5rem;
+  color: var(--color-muted);
+  font-size: 0.9rem;
+}
+
+/* ===========================
+   Improved body content
+   =========================== */
+
+.postpage .post-body {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.postpage .post-body p {
+  margin: 0.5rem 0;
+  text-align: left;
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+
+/* ===========================
+   Image gallery
+   =========================== */
+
+.postpage .image-group {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 0.75rem;
+  margin: 1rem 0;
+}
+
+
+.postpage .image-group img,
+.postpage .image-group .post-image {
+  width: 100%;
+  max-height: 60ch;
+  height: auto;
+  border-radius: var(--radius);
+  cursor: zoom-in;
+  display: block;
+  background: var(--color-surface);
+  transition:
+    opacity var(--transition),
+    transform var(--transition);
+}
+
+.postpage .image-group img:hover,
+.postpage .image-group .post-image:hover {
+  transform: scale(1.01);
+}
+
+/* ===========================
+   Metadata
+   =========================== */
+
+.postpage .post-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem;
+  align-items: center;
+  font-size: 0.85rem;
+  color: var(--color-muted);
+}
+
+/* ===========================
+   Block editor improvements
+   =========================== */
+
+.block input[type="text"],
+.block input[type="url"],
+.block select,
+.block textarea {
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.block input[type="text"],
+.block input[type="url"],
+.block select {
+  padding: 0.5rem;
+  border-radius: 4px;
+  border: 1px solid var(--color-border);
+  background: var(--color-bg);
+}
+
+.block video {
+  width: 100%;
+  margin-top: 0.5rem;
+  border-radius: var(--radius);
+}
+
+/* ===========================
+   Responsive
+   =========================== */
+
+@media (max-width: 640px) {
+
+  .postpage {
+    margin: 1rem;
+  }
+
+  .postpage .post-actions {
+    flex-direction: column;
+  }
+
+  .postpage .image-group {
+    grid-template-columns: 1fr;
+  }
+
+  .postpage .post-meta {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .postpage .user-profile-card {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+}

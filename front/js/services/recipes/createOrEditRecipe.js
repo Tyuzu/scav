@@ -4,7 +4,6 @@ import Button from "../../components/base/Button.js";
 import { createFormGroup } from "../../components/createFormGroup.js";
 import { apiFetch } from "../../api/api.js";
 import { displayRecipe } from "./recipePage.js";
-import { navigate } from "../../routes/index.js";
 
 export function createRecipe(container) {
   renderRecipeForm(container, "create", null);

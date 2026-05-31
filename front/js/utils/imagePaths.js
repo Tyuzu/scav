@@ -23,7 +23,7 @@ export const EntityType = {
   MEDIA: "media",
   MERCH: "merch",
   MENU: "menu",
-  FEED: "feed",
+  FEED: "feedpost",
   LOOP: "loops",
 };
 

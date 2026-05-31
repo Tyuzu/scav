@@ -23,6 +23,14 @@ var allowedBlockTypes = map[string]bool{
 	"video": true,
 }
 
+// --- Allowed post types ---
+var allowedPostTypes = map[string]bool{
+	"standard": true,
+	"guide":    true,
+	"tutorial": true,
+	"recipe":   true,
+}
+
 // --- Pick thumbnail ---
 func pickThumb(blocks []models.Block) string {
 	for _, b := range blocks {
@@ -41,6 +49,7 @@ func pickThumb(blocks []models.Block) string {
 // --- Sanitize blocks ---
 func sanitizeBlocks(raw []models.Block) []models.Block {
 	out := make([]models.Block, 0, len(raw))
+
 	for _, b := range raw {
 		if !allowedBlockTypes[b.Type] {
 			continue
@@ -52,18 +61,21 @@ func sanitizeBlocks(raw []models.Block) []models.Block {
 			if b.Content != "" {
 				out = append(out, b)
 			}
+
 		case "image":
 			b.URL = strings.TrimSpace(b.URL)
 			b.Alt = strings.TrimSpace(html.EscapeString(b.Alt))
 			if b.URL != "" {
 				out = append(out, b)
 			}
+
 		case "code":
 			b.Language = strings.TrimSpace(html.EscapeString(b.Language))
 			b.Content = strings.TrimSpace(html.EscapeString(b.Content))
 			if b.Content != "" {
 				out = append(out, b)
 			}
+
 		case "video":
 			b.URL = strings.TrimSpace(b.URL)
 			b.Caption = strings.TrimSpace(html.EscapeString(b.Caption))
@@ -72,6 +84,7 @@ func sanitizeBlocks(raw []models.Block) []models.Block {
 			}
 		}
 	}
+
 	return out
 }
 
@@ -95,6 +108,16 @@ func CreateOrUpdatePost(w http.ResponseWriter, r *http.Request, ps httprouter.Pa
 
 	if err := r.ParseMultipartForm(20 << 20); err != nil {
 		utils.RespondWithError(w, http.StatusBadRequest, "Invalid form data")
+		return
+	}
+
+	postType := strings.TrimSpace(r.FormValue("type"))
+	if postType == "" {
+		postType = "standard"
+	}
+
+	if !allowedPostTypes[postType] {
+		utils.RespondWithError(w, http.StatusBadRequest, "Invalid post type")
 		return
 	}
 
@@ -129,7 +152,6 @@ func CreateOrUpdatePost(w http.ResponseWriter, r *http.Request, ps httprouter.Pa
 	var refPtr *string
 	if category == "Review" &&
 		(subcategory == "Product" || subcategory == "Place" || subcategory == "Event") {
-
 		if referenceID == "" {
 			utils.RespondWithError(w, http.StatusBadRequest, "Reference ID required")
 			return
@@ -146,6 +168,7 @@ func CreateOrUpdatePost(w http.ResponseWriter, r *http.Request, ps httprouter.Pa
 		}
 
 		update := map[string]any{
+			"type":        postType,
 			"title":       title,
 			"category":    category,
 			"subcategory": subcategory,
@@ -161,12 +184,15 @@ func CreateOrUpdatePost(w http.ResponseWriter, r *http.Request, ps httprouter.Pa
 			return
 		}
 
-		utils.RespondWithJSON(w, http.StatusOK, map[string]any{"postid": postID})
+		utils.RespondWithJSON(w, http.StatusOK, map[string]any{
+			"postid": postID,
+		})
 		return
 	}
 
 	newPost := models.BlogPost{
 		PostID:      uuid.NewString(),
+		Type:        postType,
 		Title:       title,
 		Category:    category,
 		Subcategory: subcategory,
@@ -184,7 +210,9 @@ func CreateOrUpdatePost(w http.ResponseWriter, r *http.Request, ps httprouter.Pa
 		return
 	}
 
-	utils.RespondWithJSON(w, http.StatusOK, map[string]any{"postid": newPost.PostID})
+	utils.RespondWithJSON(w, http.StatusOK, map[string]any{
+		"postid": newPost.PostID,
+	})
 }
 
 // --- Wrappers ---
@@ -222,10 +250,6 @@ func DeletePost(app *infra.Deps) httprouter.Handle {
 			utils.RespondWithError(w, http.StatusInternalServerError, "Failed to delete post")
 			return
 		}
-		// if !deleted {
-		// 	utils.RespondWithError(w, http.StatusNotFound, "Post not found or unauthorized")
-		// 	return
-		// }
 
 		utils.RespondWithJSON(w, http.StatusOK, map[string]any{
 			"postid":  postID,
