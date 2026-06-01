@@ -3,6 +3,7 @@ package cart
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"net/http"
 	"strings"
 	"time"
@@ -35,6 +36,60 @@ type CouponResponse struct {
 	Valid    bool    `json:"valid"`
 	Discount float64 `json:"discount"`
 	Message  string  `json:"message"`
+}
+
+/* ───────────────────────── Coupon Validation (SERVER) ───────────────────────── */
+
+type CouponResult struct {
+	DiscountAmount int64
+}
+
+func validateCouponServer(ctx context.Context, code string, subtotal int64, app *infra.Deps) (*CouponResult, error) {
+	if code == "" {
+		return &CouponResult{DiscountAmount: 0}, nil
+	}
+
+	var coupon struct {
+		Code        string  `bson:"code"`
+		Active      bool    `bson:"active"`
+		ExpiresAt   int64   `bson:"expiresAt"`
+		Type        string  `bson:"type"`  // "flat" or "percent"
+		Value       float64 `bson:"value"` // ₹ or %
+		MaxDiscount float64 `bson:"maxDiscount"`
+	}
+
+	err := app.DB.FindOne(ctx, "coupons", bson.M{"code": code}, &coupon)
+	if err != nil || !coupon.Active {
+		return nil, errors.New("invalid coupon")
+	}
+
+	if coupon.ExpiresAt > 0 && time.Now().Unix() > coupon.ExpiresAt {
+		return nil, errors.New("coupon expired")
+	}
+
+	var discount int64 = 0
+
+	switch coupon.Type {
+	case "flat":
+		discount = int64(coupon.Value * 100)
+
+	case "percent":
+		raw := float64(subtotal) * (coupon.Value / 100)
+		discount = int64(raw)
+
+		if coupon.MaxDiscount > 0 {
+			max := int64(coupon.MaxDiscount * 100)
+			if discount > max {
+				discount = max
+			}
+		}
+	}
+
+	if discount > subtotal {
+		discount = subtotal
+	}
+
+	return &CouponResult{DiscountAmount: discount}, nil
 }
 
 /* ───────────────────────── Validate Coupon ───────────────────────── */

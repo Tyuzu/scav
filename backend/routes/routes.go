@@ -11,7 +11,6 @@ import (
 	"naevis/booking"
 	"naevis/cart"
 	"naevis/comments"
-	"naevis/discord"
 	"naevis/events"
 	"naevis/fanmade"
 	"naevis/farms"
@@ -986,17 +985,6 @@ func AddVliveRoutes(r *httprouter.Router, app *infra.Deps, rateLimiter *middlewa
 
 	// WebRTC
 	r.GET("/api/v1/vlive/webrtc/turn", auth(vlive.GetTURNServers(app)))
-}
-
-func AddDiscordRoutes(router *httprouter.Router, hubs *discord.HubManager, app *infra.Deps) {
-	auth := middleware.Authenticate(app)
-
-	router.GET("/ws/discord/:room", auth(discord.WebSocketHandler(hubs)))
-	router.POST(
-		"/api/v1/discord/:room/message",
-		auth(discord.CreateMessageHTTP(app)),
-	)
-
 }
 
 // Vendor Routes

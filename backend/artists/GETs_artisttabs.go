@@ -62,13 +62,3 @@ func GetArtistsMerch(app *infra.Deps) httprouter.Handle {
 		merch.GetMerchs(app)(w, r, ps)
 	}
 }
-
-func GetArtistsevents(app *infra.Deps) httprouter.Handle {
-	return func(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
-		events := []models.ArtistEvent{
-			{Title: "Summer Fest 2025", Date: "2025-06-15", Venue: "Sunset Arena", City: "Los Angeles", Country: "USA", TicketURL: "http://localhost:5173/event/4s89t5jt6754djt"},
-			{Title: "Berlin Beats", Date: "2025-07-20", Venue: "Techno Temple", City: "Berlin", Country: "Germany"},
-		}
-		utils.RespondWithJSON(w, http.StatusOK, events)
-	}
-}

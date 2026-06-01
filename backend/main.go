@@ -10,7 +10,6 @@ import (
 	"time"
 
 	"naevis/config"
-	"naevis/discord"
 	"naevis/infra"
 	"naevis/mechat"
 	"naevis/middleware"
@@ -56,20 +55,11 @@ func main() {
 
 	mehub := mechat.NewHub()
 
-	hubs := discord.NewHubManager(8)
-
-	// go discord.StartConsumer(
-	// 	context.Background(),
-	// 	app.MQ,
-	// 	hubs.ForRoom("*"),
-	// 	"chat.*.events",
-	// )
 	// =====================
 	// Router & middleware
 	// =====================
 	router := routes.SetupRouter(app, rateLimiter)
 
-	routes.AddDiscordRoutes(router, hubs, app)
 	routes.AddNewChatRoutes(router, hub, app, rateLimiter)
 	routes.AddMeChatRoutes(router, mehub, app, rateLimiter)
 	routes.AddStaticRoutes(router)
