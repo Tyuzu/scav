@@ -1,13 +1,43 @@
 import { apiFetch } from "../../../api/api.js";
 import { createElement } from "../../../components/createElement.js";
 import { editCrop } from "../crop/editCrop.js";
-import Button from "../../../components/base/Button.js";
 import { navigate } from "../../../routes/index.js";
 import { addToCart } from "../../cart/addToCart.js";
 import { getState } from "../../../state/state.js";
 import { EntityType } from "../../../utils/imagePaths.js";
 import { editFarm } from "./editFarm.js";
 import Bannerx from "../../../components/base/Bannerx.js";
+
+// ─────────── Local button helper ───────────
+function makeButton(title, id = "", onClick, classes = "", styles = {}) {
+  const button = document.createElement("button");
+  button.type = "button";
+  button.textContent = title;
+
+  if (id) {
+    button.id = id;
+  }
+
+  if (classes) {
+    button.className = classes;
+  }
+
+  button.classList.add("button");
+
+  for (const [key, value] of Object.entries(styles)) {
+    button.style[key] = value;
+  }
+
+  if (typeof onClick === "function") {
+    button.addEventListener("click", (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      onClick(e);
+    });
+  }
+
+  return button;
+}
 
 // ─────────── Farm details ───────────
 export function renderFarmDetails(farm, isCreator) {
@@ -19,24 +49,21 @@ export function renderFarmDetails(farm, isCreator) {
       ? "🟡 Updated this week"
       : `🔴 Updated ${daysAgo} days ago`;
 
-  const actions = createElement("div", { class: "farm-actions" });
+  const actions = document.createElement("div");
+  actions.className = "farm-actions";
 
   if (isCreator) {
     actions.append(
-      Button("✏️ Edit", `edit-${farm.farmid}`, {
-        click: () => editFarm(true, farm)
-      }, "buttonx"),
-      Button("🗑️ Delete", `delete-${farm.farmid}`, {
-        click: async () => {
-          const ok = window.confirm?.(`Delete farm "${farm.name}"?`);
-          if (!ok) {
-return;
-}
+      makeButton(`✏️ Edit`, `edit-${farm.farmid}`, () => editFarm(true, farm), "buttonx"),
+      makeButton(`🗑️ Delete`, `delete-${farm.farmid}`, async () => {
+        const ok = window.confirm?.(`Delete farm "${farm.name}"?`);
+        if (!ok) {
+          return;
+        }
 
-          const res = await apiFetch(`/farms/${farm.farmid}`, "DELETE");
-          if (res?.success) {
-navigate("/farms");
-}
+        const res = await apiFetch(`/farms/${farm.farmid}`, "DELETE");
+        if (res?.success) {
+          navigate("/farms");
         }
       }, "buttonx")
     );
@@ -49,14 +76,19 @@ navigate("/farms");
     createElement("p", {}, [`👤 Owner: ${farm.owner || "N/A"}`]),
     createElement("p", {}, [`📞 Contact: ${farm.contact || "N/A"}`]),
     farm.practice && createElement("p", {}, [`🌱 Practice: ${farm.practice}`]),
-    farm.social && createElement("p", {}, [
-      "🔗 ",
-      createElement("a", {
-        href: farm.social,
-        target: "_blank",
-        rel: "noopener"
-      }, ["Visit farm page"])
-    ]),
+    farm.social &&
+      createElement("p", {}, [
+        "🔗 ",
+        createElement(
+          "a",
+          {
+            href: farm.social,
+            target: "_blank",
+            rel: "noopener"
+          },
+          ["Visit farm page"]
+        )
+      ]),
     createElement("p", {}, [freshness]),
     actions
   ].filter(Boolean));
@@ -65,7 +97,7 @@ navigate("/farms");
 // ─────────── Crop summary ───────────
 export function renderCropSummary(crops) {
   const total = crops.length;
-  const inStock = crops.filter(c => c.quantity > 0).length;
+  const inStock = crops.filter((c) => c.quantity > 0).length;
   const avgPrice = (
     crops.reduce((sum, c) => sum + (c.price || 0), 0) / (total || 1)
   ).toFixed(2);
@@ -112,7 +144,7 @@ export function createSortDropdown(onChange) {
     )
   );
 
-  select.onchange = () => onChange(select.value);
+  select.addEventListener("change", () => onChange(select.value));
   return select;
 }
 
@@ -130,9 +162,7 @@ export async function renderCrops(
   cropsContainer.replaceChildren();
 
   if (!farm.crops?.length) {
-    cropsContainer.append(
-      createElement("p", {}, ["No crops listed yet."])
-    );
+    cropsContainer.append(createElement("p", {}, ["No crops listed yet."]));
     return;
   }
 
@@ -206,85 +236,117 @@ function createCropCard(crop, farmName, farmId, mainCon, editcon, isLoggedIn, is
 
 // ─────────── Price history ───────────
 function createPriceHistoryToggle(history) {
-  const toggle = createElement("button", {}, ["📈 Show Price History"]);
-  const block = createElement("pre", { class: "price-history hidden" }, [
-    history.map(p => `${p.date}: ₹${p.price}`).join("\n")
-  ]);
+  const toggle = makeButton("📈 Show Price History", "", null, "buttonx");
 
-  toggle.onclick = () => block.classList.toggle("hidden");
+  const block = document.createElement("pre");
+  block.className = "price-history hidden";
+  block.textContent = history.map((p) => `${p.date}: ₹${p.price}`).join("\n");
+
+  toggle.addEventListener("click", (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    block.classList.toggle("hidden");
+  });
+
   return [toggle, block];
 }
 
 // ─────────── Creator controls ───────────
 function createCreatorControls(crop, farmId, editcon) {
   return [
-    Button("✏️ Edit", "", {
-      click: () => {
-        editcon.replaceChildren();
-        editCrop(farmId, crop, editcon);
-      }
+    makeButton("✏️ Edit", "", () => {
+      editcon.replaceChildren();
+      editCrop(farmId, crop, editcon);
     }, "buttonx"),
-    Button("🗑️ Delete", "", {
-      click: async () => {
-        const ok = window.confirm?.(`Delete crop "${crop.name}"?`);
-        if (!ok) {
-return;
-}
+    makeButton("🗑️ Delete", "", async () => {
+      const ok = window.confirm?.(`Delete crop "${crop.name}"?`);
+      if (!ok) {
+        return;
+      }
 
-        const res = await apiFetch(
-          `/farms/${farmId}/crops/${crop.cropid}`,
-          "DELETE"
+      const res = await apiFetch(`/farms/${farmId}/crops/${crop.cropid}`, "DELETE");
+
+      if (res?.success) {
+        editcon.replaceChildren(
+          createElement("p", {}, ["❌ Crop deleted"])
         );
-
-        if (res?.success) {
-          editcon.replaceChildren(
-            createElement("p", {}, ["❌ Crop deleted"])
-          );
-        }
       }
     }, "buttonx")
   ];
 }
 
 // ─────────── User controls ───────────
-export function createUserControls(crop, farmName, farmId, isLoggedIn) {
+export function createUserControls(crop, farmName, farmId, _isLoggedIn) {
   let quantity = 1;
-  const maxQty = crop.quantity ?? 0;
+  const maxQty = Number(crop.quantity ?? 0);
 
-  const display = createElement("span", {}, [String(quantity)]);
-  const inc = createElement("button", {}, ["+"]);
-  const dec = createElement("button", {}, ["−"]);
+  const display = document.createElement("span");
+  display.className = "quantity-display";
+  display.textContent = String(quantity);
 
-  inc.onclick = () => {
+  const quantityRow = document.createElement("div");
+  quantityRow.className = "quantity-control";
+
+  const updateUI = (incBtn, decBtn, addBtn) => {
+    display.textContent = String(quantity);
+    decBtn.disabled = quantity <= 1;
+    incBtn.disabled = maxQty < 1 || quantity >= maxQty;
+    addBtn.disabled = maxQty < 1;
+  };
+
+  const inc = makeButton("+", "", null, "buttonx subtle");
+  const dec = makeButton("−", "", null, "buttonx subtle");
+
+  const addBtn = makeButton(
+    "Add-To-Cart",
+    "a2c-crop-crd",
+    async () => {
+      if (maxQty < 1) {
+        return;
+      }
+
+      await addToCart({
+        itemId: crop.cropid,
+        quantity,
+        isLoggedIn: Boolean(getState("token")),
+        itemType: "crop",
+        itemName: crop.name,
+        entityType: "farm",
+        entityId: farmId,
+        entityName: farmName
+      });
+    },
+    "buttonx"
+  );
+
+  inc.addEventListener("click", (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+
     if (quantity < maxQty) {
-      quantity++;
-      display.replaceChildren(String(quantity));
+      quantity += 1;
+      updateUI(inc, dec, addBtn);
     }
-  };
+  });
 
-  dec.onclick = () => {
+  dec.addEventListener("click", (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+
     if (quantity > 1) {
-      quantity--;
-      display.replaceChildren(String(quantity));
+      quantity -= 1;
+      updateUI(inc, dec, addBtn);
     }
-  };
+  });
+
+  updateUI(inc, dec, addBtn);
+
+  quantityRow.append(dec, display, inc);
 
   return [
     createElement("label", {}, ["Quantity:"]),
-    createElement("div", { class: "quantity-control" }, [dec, display, inc]),
-    Button("Add-To-Cart", "a2c-crop-crd", {
-      click: async () =>
-        addToCart({
-          itemId: crop.cropid,
-          quantity,
-          isLoggedIn: Boolean(getState("token")),
-          itemType: "crop",
-          itemName: crop.name,
-          entityType: "farm",
-          entityId: farmId,
-          entityName: farmName
-        })
-    }, "buttonx")
+    quantityRow,
+    addBtn
   ];
 }
 
@@ -292,8 +354,10 @@ export function createUserControls(crop, farmName, farmId, isLoggedIn) {
 function sortCrops(crops, sortBy) {
   return [...crops].sort((a, b) => {
     switch (sortBy) {
-      case "price": return understanding(a.price) - understanding(b.price);
-      case "quantity": return (b.quantity || 0) - (a.quantity || 0);
+      case "price":
+        return understanding(a.price) - understanding(b.price);
+      case "quantity":
+        return (b.quantity || 0) - (a.quantity || 0);
       case "age":
         return getAgeInDays(b.harvestDate) - getAgeInDays(a.harvestDate);
       case "name":
@@ -311,7 +375,7 @@ function understanding(v) {
 function getAgeInDays(dateStr) {
   const d = new Date(dateStr);
   if (isNaN(d.getTime())) {
-return 0;
-}
+    return 0;
+  }
   return Math.floor((Date.now() - d.getTime()) / (1000 * 60 * 60 * 24));
 }

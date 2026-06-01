@@ -47,7 +47,7 @@ export async function displayCrop(content, cropID, isLoggedIn) {
             { id: "filter-min-qty", label: "Available Quantity (Kg)", type: "number", placeholder: "Min", min: 0 },
             { id: "filter-max-qty", label: "", type: "number", placeholder: "Max", min: 0 },
             { id: "filter-harvest", label: "Harvest Date", type: "date" },
-          ].map((f, i, arr) => {
+          ].map((f, _i, _arr) => {
             const children = [createElement("label", { for: f.id }, [f.label || ""])];
             children.push(createElement("input", { type: f.type, id: f.id, placeholder: f.placeholder, min: f.min }));
             return createElement("div", { class: "filter-row" }, children);
@@ -87,8 +87,7 @@ export async function displayCrop(content, cropID, isLoggedIn) {
           createElement("p", {}, [`Price per Kg: ₹${listing.pricePerKg ?? "N/A"}`]),
           createElement("p", {}, [`Available: ${listing.availableQtyKg ?? "N/A"} Kg`]),
           createElement("p", {}, [
-            `Harvest Date: ${
-              listing.harvestDate ? new Date(listing.harvestDate).toLocaleDateString() : "N/A"
+            `Harvest Date: ${listing.harvestDate ? new Date(listing.harvestDate).toLocaleDateString() : "N/A"
             }`,
           ]),
         ]);
@@ -99,6 +98,7 @@ export async function displayCrop(content, cropID, isLoggedIn) {
           pricePerKg: listing.pricePerKg,
           unit: "kg",
           breed: listing.breed,
+          quantity: listing.availableQtyKg ?? 0
         };
 
         const controls = createUserControls(
