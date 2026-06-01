@@ -15,16 +15,26 @@ const normalize = (v) =>
 const capitalize = (str = "") =>
   str ? str[0].toUpperCase() + str.slice(1) : "";
 
+const qtyUpdateTimers = new Map();
+
+const getQtyTimerKey = (item, category) =>
+  `${normalize(category)}:${item?.itemId ?? ""}:${item?.entityId ?? ""}:${normalize(
+    item?.entityType
+  )}`;
+
 /* ────────────────────── API Layer ────────────────────── */
 
 function buildPayload(base, entityId, entityType) {
   const payload = { ...base };
+
   if (entityId) {
     payload.entityId = entityId;
   }
+
   if (entityType) {
     payload.entityType = normalize(entityType);
   }
+
   return payload;
 }
 
@@ -65,6 +75,7 @@ export function renderCartCategory({
   displayCheckout
 }) {
   const items = cart[category];
+
   if (!Array.isArray(items) || !items.length) {
     return;
   }
@@ -81,7 +92,11 @@ export function renderCartCategory({
     "Checkout",
     "checkoutbtn",
     {
-      click: () => items.length && displayCheckout(contentContainer, items)
+      click: () => {
+        if (items.length) {
+          displayCheckout(contentContainer, items);
+        }
+      }
     },
     "buttonx primary"
   );
@@ -131,6 +146,10 @@ export function renderCartCategory({
   }
 
   function cleanup() {
+    for (const item of items) {
+      clearQtyTimer(item);
+    }
+
     section.remove();
     delete cart[category];
     delete sectionTotals[category];
@@ -181,9 +200,7 @@ export function renderCartCategory({
   function createPricing(price, qty) {
     return createElement("div", { class: "cart-card-pricing" }, [
       createElement("p", {}, [`Unit Price: ${formatPrice(price)}`]),
-      createElement("p", {}, [
-        `Subtotal: ${formatPrice(price * qty)}`
-      ])
+      createElement("p", {}, [`Subtotal: ${formatPrice(price * qty)}`])
     ]);
   }
 
@@ -199,8 +216,9 @@ export function renderCartCategory({
         "♡ Save for Later",
         "",
         {
-          click: () =>
-            alert(`Saved "${item.itemName || "item"}" for later`)
+          click: () => {
+            alert(`Saved "${item.itemName || "item"}" for later`);
+          }
         },
         "buttonx secondary"
       )
@@ -209,6 +227,8 @@ export function renderCartCategory({
 
   async function handleRemove(item, index) {
     try {
+      clearQtyTimer(item);
+
       await CartAPI.remove(
         item.itemId,
         category,
@@ -225,28 +245,55 @@ export function renderCartCategory({
     }
   }
 
-  async function changeQty(index, delta) {
+  function clearQtyTimer(item) {
+    const key = getQtyTimerKey(item, category);
+    const timer = qtyUpdateTimers.get(key);
+
+    if (timer) {
+      clearTimeout(timer);
+      qtyUpdateTimers.delete(key);
+    }
+  }
+
+  function scheduleQtyUpdate(item) {
+    const key = getQtyTimerKey(item, category);
+
+    clearQtyTimer(item);
+
+    const timer = setTimeout(async () => {
+      qtyUpdateTimers.delete(key);
+
+      try {
+        await CartAPI.updateQty(
+          item.itemId,
+          category,
+          item.quantity,
+          item.entityId,
+          item.entityType
+        );
+      } catch (err) {
+        console.error(err);
+        Notify("Failed to update quantity", {
+          type: "error",
+          duration: 3000
+        });
+      }
+    }, 300);
+
+    qtyUpdateTimers.set(key, timer);
+  }
+
+  function changeQty(index, delta) {
     const item = items[index];
+
     if (!item) {
       return;
     }
 
     const newQty = Math.max(1, (item.quantity || 1) + delta);
 
-    try {
-      await CartAPI.updateQty(
-        item.itemId,
-        category,
-        newQty,
-        item.entityId,
-        item.entityType
-      );
-
-      item.quantity = newQty;
-      render();
-    } catch (err) {
-      console.error(err);
-      Notify("Failed to update quantity", { type: "error", duration: 3000 });
-    }
+    item.quantity = newQty;
+    render();
+    scheduleQtyUpdate(item);
   }
 }
