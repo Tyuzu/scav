@@ -149,10 +149,16 @@ func (m *MongoDatabase) FindOneWithProjection(ctx context.Context, collection st
 	return res.Decode(result)
 }
 
-func (m *MongoDatabase) FindMany(ctx context.Context, collection string, filter any, result any) error {
+func (m *MongoDatabase) FindMany(
+	ctx context.Context,
+	collection string,
+	filter any,
+	result any,
+	opts ...*options.FindOptions,
+) error {
 	filter = m.normalizeFilter(filter)
 
-	cur, err := m.collection(collection).Find(ctx, filter)
+	cur, err := m.collection(collection).Find(ctx, filter, opts...)
 	if err != nil {
 		return err
 	}

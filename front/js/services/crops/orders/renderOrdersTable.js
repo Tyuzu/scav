@@ -1,10 +1,17 @@
 import { createElement } from "../../../components/createElement";
 import Button from "../../../components/base/Button.js";
 import { capitalize, contactBuyer, getOrderStatusClass, getPaymentStatusClass } from "./orderHelpers.js";
-import { markOrderDelivered, rejectOrder } from "./orderUtils.js";
+import { markOrderDelivered, rejectOrder, acceptOrder } from "./orderUtils.js";
 
 export function renderOrdersTable(orderList, onRefresh) {
   const handleContact = (contact) => contactBuyer(contact);
+
+  const handleAccepted = async (orderId) => {
+    const success = await acceptOrder(orderId);
+    if (success) {
+      onRefresh?.();
+    }
+  };
 
   const handleDelivered = async (orderId) => {
     const success = await markOrderDelivered(orderId);
@@ -31,11 +38,11 @@ export function renderOrdersTable(orderList, onRefresh) {
 
   const bodyRows = orderList.length === 0
     ? [
-        createElement("tr", {}, [
-          createElement("td", { colspan: 12 }, ["No orders found."]),
-        ]),
-      ]
-    : orderList.map((order) => buildOrderTableRow(order, handleContact, handleDelivered, handleReject));
+      createElement("tr", {}, [
+        createElement("td", { colspan: 12 }, ["No orders found."]),
+      ]),
+    ]
+    : orderList.map((order) => buildOrderTableRow(order, handleContact, handleAccepted, handleDelivered, handleReject));
 
   return createElement("table", { class: "orders-table" }, [
     createElement("thead", {}, [headerRow]),
@@ -43,7 +50,7 @@ export function renderOrdersTable(orderList, onRefresh) {
   ]);
 }
 
-function buildOrderTableRow(order, onContact, onDelivered, onReject) {
+function buildOrderTableRow(order, onContact, onAccepted, onDelivered, onReject) {
   const statusClass = getOrderStatusClass(order.status);
   const paymentClass = getPaymentStatusClass(order.payment);
 
@@ -66,6 +73,12 @@ function buildOrderTableRow(order, onContact, onDelivered, onReject) {
         click: (e) => {
           e.stopPropagation();
           onContact(order.contact);
+        },
+      }, "small-button buttonx"),
+      Button("Accepted", `accept-${order.id}`, {
+        click: (e) => {
+          e.stopPropagation();
+          onAccepted(order.id);
         },
       }, "small-button buttonx"),
       Button("Delivered", `deliver-${order.id}`, {

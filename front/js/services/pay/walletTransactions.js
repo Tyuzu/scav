@@ -49,7 +49,7 @@ export function WalletTransactions({ onBalanceChange }) {
 
     async function loadTransactions() {
         container
-            .querySelectorAll(".txn-item, .load-more, .txn-error")
+            .querySelectorAll(".load-more, .txn-error")
             .forEach((el) => el.remove());
 
         try {
@@ -77,15 +77,15 @@ export function WalletTransactions({ onBalanceChange }) {
                     txn.type === "topup"
                         ? "Top-up"
                         : txn.type === "payment"
-                          ? "Payment"
-                          : String(txn.type || "").toUpperCase();
+                            ? "Payment"
+                            : String(txn.type || "").toUpperCase();
 
                 const typeClass =
                     txn.type === "topup"
                         ? "txn-topup"
                         : txn.type === "payment"
-                          ? "txn-payment"
-                          : `txn-${txn.type}`;
+                            ? "txn-payment"
+                            : `txn-${txn.type}`;
 
                 const txnEl = createElement(
                     "div",
@@ -223,7 +223,7 @@ export function WalletTransactions({ onBalanceChange }) {
                                     } else {
                                         Notify(
                                             refundRes?.message ||
-                                                "Refund failed",
+                                            "Refund failed",
                                             { type: "error" }
                                         );
                                     }

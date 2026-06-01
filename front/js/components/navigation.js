@@ -104,22 +104,22 @@ ul.insertBefore(draggingEl, placeholder);
 /** Create navigation bar */
 const createNav = () => {
     const defaultNavItems = [
-        // { href: "/dash", label: "Dash" },
-        // { href: "/farms", label: "Farms" },
-        // { href: "/crops", label: "Crops" },
-        // { href: "/tools", label: "Tools" },
+        { href: "/dash", label: "Dash" },
+        { href: "/farms", label: "Farms" },
+        { href: "/crops", label: "Crops" },
+        { href: "/tools", label: "Tools" },
         { href: "/grocery", label: "Grocery" },
         { href: "/recipes", label: "Recipes" },
         { href: "/products", label: "Products" },
-        { href: "/places", label: "Places" },
-        { href: "/itinerary", label: "Itinerary" },
-        { href: "/events", label: "Events" },
+        // { href: "/places", label: "Places" },
+        // { href: "/itinerary", label: "Itinerary" },
+        // { href: "/events", label: "Events" },
         // { href: "/music", label: "Music" },
-        { href: "/artists", label: "Artists" },
-        { href: "/social", label: "Social" },
-        { href: "/posts", label: "Posts" },
-        { href: "/baitos", label: "Baito" },
-        { href: "/baitos/hire", label: "Hire" },
+        // { href: "/artists", label: "Artists" },
+        // { href: "/social", label: "Social" },
+        // { href: "/posts", label: "Posts" },
+        // { href: "/baitos", label: "Baito" },
+        // { href: "/baitos/hire", label: "Hire" },
     ];
 
     const savedOrder = getNavOrder();

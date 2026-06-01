@@ -1,10 +1,26 @@
 import { createElement } from "../../../components/createElement";
 import Button from "../../../components/base/Button.js";
-import { capitalize, contactBuyer, getOrderStatusClass, getPaymentStatusClass } from "./orderHelpers.js";
-import { markOrderDelivered, rejectOrder } from "./orderUtils.js";
+import {
+  capitalize,
+  contactBuyer,
+  getOrderStatusClass,
+  getPaymentStatusClass,
+} from "./orderHelpers.js";
+import {
+  markOrderDelivered,
+  rejectOrder,
+  acceptOrder,
+} from "./orderUtils.js";
 
 export function renderOrderCard(order, onRefresh) {
   const handleContact = () => contactBuyer(order.contact);
+
+  const handleAccepted = async () => {
+    const success = await acceptOrder(order.id);
+    if (success) {
+      onRefresh?.();
+    }
+  };
 
   const handleDelivered = async () => {
     const success = await markOrderDelivered(order.id);
@@ -26,8 +42,13 @@ export function renderOrderCard(order, onRefresh) {
   return createElement("div", { class: "order-card" }, [
     createElement("div", { class: "order-header" }, [
       createElement("h3", {}, [`Order #${order.id}`]),
-      createElement("span", { class: `status-badge ${statusClass}` }, [capitalize(order.status)]),
+      createElement(
+        "span",
+        { class: `status-badge ${statusClass}` },
+        [capitalize(order.status)]
+      ),
     ]),
+
     createElement("div", { class: "order-info" }, [
       createElement("p", {}, [
         createElement("strong", {}, ["Buyer:"]),
@@ -62,10 +83,35 @@ export function renderOrderCard(order, onRefresh) {
         ` ${capitalize(order.payment)}`,
       ]),
     ]),
+
     createElement("div", { class: "order-actions" }, [
-      Button("Contact", `contact-${order.id}`, { click: handleContact }, "secondary-button"),
-      Button("Delivered", `deliver-${order.id}`, { click: handleDelivered }, "success-button"),
-      Button("Reject", `reject-${order.id}`, { click: handleReject }, "danger-button"),
+      Button(
+        "Contact",
+        `contact-${order.id}`,
+        { click: handleContact },
+        "secondary-button"
+      ),
+
+      Button(
+        "Accepted",
+        `accept-${order.id}`,
+        { click: handleAccepted },
+        "success-button"
+      ),
+
+      Button(
+        "Delivered",
+        `deliver-${order.id}`,
+        { click: handleDelivered },
+        "success-button"
+      ),
+
+      Button(
+        "Reject",
+        `reject-${order.id}`,
+        { click: handleReject },
+        "danger-button"
+      ),
     ]),
   ]);
 }

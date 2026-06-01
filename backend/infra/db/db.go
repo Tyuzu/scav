@@ -4,6 +4,7 @@ import (
 	"context"
 
 	"go.mongodb.org/mongo-driver/bson"
+	"go.mongodb.org/mongo-driver/mongo/options"
 )
 
 type FindManyOptions struct {
@@ -29,7 +30,7 @@ type Database interface {
 	FindOne(ctx context.Context, collection string, filter any, result any) error
 	FindOneWithProjection(ctx context.Context, collection string, filter any, projection []string, result any) error
 
-	FindMany(ctx context.Context, collection string, filter any, result any) error
+	FindMany(ctx context.Context, collection string, filter any, result any, opts ...*options.FindOptions) error
 	FindManyWithOptions(ctx context.Context, collection string, filter any, opts FindManyOptions, result any) error
 	FindManyWithProjection(
 		ctx context.Context,
