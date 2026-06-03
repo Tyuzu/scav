@@ -10,14 +10,11 @@ let isOpen = false;
 /* ---------------------------------- */
 
 const LINKS = [
-  { href: "/crops", label: "Crops" },
   { href: "/farms", label: "Farms" },
   { href: "/dash", label: "Dash" },
   { href: "/recipes", label: "Recipes" },
   { href: "/products", label: "Products" },
   { href: "/tools", label: "Tools" },
-  { href: "/music", label: "Music" },
-  { href: "/merechats", label: "TextChat" }
 ];
 
 const TILES = [

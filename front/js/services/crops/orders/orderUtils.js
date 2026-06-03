@@ -6,11 +6,8 @@ import { apiFetch } from "../../../api/api";
 
 export async function acceptOrder(orderId) {
   try {
-    const response = await apiFetch(
-      `/farmorders/order/${orderId}/accept`,
-      "POST"
-    );
-    return response.success;
+    const response = await apiFetch(`/farmorders/order/${orderId}/accept`, "POST");
+    return Boolean(response?.success);
   } catch (err) {
     console.error(`Failed to accept order ${orderId}:`, err);
     return false;
@@ -19,11 +16,8 @@ export async function acceptOrder(orderId) {
 
 export async function rejectOrder(orderId) {
   try {
-    const response = await apiFetch(
-      `/farmorders/order/${orderId}/reject`,
-      "POST"
-    );
-    return response.success;
+    const response = await apiFetch(`/farmorders/order/${orderId}/reject`, "POST");
+    return Boolean(response?.success);
   } catch (err) {
     console.error(`Failed to reject order ${orderId}:`, err);
     return false;
@@ -32,27 +26,20 @@ export async function rejectOrder(orderId) {
 
 export async function markOrderDelivered(orderId) {
   try {
-    const response = await apiFetch(
-      `/farmorders/order/${orderId}/deliver`,
-      "POST"
-    );
-    return response.success;
+    const response = await apiFetch(`/farmorders/order/${orderId}/deliver`, "POST");
+    return Boolean(response?.success);
   } catch (err) {
     console.error(`Failed to mark order ${orderId} as delivered:`, err);
     return false;
   }
 }
 
-export async function updateOrderStatus(orderId, status) {
+export async function markOrderPaid(orderId) {
   try {
-    const response = await apiFetch(
-      `/farmorders/order/${orderId}/status`,
-      "PATCH",
-      { status }
-    );
-    return response.success;
+    const response = await apiFetch(`/farmorders/order/${orderId}/markpaid`, "POST");
+    return Boolean(response?.success);
   } catch (err) {
-    console.error(`Failed to update order ${orderId} status:`, err);
+    console.error(`Failed to mark order ${orderId} as paid:`, err);
     return false;
   }
 }
@@ -63,18 +50,14 @@ export async function updateOrderStatus(orderId, status) {
 
 export async function bulkAcceptOrders(orderIds) {
   try {
-    const response = await apiFetch(
-      "/farmorders/bulk/accept",
-      "POST",
-      { orderIds }
-    );
+    const response = await apiFetch("/farmorders/bulk/accept", "POST", { orderIds });
 
     return {
-      success: response.success,
-      updated: response.updated || 0,
-      failed: response.failed || 0,
-      message: response.message,
-      errors: response.errors || [],
+      success: Boolean(response?.success),
+      updated: response?.updated || 0,
+      failed: response?.failed || 0,
+      message: response?.message || "",
+      errors: response?.errors || [],
     };
   } catch (err) {
     console.error("Failed to bulk accept orders:", err);
@@ -82,27 +65,23 @@ export async function bulkAcceptOrders(orderIds) {
     return {
       success: false,
       updated: 0,
-      failed: orderIds.length,
+      failed: Array.isArray(orderIds) ? orderIds.length : 0,
       message: "Failed to bulk accept orders",
-      errors: [err.message],
+      errors: [err?.message || "Unknown error"],
     };
   }
 }
 
 export async function bulkRejectOrders(orderIds) {
   try {
-    const response = await apiFetch(
-      "/farmorders/bulk/reject",
-      "POST",
-      { orderIds }
-    );
+    const response = await apiFetch("/farmorders/bulk/reject", "POST", { orderIds });
 
     return {
-      success: response.success,
-      updated: response.updated || 0,
-      failed: response.failed || 0,
-      message: response.message,
-      errors: response.errors || [],
+      success: Boolean(response?.success),
+      updated: response?.updated || 0,
+      failed: response?.failed || 0,
+      message: response?.message || "",
+      errors: response?.errors || [],
     };
   } catch (err) {
     console.error("Failed to bulk reject orders:", err);
@@ -110,27 +89,23 @@ export async function bulkRejectOrders(orderIds) {
     return {
       success: false,
       updated: 0,
-      failed: orderIds.length,
+      failed: Array.isArray(orderIds) ? orderIds.length : 0,
       message: "Failed to bulk reject orders",
-      errors: [err.message],
+      errors: [err?.message || "Unknown error"],
     };
   }
 }
 
 export async function bulkMarkOrdersDelivered(orderIds) {
   try {
-    const response = await apiFetch(
-      "/farmorders/bulk/deliver",
-      "POST",
-      { orderIds }
-    );
+    const response = await apiFetch("/farmorders/bulk/deliver", "POST", { orderIds });
 
     return {
-      success: response.success,
-      updated: response.updated || 0,
-      failed: response.failed || 0,
-      message: response.message,
-      errors: response.errors || [],
+      success: Boolean(response?.success),
+      updated: response?.updated || 0,
+      failed: response?.failed || 0,
+      message: response?.message || "",
+      errors: response?.errors || [],
     };
   } catch (err) {
     console.error("Failed to bulk mark orders as delivered:", err);
@@ -138,15 +113,15 @@ export async function bulkMarkOrdersDelivered(orderIds) {
     return {
       success: false,
       updated: 0,
-      failed: orderIds.length,
+      failed: Array.isArray(orderIds) ? orderIds.length : 0,
       message: "Failed to bulk mark orders as delivered",
-      errors: [err.message],
+      errors: [err?.message || "Unknown error"],
     };
   }
 }
 
 // ============================================================
-// Fetch Orders (with optional filters)
+// Fetch Orders
 // ============================================================
 
 export async function fetchIncomingOrders(filters = {}) {
@@ -165,6 +140,10 @@ export async function fetchIncomingOrders(filters = {}) {
       params.append("payment", filters.payment);
     }
 
+    if (filters.date) {
+      params.append("date", filters.date);
+    }
+
     if (filters.dateFrom) {
       params.append("dateFrom", filters.dateFrom);
     }
@@ -179,7 +158,7 @@ export async function fetchIncomingOrders(filters = {}) {
 
     const response = await apiFetch(url);
 
-    if (!response.success || !Array.isArray(response.orders)) {
+    if (!response?.success || !Array.isArray(response.orders)) {
       throw new Error("Invalid response");
     }
 

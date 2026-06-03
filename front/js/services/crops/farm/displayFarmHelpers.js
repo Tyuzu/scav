@@ -61,7 +61,7 @@ export function renderFarmDetails(farm, isCreator) {
           return;
         }
 
-        const res = await apiFetch(`/farms/${farm.farmid}`, "DELETE");
+        const res = await apiFetch(`/farms/farm/${farm.farmid}`, "DELETE");
         if (res?.success) {
           navigate("/farms");
         }
@@ -264,7 +264,7 @@ function createCreatorControls(crop, farmId, editcon) {
         return;
       }
 
-      const res = await apiFetch(`/farms/${farmId}/crops/${crop.cropid}`, "DELETE");
+      const res = await apiFetch(`/farms/farm/${farmId}/crops/${crop.cropid}`, "DELETE");
 
       if (res?.success) {
         editcon.replaceChildren(

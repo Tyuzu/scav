@@ -3,6 +3,7 @@ import Button from "../../components/base/Button.js";
 import { apiFetch } from "../../api/api.js";
 import { createTabs } from "../../components/ui/createTabs.js";
 import { displayOrders } from "../crops/orders/orders.js";
+import {displayMyFarm} from "../crops/farm/myFarms.js";
 
 export function displayDash(content, isLoggedIn) {
   content.replaceChildren();
@@ -24,6 +25,7 @@ export function displayDash(content, isLoggedIn) {
   const tabs = [
     { id: "overview", title: "Overview", render: renderOverviewTab },
     { id: "orders", title: "Orders", render: renderOrdersTab },
+    { id: "myfarm", title: "My farm", render: renderMyFarmTab },
   ];
 
   const activeTabId = localStorage.getItem("dash-active-tab") || "overview";
@@ -60,6 +62,10 @@ function renderOverviewTab(container) {
 
 function renderOrdersTab(container) {
   displayOrders(container);
+}
+
+function renderMyFarmTab(container) {
+  displayMyFarm(container);
 }
 
 function buildStatsSummary(farm, crops) {

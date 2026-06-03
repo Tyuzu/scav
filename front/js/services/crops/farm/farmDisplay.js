@@ -27,7 +27,7 @@ export async function displayFarm(isLoggedIn, farmId, content) {
   const container = createElement("div", { class: "farmpage" });
   content.replaceChildren(container);
 
-  const res = await apiFetch(`/farms/${farmId}`);
+  const res = await apiFetch(`/farms/farm/${farmId}`);
   const farm = res?.farm;
 
   if (!res?.success || !farm) {

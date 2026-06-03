@@ -2,26 +2,22 @@ import { createElement } from "../../../components/createElement";
 import Button from "../../../components/base/Button.js";
 
 export function renderFiltersSection(onApplyFilters) {
-  const cropTypeSelect = createElement(
-    "select",
-    { id: "filter-crop-type" },
-    [
-      { value: "", label: "All" },
-      { value: "wheat", label: "Wheat" },
-      { value: "tomatoes", label: "Tomatoes" },
-    ].map((opt) =>
-      createElement("option", { value: opt.value }, [opt.label])
-    )
-  );
+  const cropTypeInput = createElement("input", {
+    type: "text",
+    id: "filter-crop-type",
+    placeholder: "Crop name",
+  });
 
-  const deliveryStatusSelect = createElement(
+  const orderStatusSelect = createElement(
     "select",
-    { id: "filter-delivery-status" },
+    { id: "filter-order-status" },
     [
       { value: "", label: "All" },
       { value: "pending", label: "Pending" },
-      { value: "shipped", label: "Shipped" },
+      { value: "accepted", label: "Accepted" },
+      { value: "paid", label: "Paid" },
       { value: "delivered", label: "Delivered" },
+      { value: "rejected", label: "Rejected" },
     ].map((opt) =>
       createElement("option", { value: opt.value }, [opt.label])
     )
@@ -34,6 +30,7 @@ export function renderFiltersSection(onApplyFilters) {
       { value: "", label: "All" },
       { value: "paid", label: "Paid" },
       { value: "pending", label: "Pending" },
+      { value: "unpaid", label: "Unpaid" },
     ].map((opt) =>
       createElement("option", { value: opt.value }, [opt.label])
     )
@@ -44,21 +41,27 @@ export function renderFiltersSection(onApplyFilters) {
     id: "filter-date",
   });
 
-  const applyButton = Button("Apply Filters", "apply-filters-btn", {
-    click: () => {
-      const filters = {
-        cropType: cropTypeSelect.value,
-        deliveryStatus: deliveryStatusSelect.value,
-        paymentStatus: paymentStatusSelect.value,
-        date: dateInput.value,
-      };
-      onApplyFilters(filters);
+  const applyButton = Button(
+    "Apply Filters",
+    "apply-filters-btn",
+    {
+      click: () => {
+        const filters = {
+          crop: cropTypeInput.value.trim(),
+          status: orderStatusSelect.value,
+          payment: paymentStatusSelect.value,
+          date: dateInput.value,
+        };
+
+        onApplyFilters(filters);
+      },
     },
-  }, "primary-button");
+    "primary-button"
+  );
 
   return createElement("div", { class: "filters-section" }, [
-    createElement("label", {}, ["Crop Type:", cropTypeSelect]),
-    createElement("label", {}, ["Delivery Status:", deliveryStatusSelect]),
+    createElement("label", {}, ["Crop:", cropTypeInput]),
+    createElement("label", {}, ["Order Status:", orderStatusSelect]),
     createElement("label", {}, ["Payment Status:", paymentStatusSelect]),
     createElement("label", {}, ["Date:", dateInput]),
     applyButton,

@@ -2,13 +2,13 @@
 // import { createElement } from "../../components/createElement.js";
 
 // import { clearElement, createListingTabs } from "./listingcon.js";
-import {
+// import {
   // createWeatherInfoWidget,
   // createSearchBar,
   //createNavWrapper,
   // createAuthForms,
   // adspace
-} from "./homeHelpers.js";
+// } from "./homeHelpers.js";
 
 // --- MAIN HOME ---
 export function YoHome(_isLoggedIn, _container) {

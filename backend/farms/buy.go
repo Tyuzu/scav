@@ -4,7 +4,6 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"log"
 	"net/http"
 	"time"
 
@@ -35,6 +34,77 @@ type OrderDisplay struct {
 	Status       string `json:"status"`
 }
 
+type BulkOrdersRequest struct {
+	OrderIDs []string `json:"orderIds"`
+}
+
+type BulkOrdersResponse struct {
+	Success bool     `json:"success"`
+	Message string   `json:"message"`
+	Updated int      `json:"updated"`
+	Failed  int      `json:"failed"`
+	Errors  []string `json:"errors,omitempty"`
+}
+
+/* ---------------------------------------------------- */
+/* Helpers                                              */
+/* ---------------------------------------------------- */
+
+func orderStatusTransitions() map[string][]string {
+	return map[string][]string{
+		"pending":   []string{"accepted", "rejected"},
+		"accepted":  []string{"paid", "rejected"},
+		"paid":      []string{"delivered"},
+		"rejected":  []string{},
+		"delivered": []string{},
+	}
+}
+
+func isValidOrderTransition(oldStatus, newStatus string) bool {
+	allowedNext, ok := orderStatusTransitions()[oldStatus]
+	if !ok {
+		return false
+	}
+
+	for _, status := range allowedNext {
+		if status == newStatus {
+			return true
+		}
+	}
+
+	return false
+}
+
+func auditActionForStatus(newStatus string) string {
+	switch newStatus {
+	case "accepted":
+		return models.AuditActionOrderAccept
+	case "rejected":
+		return models.AuditActionOrderReject
+	case "paid":
+		return models.AuditActionOrderMarkPaid
+	case "delivered":
+		return models.AuditActionOrderMarkDeliver
+	default:
+		return ""
+	}
+}
+
+func toInt(v any) (int, bool) {
+	switch n := v.(type) {
+	case int:
+		return n, true
+	case int32:
+		return int(n), true
+	case int64:
+		return int(n), true
+	case float64:
+		return int(n), true
+	default:
+		return 0, false
+	}
+}
+
 /* ---------------------------------------------------- */
 /* Buy crop                                             */
 /* ---------------------------------------------------- */
@@ -47,8 +117,7 @@ func BuyCrop(app *infra.Deps) httprouter.Handle {
 		farmID := ps.ByName("farmid")
 		cropID := ps.ByName("cropid")
 
-		// SECURITY: Use atomic FindOneAndUpdate to prevent race condition
-		// This ensures only one concurrent request can successfully decrement inventory
+		// Atomic decrement to prevent concurrent overselling.
 		var updatedCrop bson.M
 		err := app.DB.FindOneAndUpdate(
 			ctx,
@@ -56,7 +125,7 @@ func BuyCrop(app *infra.Deps) httprouter.Handle {
 			bson.M{
 				"farmid":     farmID,
 				"cropid":     cropID,
-				"quantity":   bson.M{"$gt": 0}, // Atomic check
+				"quantity":   bson.M{"$gt": 0},
 				"outOfStock": false,
 			},
 			bson.M{
@@ -75,13 +144,12 @@ func BuyCrop(app *infra.Deps) httprouter.Handle {
 			return
 		}
 
-		// Check if this was the last crop (quantity is now 0)
-		if quantity, ok := updatedCrop["quantity"].(int32); ok && quantity == 0 {
-			app.DB.UpdateOne(
+		if quantity, ok := toInt(updatedCrop["quantity"]); ok && quantity == 0 {
+			_ = app.DB.UpdateOne(
 				ctx,
 				cropsCollection,
 				bson.M{"farmid": farmID, "cropid": cropID},
-				bson.M{"$set": bson.M{"outOfStock": true}},
+				bson.M{"$set": bson.M{"outOfStock": true, "updatedAt": time.Now()}},
 			)
 		}
 
@@ -103,14 +171,16 @@ func updateOrderStatus(
 	ctx, cancel := context.WithTimeout(r.Context(), 5*time.Second)
 	defer cancel()
 
-	// SECURITY: Verify the user is the farm owner
 	userID := utils.GetUserIDFromRequest(r)
 	if userID == "" {
-		http.Error(w, "Unauthorized", http.StatusUnauthorized)
+		utils.RespondWithJSON(
+			w,
+			http.StatusUnauthorized,
+			utils.M{"success": false, "message": "Unauthorized"},
+		)
 		return
 	}
 
-	// Fetch the order to verify the requester is the farm owner
 	var order models.FarmOrder
 	if err := app.DB.FindOne(ctx, farmOrdersCollection, bson.M{"orderid": orderID}, &order); err != nil {
 		utils.RespondWithJSON(
@@ -121,7 +191,6 @@ func updateOrderStatus(
 		return
 	}
 
-	// Verify authorization: only the farm owner can change order status
 	var farm models.Farm
 	if err := app.DB.FindOne(ctx, farmsCollection, bson.M{"farmid": order.FarmID}, &farm); err != nil {
 		utils.RespondWithJSON(
@@ -133,32 +202,23 @@ func updateOrderStatus(
 	}
 
 	if farm.CreatedBy != userID {
-		http.Error(w, "Forbidden: Only farm owner can update order status", http.StatusForbidden)
+		utils.RespondWithJSON(
+			w,
+			http.StatusForbidden,
+			utils.M{"success": false, "message": "Forbidden: Only farm owner can update order status"},
+		)
 		return
 	}
 
-	// Prevent invalid status transitions
-	validTransitions := map[string][]string{
-		"pending":   {"accepted", "rejected"},
-		"accepted":  {"paid", "rejected"},
-		"paid":      {"delivered"},
-		"rejected":  {},
-		"delivered": {},
-	}
-
-	allowed := false
-	for _, validStatus := range validTransitions[string(order.Status)] {
-		if validStatus == newStatus {
-			allowed = true
-			break
-		}
-	}
-
-	if !allowed {
+	oldStatus := string(order.Status)
+	if !isValidOrderTransition(oldStatus, newStatus) {
 		utils.RespondWithJSON(
 			w,
 			http.StatusBadRequest,
-			utils.M{"success": false, "message": "Invalid status transition from " + string(order.Status) + " to " + newStatus},
+			utils.M{
+				"success": false,
+				"message": "Invalid status transition from " + oldStatus + " to " + newStatus,
+			},
 		)
 		return
 	}
@@ -167,9 +227,8 @@ func updateOrderStatus(
 		ctx,
 		farmOrdersCollection,
 		bson.M{"orderid": orderID},
-		bson.M{"$set": bson.M{"status": newStatus, "updatedat": time.Now()}},
+		bson.M{"$set": bson.M{"status": newStatus, "updatedAt": time.Now()}},
 	)
-
 	if err != nil {
 		utils.RespondWithJSON(
 			w,
@@ -179,19 +238,7 @@ func updateOrderStatus(
 		return
 	}
 
-	// SECURITY: Log audit trail for farm order status changes
-	auditAction := ""
-	switch newStatus {
-	case "accepted":
-		auditAction = models.AuditActionOrderAccept
-	case "rejected":
-		auditAction = models.AuditActionOrderReject
-	case "paid":
-		auditAction = models.AuditActionOrderMarkPaid
-	case "delivered":
-		auditAction = models.AuditActionOrderMarkDeliver
-	}
-
+	auditAction := auditActionForStatus(newStatus)
 	if auditAction != "" {
 		auditlog.LogAction(
 			ctx,
@@ -203,7 +250,7 @@ func updateOrderStatus(
 			orderID,
 			"success",
 			map[string]interface{}{
-				"oldStatus": order.Status,
+				"oldStatus": oldStatus,
 				"newStatus": newStatus,
 			},
 		)
@@ -244,18 +291,6 @@ func MarkOrderPaid(app *infra.Deps) httprouter.Handle {
 /* Bulk order status updates                            */
 /* ---------------------------------------------------- */
 
-type BulkOrdersRequest struct {
-	OrderIDs []string `json:"orderIds"`
-}
-
-type BulkOrdersResponse struct {
-	Success bool     `json:"success"`
-	Message string   `json:"message"`
-	Updated int      `json:"updated"`
-	Failed  int      `json:"failed"`
-	Errors  []string `json:"errors,omitempty"`
-}
-
 func BulkAcceptOrders(app *infra.Deps) httprouter.Handle {
 	return func(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
 		bulkUpdateOrders(w, r, "accepted", app)
@@ -280,7 +315,11 @@ func bulkUpdateOrders(w http.ResponseWriter, r *http.Request, newStatus string, 
 
 	userID := utils.GetUserIDFromRequest(r)
 	if userID == "" {
-		http.Error(w, "Unauthorized", http.StatusUnauthorized)
+		utils.RespondWithJSON(
+			w,
+			http.StatusUnauthorized,
+			utils.M{"success": false, "message": "Unauthorized"},
+		)
 		return
 	}
 
@@ -301,9 +340,8 @@ func bulkUpdateOrders(w http.ResponseWriter, r *http.Request, newStatus string, 
 		return
 	}
 
-	// Fetch user's farms for authorization
-	var farms []models.Farm
-	if err := app.DB.FindMany(ctx, farmsCollection, bson.M{"createdBy": userID}, &farms); err != nil {
+	var ownedFarms []models.Farm
+	if err := app.DB.FindMany(ctx, farmsCollection, bson.M{"createdBy": userID}, &ownedFarms); err != nil {
 		utils.RespondWithJSON(w, http.StatusInternalServerError, utils.M{
 			"success": false,
 			"message": "Failed to fetch farms",
@@ -311,24 +349,22 @@ func bulkUpdateOrders(w http.ResponseWriter, r *http.Request, newStatus string, 
 		return
 	}
 
-	farmIDs := make([]string, len(farms))
-	for i, f := range farms {
-		farmIDs[i] = f.FarmID
+	farmIDs := make([]string, 0, len(ownedFarms))
+	for _, f := range ownedFarms {
+		farmIDs = append(farmIDs, f.FarmID)
 	}
 
 	response := BulkOrdersResponse{Success: true}
-	var errors []string
+	errorsList := make([]string, 0)
 
 	for _, orderID := range req.OrderIDs {
-		// Fetch the order
 		var order models.FarmOrder
 		if err := app.DB.FindOne(ctx, farmOrdersCollection, bson.M{"orderid": orderID}, &order); err != nil {
 			response.Failed++
-			errors = append(errors, fmt.Sprintf("Order %s not found", orderID))
+			errorsList = append(errorsList, fmt.Sprintf("Order %s not found", orderID))
 			continue
 		}
 
-		// Verify farm ownership
 		authorized := false
 		for _, farmID := range farmIDs {
 			if order.FarmID == farmID {
@@ -338,58 +374,31 @@ func bulkUpdateOrders(w http.ResponseWriter, r *http.Request, newStatus string, 
 		}
 		if !authorized {
 			response.Failed++
-			errors = append(errors, fmt.Sprintf("Order %s unauthorized", orderID))
+			errorsList = append(errorsList, fmt.Sprintf("Order %s unauthorized", orderID))
 			continue
 		}
 
-		// Validate status transition
-		validTransitions := map[string][]string{
-			"pending":   {"accepted", "rejected", "delivered"},
-			"accepted":  {"paid", "rejected", "delivered"},
-			"paid":      {"delivered"},
-			"rejected":  {},
-			"delivered": {},
-		}
-
-		allowed := false
-		for _, validStatus := range validTransitions[string(order.Status)] {
-			if validStatus == newStatus {
-				allowed = true
-				break
-			}
-		}
-
-		if !allowed {
+		oldStatus := string(order.Status)
+		if !isValidOrderTransition(oldStatus, newStatus) {
 			response.Failed++
-			errors = append(errors, fmt.Sprintf("Order %s: invalid transition from %s to %s", orderID, order.Status, newStatus))
+			errorsList = append(errorsList, fmt.Sprintf("Order %s: invalid transition from %s to %s", orderID, oldStatus, newStatus))
 			continue
 		}
 
-		// Update order status
 		if err := app.DB.UpdateOne(
 			ctx,
 			farmOrdersCollection,
 			bson.M{"orderid": orderID},
-			bson.M{"$set": bson.M{"status": newStatus, "updatedat": time.Now()}},
+			bson.M{"$set": bson.M{"status": newStatus, "updatedAt": time.Now()}},
 		); err != nil {
 			response.Failed++
-			errors = append(errors, fmt.Sprintf("Order %s: update failed", orderID))
+			errorsList = append(errorsList, fmt.Sprintf("Order %s: update failed", orderID))
 			continue
 		}
 
 		response.Updated++
 
-		// Log audit action
-		auditAction := ""
-		switch newStatus {
-		case "accepted":
-			auditAction = models.AuditActionOrderAccept
-		case "rejected":
-			auditAction = models.AuditActionOrderReject
-		case "delivered":
-			auditAction = models.AuditActionOrderMarkDeliver
-		}
-
+		auditAction := auditActionForStatus(newStatus)
 		if auditAction != "" {
 			auditlog.LogAction(
 				ctx,
@@ -401,15 +410,15 @@ func bulkUpdateOrders(w http.ResponseWriter, r *http.Request, newStatus string, 
 				orderID,
 				"success",
 				map[string]interface{}{
-					"oldStatus": order.Status,
+					"oldStatus": oldStatus,
 					"newStatus": newStatus,
 				},
 			)
 		}
 	}
 
-	if len(errors) > 0 {
-		response.Errors = errors
+	if len(errorsList) > 0 {
+		response.Errors = errorsList
 	}
 
 	if response.Updated > 0 {
@@ -449,70 +458,4 @@ func DownloadReceipt(app *infra.Deps) httprouter.Handle {
 			utils.M{"success": true, "receipt": order},
 		)
 	}
-}
-
-/* ---------------------------------------------------- */
-/* Incoming orders                                      */
-/* ---------------------------------------------------- */
-
-func GetIncomingOrders(app *infra.Deps) httprouter.Handle {
-	return func(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
-		ctx, cancel := context.WithTimeout(r.Context(), 10*time.Second)
-		defer cancel()
-
-		var orders []models.FarmOrder
-		if err := app.DB.FindMany(ctx, farmOrdersCollection, bson.M{}, &orders); err != nil {
-			log.Println("GetIncomingOrders error:", err)
-			http.Error(w, "Database error", http.StatusInternalServerError)
-			return
-		}
-
-		incoming := make([]models.IncomingOrder, 0, len(orders))
-		for _, o := range orders {
-			user := getUserByID(ctx, o.UserID, app)
-			crop := getCropByID(ctx, o.CropID, app)
-
-			incoming = append(incoming, models.IncomingOrder{
-				ID:           o.OrderID,
-				Buyer:        user.Name,
-				Contact:      user.Email,
-				Crop:         crop.Name,
-				Qty:          o.Quantity,
-				Unit:         crop.Unit,
-				OrderDate:    o.CreatedAt.Format("2006-01-02"),
-				DeliveryDate: estimateDeliveryDate(o.CreatedAt),
-				Address:      user.Address,
-				Payment:      "pending",
-				Status:       string(o.Status),
-			})
-		}
-
-		w.Header().Set("Content-Type", "application/json")
-		_ = json.NewEncoder(w).Encode(
-			map[string]interface{}{
-				"success": true,
-				"orders":  incoming,
-			},
-		)
-	}
-}
-
-/* ---------------------------------------------------- */
-/* Helpers                                              */
-/* ---------------------------------------------------- */
-
-func getUserByID(ctx context.Context, id string, app *infra.Deps) models.User {
-	var user models.User
-	_ = app.DB.FindOne(ctx, usersCollection, bson.M{"userid": id}, &user)
-	return user
-}
-
-func getCropByID(ctx context.Context, id string, app *infra.Deps) models.Crop {
-	var crop models.Crop
-	_ = app.DB.FindOne(ctx, cropsCollection, bson.M{"cropid": id}, &crop)
-	return crop
-}
-
-func estimateDeliveryDate(created time.Time) string {
-	return created.Add(72 * time.Hour).Format("2006-01-02")
 }

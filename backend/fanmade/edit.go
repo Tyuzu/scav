@@ -2,9 +2,9 @@ package fanmade
 
 import (
 	"encoding/json"
-	"naevis/globals"
 	"naevis/infra"
 	"naevis/models"
+	"naevis/utils"
 	"net/http"
 	"time"
 
@@ -21,11 +21,12 @@ func EditMedia(app *infra.Deps) httprouter.Handle {
 		entityID := ps.ByName("entityid")
 		mediaID := ps.ByName("id")
 
-		requestingUserID, ok := ctx.Value(globals.UserIDKey).(string)
-		if !ok || requestingUserID == "" {
-			http.Error(w, "Invalid user", http.StatusUnauthorized)
-			return
-		}
+		// requestingUserID, ok := ctx.Value(globals.UserIDKey).(string)
+		// if !ok || requestingUserID == "" {
+		// 	http.Error(w, "Invalid user", http.StatusUnauthorized)
+		// 	return
+		// }
+		requestingUserID := utils.GetUserIDFromRequest(r)
 
 		var payload struct {
 			Caption     *string  `json:"caption,omitempty"`

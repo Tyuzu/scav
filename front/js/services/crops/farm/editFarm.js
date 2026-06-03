@@ -14,7 +14,7 @@ export function editFarm(isLoggedIn, farm, container) {
         isEdit: true,
         farm,
         onSubmit: async (formData) => {
-            const res = await apiFetch(`/farms/${farm.farmid}`, "PUT", formData, true);
+            const res = await apiFetch(`/farms/farm/${farm.farmid}`, "PUT", formData, true);
             if (res.success) {
                 displayFarm(isLoggedIn, farm.farmid, container);
             } else {

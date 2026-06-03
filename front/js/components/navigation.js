@@ -11,8 +11,8 @@ export const highlightActiveNav = (path) => {
 const handleNavigation = (event, href) => {
     event.preventDefault();
     if (!href) {
-return console.error("🚨 handleNavigation received null href!");
-}
+        return console.error("🚨 handleNavigation received null href!");
+    }
     navigate(href);
 };
 
@@ -49,8 +49,8 @@ const enableDragDrop = (ul, toggle) => {
 
     const onDragStart = (e) => {
         if (!toggle.checked) {
-return;
-}
+            return;
+        }
         draggingEl = e.target.closest("li");
         draggingEl.classList.add("dragging");
         e.dataTransfer.effectAllowed = "move";
@@ -58,8 +58,8 @@ return;
 
     const onDragEnd = () => {
         if (draggingEl) {
-draggingEl.classList.remove("dragging");
-}
+            draggingEl.classList.remove("dragging");
+        }
         draggingEl = null;
         placeholder.remove();
         // save order
@@ -72,12 +72,12 @@ draggingEl.classList.remove("dragging");
     const onDragOver = (e) => {
         e.preventDefault();
         if (!toggle.checked) {
-return;
-}
+            return;
+        }
         const target = e.target.closest("li");
         if (!target || target === draggingEl || target === placeholder) {
-return;
-}
+            return;
+        }
 
         const rect = target.getBoundingClientRect();
         const next = (e.clientX - rect.left) / rect.width > 0.5; // horizontal
@@ -87,11 +87,11 @@ return;
     const onDrop = (e) => {
         e.preventDefault();
         if (!toggle.checked) {
-return;
-}
+            return;
+        }
         if (placeholder.parentNode) {
-ul.insertBefore(draggingEl, placeholder);
-}
+            ul.insertBefore(draggingEl, placeholder);
+        }
         placeholder.remove();
     };
 
@@ -104,12 +104,10 @@ ul.insertBefore(draggingEl, placeholder);
 /** Create navigation bar */
 const createNav = () => {
     const defaultNavItems = [
-        { href: "/home", label: "Home" },
-        { href: "/dash", label: "Dash" },
-        { href: "/farms", label: "Farms" },
-        { href: "/crops", label: "Crops" },
-        { href: "/tools", label: "Tools" },
         { href: "/grocery", label: "Grocery" },
+        // { href: "/farms", label: "Farms" },
+        // { href: "/crops", label: "Crops" },
+        { href: "/tools", label: "Tools" },
         { href: "/recipes", label: "Recipes" },
         { href: "/products", label: "Products" },
         // { href: "/places", label: "Places" },
@@ -121,6 +119,8 @@ const createNav = () => {
         // { href: "/posts", label: "Posts" },
         // { href: "/baitos", label: "Baito" },
         // { href: "/baitos/hire", label: "Hire" },
+        // { href: "/music", label: "Music" },
+        // { href: "/merechats", label: "TextChat" }
     ];
 
     const savedOrder = getNavOrder();
@@ -131,8 +131,8 @@ const createNav = () => {
             .filter(Boolean);
         defaultNavItems.forEach(item => {
             if (!navItems.find(i => i.href === item.href)) {
-navItems.push(item);
-}
+                navItems.push(item);
+            }
         });
     }
 

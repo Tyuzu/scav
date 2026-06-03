@@ -403,15 +403,15 @@ func RegisterFarmRoutes(router *httprouter.Router, app *infra.Deps, rateLimiter 
 	// 🌾 Farm CRUD
 	router.POST("/api/v1/farms", rateLimiter.Limit(authmidware(farms.CreateFarm(app))))
 	router.GET("/api/v1/farms", farms.GetPaginatedFarms(app)) // Public
-	router.GET("/api/v1/farms/:id", middleware.OptionalAuth(farms.GetFarm(app)))
-	router.PUT("/api/v1/farms/:id", rateLimiter.Limit(authmidware(farms.EditFarm(app))))
-	router.DELETE("/api/v1/farms/:id", rateLimiter.Limit(authmidware(farms.DeleteFarm(app))))
+	router.GET("/api/v1/farms/farm/:id", middleware.OptionalAuth(farms.GetFarm(app)))
+	router.PUT("/api/v1/farms/farm/:id", rateLimiter.Limit(authmidware(farms.EditFarm(app))))
+	router.DELETE("/api/v1/farms/farm/:id", rateLimiter.Limit(authmidware(farms.DeleteFarm(app))))
 
 	// 🌱 Crops (within farm)
-	router.POST("/api/v1/farms/:id/crops", rateLimiter.Limit(authmidware(farms.AddCrop(app))))
-	router.PUT("/api/v1/farms/:id/crops/:cropid", rateLimiter.Limit(authmidware(farms.EditCrop(app))))
-	router.DELETE("/api/v1/farms/:id/crops/:cropid", rateLimiter.Limit(authmidware(farms.DeleteCrop(app))))
-	router.PUT("/api/v1/farms/:id/crops/:cropid/buy", rateLimiter.Limit(authmidware(farms.BuyCrop(app))))
+	router.POST("/api/v1/farms/farm/:id/crops", rateLimiter.Limit(authmidware(farms.AddCrop(app))))
+	router.PUT("/api/v1/farms/farm/:id/crops/:cropid", rateLimiter.Limit(authmidware(farms.EditCrop(app))))
+	router.DELETE("/api/v1/farms/farm/:id/crops/:cropid", rateLimiter.Limit(authmidware(farms.DeleteCrop(app))))
+	router.PUT("/api/v1/farms/farm/:id/crops/:cropid/buy", rateLimiter.Limit(authmidware(farms.BuyCrop(app))))
 
 	// 📊 Dashboard
 	router.GET("/api/v1/dash/farms", authmidware(farms.GetFarmDash(app)))
@@ -419,6 +419,7 @@ func RegisterFarmRoutes(router *httprouter.Router, app *infra.Deps, rateLimiter 
 	// 📦 Farm Orders
 	router.GET("/api/v1/orders/mine", authmidware(farms.GetMyFarmOrders(app)))
 	router.GET("/api/v1/orders/incoming", authmidware(farms.GetIncomingFarmOrders(app)))
+
 	router.POST("/api/v1/farmorders/order/:id/accept", rateLimiter.Limit(authmidware(farms.AcceptOrder(app))))
 	router.POST("/api/v1/farmorders/order/:id/reject", rateLimiter.Limit(authmidware(farms.RejectOrder(app))))
 	router.POST("/api/v1/farmorders/order/:id/deliver", rateLimiter.Limit(authmidware(farms.MarkOrderDelivered(app))))
@@ -453,6 +454,10 @@ func RegisterFarmRoutes(router *httprouter.Router, app *infra.Deps, rateLimiter 
 
 	// 🖼 Upload
 	// router.POST("/api/v1/upload/images", rateLimiter.Limit(authmidware(utils.UploadImages)))
+
+	// Weather
+	router.GET("/api/v1/weather", farms.GetWeather(app))
+	router.GET("/api/v1/farms/my", authmidware(farms.GetMyFarms(app)))
 }
 
 func AddMerchRoutes(router *httprouter.Router, app *infra.Deps, rateLimiter *middleware.RateLimiter) {

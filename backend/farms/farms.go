@@ -36,11 +36,7 @@ func CreateFarm(app *infra.Deps) httprouter.Handle {
 			return
 		}
 
-		requestingUserID, ok := ctx.Value(globals.UserIDKey).(string)
-		if !ok {
-			http.Error(w, "Unauthorized", http.StatusUnauthorized)
-			return
-		}
+		requestingUserID := utils.GetUserIDFromRequest(r)
 
 		name := strings.TrimSpace(r.FormValue("name"))
 		location := strings.TrimSpace(r.FormValue("location"))
@@ -119,7 +115,6 @@ func CreateFarm(app *infra.Deps) httprouter.Handle {
 // --------------------------------------------------
 // Edit
 // --------------------------------------------------
-
 func EditFarm(app *infra.Deps) httprouter.Handle {
 	return func(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 		ctx := r.Context()
@@ -133,8 +128,35 @@ func EditFarm(app *infra.Deps) httprouter.Handle {
 			return
 		}
 
-		if _, ok := ctx.Value(globals.UserIDKey).(string); !ok {
-			http.Error(w, "Invalid user", http.StatusBadRequest)
+		userID, ok := ctx.Value(globals.UserIDKey).(string)
+		if !ok || userID == "" {
+			utils.RespondWithJSON(w, http.StatusUnauthorized, utils.M{
+				"success": false,
+				"message": "Unauthorized",
+			})
+			return
+		}
+
+		// Verify ownership
+		var farm models.Farm
+		if err := app.DB.FindOne(
+			ctx,
+			farmsCollection,
+			bson.M{"farmid": farmID},
+			&farm,
+		); err != nil {
+			utils.RespondWithJSON(w, http.StatusNotFound, utils.M{
+				"success": false,
+				"message": "Farm not found",
+			})
+			return
+		}
+
+		if farm.CreatedBy != userID {
+			utils.RespondWithJSON(w, http.StatusForbidden, utils.M{
+				"success": false,
+				"message": "You can only edit your own farm",
+			})
 			return
 		}
 
@@ -200,8 +222,13 @@ func EditFarm(app *infra.Deps) httprouter.Handle {
 		if err := app.DB.UpdateOne(
 			ctx,
 			farmsCollection,
-			bson.M{"farmid": farmID},
-			bson.M{"$set": update},
+			bson.M{
+				"farmid": farmID,
+				"userid": userID, // ownership check at DB level too
+			},
+			bson.M{
+				"$set": update,
+			},
 		); err != nil {
 			utils.RespondWithJSON(w, http.StatusInternalServerError, utils.M{
 				"success": false,
@@ -209,8 +236,6 @@ func EditFarm(app *infra.Deps) httprouter.Handle {
 			})
 			return
 		}
-
-		/* -------- Publish FarmUpdated Event -------- */
 
 		utils.RespondWithJSON(w, http.StatusOK, utils.M{
 			"success": true,
