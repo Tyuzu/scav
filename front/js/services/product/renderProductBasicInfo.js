@@ -1,3 +1,5 @@
+// renderProductBasicInfo.js
+
 import { createElement } from "../../components/createElement";
 import { getProductAvailability } from "./productHelpers.js";
 

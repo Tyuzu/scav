@@ -1,9 +1,10 @@
 import { createElement } from "./createElement.js";
+// eslint-disable-next-line no-unused-vars
 import { notifSVG, cartSVG, chatSVG, menuSVG, searchSVG } from "./svgs.js";
 import { navigate } from "../routes/index.js";
 import { getState, subscribeDeep } from "../state/state.js";
 import { openNotificationsModal } from "../services/notifications/notifModal.js";
-import { toggleSidebar } from "./sidebar.js";
+// import { toggleSidebar } from "./sidebar.js";
 import { createIconButton } from "../utils/svgIconButton.js";
 // import { tmessaging } from "./tumblrSvgs.js";
 // import { openCartModal } from "../services/cart/cartModal.js";
@@ -14,12 +15,12 @@ function updateNav(container, _divs) {
 
   container.innerHTML = "";
 
-  container.appendChild(createIconButton({
-    classSuffix: "pause",
-    svgMarkup: menuSVG,
-    onClick: toggleSidebar,
-    label: "" // ✅ no text
-  }));
+  // container.appendChild(createIconButton({
+  //   classSuffix: "pause",
+  //   svgMarkup: menuSVG,
+  //   onClick: toggleSidebar,
+  //   label: "" // ✅ no text
+  // }));
 
   container.appendChild(createIconButton({
     classSuffix: "dld",
@@ -38,19 +39,19 @@ function updateNav(container, _divs) {
     }));
     
     container.appendChild(createIconButton({
-      classSuffix: "edit",
-      svgMarkup: cartSVG,
-      onClick: () => navigate("/cart"),
-      label: ""
-    }));
- 
-    container.appendChild(createIconButton({
       classSuffix: "stop",
       svgMarkup: notifSVG,
       onClick: openNotificationsModal,
       label: ""
     }));   
 
+    container.appendChild(createIconButton({
+      classSuffix: "edit",
+      svgMarkup: cartSVG,
+      onClick: () => navigate("/cart"),
+      label: ""
+    }));
+ 
 
     // container.appendChild(createIconButton({
     //   classSuffix: "edit",

@@ -56,8 +56,6 @@ func createItem(w http.ResponseWriter, r *http.Request, itemType string, app *in
 		return
 	}
 
-	/* -------- Publish ProductCreated Event -------- */
-
 	w.Header().Set("Content-Type", "application/json")
 	_ = json.NewEncoder(w).Encode(item)
 }
@@ -130,9 +128,12 @@ func updateItem(
 	}
 
 	/* -------- Publish ProductUpdated Event -------- */
-
-	w.Header().Set("Content-Type", "application/json")
-	_ = json.NewEncoder(w).Encode(utils.M{"status": "updated"})
+	utils.RespondWithJSON(w, http.StatusOK, map[string]interface{}{
+		"status":    "success",
+		"message":   "Product updated successfully",
+		"productid": id,
+		"product":   item,
+	})
 }
 
 // --------------------------------------------------
@@ -193,17 +194,16 @@ func deleteItem(app *infra.Deps) httprouter.Handle {
 // parseProductJSON parses a JSON body into models.Product
 func parseProductJSON(r *http.Request, itemType string) (models.Product, error) {
 	var payload struct {
-		Name          string   `json:"name"`
-		Description   string   `json:"description"`
-		Category      string   `json:"category"`
-		SKU           string   `json:"sku"`
-		Unit          string   `json:"unit"`
-		Featured      bool     `json:"featured"`
-		Price         float64  `json:"price"`
-		Quantity      float64  `json:"quantity"`
-		AvailableFrom string   `json:"availableFrom"`
-		AvailableTo   string   `json:"availableTo"`
-		Images        []string `json:"images"`
+		Name          string  `json:"name"`
+		Description   string  `json:"description"`
+		Category      string  `json:"category"`
+		SKU           string  `json:"sku"`
+		Unit          string  `json:"unit"`
+		Featured      bool    `json:"featured"`
+		Price         float64 `json:"price"`
+		Quantity      float64 `json:"quantity"`
+		AvailableFrom string  `json:"availableFrom"`
+		AvailableTo   string  `json:"availableTo"`
 	}
 
 	if err := json.NewDecoder(r.Body).Decode(&payload); err != nil {
@@ -220,7 +220,6 @@ func parseProductJSON(r *http.Request, itemType string) (models.Product, error) 
 		Featured:    payload.Featured,
 		Price:       payload.Price,
 		Quantity:    payload.Quantity,
-		Images:      payload.Images,
 	}
 
 	if payload.AvailableFrom != "" {
@@ -228,6 +227,7 @@ func parseProductJSON(r *http.Request, itemType string) (models.Product, error) 
 			item.AvailableFrom = &models.SafeTime{Time: t}
 		}
 	}
+
 	if payload.AvailableTo != "" {
 		if t, err := time.Parse("2006-01-02", payload.AvailableTo); err == nil {
 			item.AvailableTo = &models.SafeTime{Time: t}

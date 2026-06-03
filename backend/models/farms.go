@@ -131,6 +131,8 @@ type Product struct {
 	Category    string   `bson:"category" json:"category"`
 	Quantity    float64  `bson:"quantity" json:"quantity"`
 	Type        string   `bson:"type" json:"type"`
+	Photo string `bson:"photo,omitempty" json:"photo,omitempty"`
+	Banner string `bson:"banner,omitempty" json:"banner,omitempty"`
 
 	// Physical product fields
 	Size        string            `json:"size,omitempty"`

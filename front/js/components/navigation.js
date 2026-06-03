@@ -104,6 +104,7 @@ ul.insertBefore(draggingEl, placeholder);
 /** Create navigation bar */
 const createNav = () => {
     const defaultNavItems = [
+        { href: "/home", label: "Home" },
         { href: "/dash", label: "Dash" },
         { href: "/farms", label: "Farms" },
         { href: "/crops", label: "Crops" },

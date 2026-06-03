@@ -42,7 +42,7 @@ async function loadContent(url) {
       let user = userRaw;
       try {
         user = JSON.parse(userRaw);
-      } catch {}
+      } catch { }
 
       setState({ token, user }, true);
     }
@@ -55,12 +55,13 @@ async function loadContent(url) {
   if (!layoutState.headerRendered) {
     const headerContent = createheader();
     if (headerContent) {
-header.appendChild(headerContent);
-}
+      header.appendChild(headerContent);
+    }
     layoutState.headerRendered = true;
   }
 
-  const shouldShowNav = !["/home", "/merechats"].includes(url);
+// const shouldShowNav = !["/home", "/merechats"].includes(url);
+  const shouldShowNav = !["/merechats"].includes(url);
 
   if (shouldShowNav && !layoutState.navRendered) {
     const navContent = createNav();
@@ -77,8 +78,8 @@ header.appendChild(headerContent);
   if (!layoutState.footerRendered) {
     const footerContent = Footer();
     if (footerContent) {
-footer.appendChild(footerContent);
-}
+      footer.appendChild(footerContent);
+    }
     layoutState.footerRendered = true;
   }
 
@@ -100,8 +101,8 @@ function navigate(path, { storeRedirect = false } = {}) {
   }
 
   if (layoutState.isNavigating || window.location.pathname === path) {
-return;
-}
+    return;
+  }
 
   layoutState.isNavigating = true;
 

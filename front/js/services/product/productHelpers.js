@@ -1,3 +1,5 @@
+// productHelpers.js
+
 import { apiFetch } from "../../api/api";
 
 export async function fetchProduct(productType, productId) {
@@ -39,6 +41,8 @@ export function normalizeProduct(product) {
     unit: product.unit || "unit",
     description: product.description || "",
     images: Array.isArray(product.images) ? product.images : [],
+    banner: product.banner || "",
+    photo: product.photo || "",
     category: product.category || "",
     sku: product.sku || "",
     ...product,

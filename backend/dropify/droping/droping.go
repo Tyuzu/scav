@@ -43,6 +43,7 @@ var validEntities = map[string]filemgr.EntityType{
 	"feedpost":     filemgr.EntityFeed,
 	"recipe":       filemgr.EntityRecipe,
 	"product":      filemgr.EntityProduct,
+	"tool":         filemgr.EntityProduct,
 	"live":         filemgr.EntityLive,
 }
 
@@ -194,9 +195,10 @@ func FiledropHandler(app *infra.Deps, w http.ResponseWriter, r *http.Request, _ 
 	// Remote URL upload
 	// -------------------------
 
+	// Remote URL upload
 	if remoteURL != "" {
 		switch remoteKey {
-		case "banner", "photo", "avatar", "seating":
+		case "banner", "photo", "avatar", "seating", "gallery":
 		default:
 			utils.RespondWithError(w, http.StatusBadRequest, "invalid remoteKey")
 			return
@@ -209,10 +211,7 @@ func FiledropHandler(app *infra.Deps, w http.ResponseWriter, r *http.Request, _ 
 			entityId,
 		)
 	} else {
-		// -------------------------
 		// Multipart upload
-		// -------------------------
-
 		if r.MultipartForm == nil || len(r.MultipartForm.File) == 0 {
 			utils.RespondWithError(w, http.StatusBadRequest, "no files uploaded")
 			return
@@ -316,12 +315,7 @@ func convertToAttachments(
 }
 
 // updateEntityMedia updates the mongo document for the entity
-func updateEntityMedia(
-	app *infra.Deps,
-	entityType string,
-	entityId string,
-	attachments []services.Attachment,
-) error {
+func updateEntityMedia(app *infra.Deps, entityType string, entityId string, attachments []services.Attachment) error {
 	meta, ok := entityMeta[entityType]
 	if !ok {
 		return fmt.Errorf("unsupported entity type: %s", entityType)
@@ -333,6 +327,7 @@ func updateEntityMedia(
 
 	setFields := bson.M{}
 	var photos []string
+	var gallery []string
 
 	for _, attachment := range attachments {
 		switch strings.ToLower(strings.TrimSpace(attachment.Key)) {
@@ -353,6 +348,9 @@ func updateEntityMedia(
 
 		case "photo":
 			photos = append(photos, attachment.Filename)
+
+		case "gallery":
+			gallery = append(gallery, attachment.Filename)
 		}
 	}
 
@@ -370,6 +368,12 @@ func updateEntityMedia(
 		}
 	}
 
+	if len(gallery) > 0 {
+		update["$set"] = mergeSet(update["$set"], bson.M{
+			"gallery": gallery,
+		})
+	}
+
 	if len(update) == 0 {
 		return nil
 	}
@@ -380,4 +384,22 @@ func updateEntityMedia(
 		filter,
 		update,
 	)
+}
+
+func mergeSet(existing any, next bson.M) bson.M {
+	out := bson.M{}
+
+	if existing != nil {
+		if m, ok := existing.(bson.M); ok {
+			for k, v := range m {
+				out[k] = v
+			}
+		}
+	}
+
+	for k, v := range next {
+		out[k] = v
+	}
+
+	return out
 }

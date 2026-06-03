@@ -1,32 +1,19 @@
 import { apiFetch } from "../../../api/api.js";
 import { createElement } from "../../../components/createElement.js";
 import { createFormGroup } from "../../../components/createFormGroup.js";
-import { createFileInputGroup } from "../../../components/createFileInputGroup.js";
-import { uploadFile } from "../../media/api/mediaApi.js";
 import Button from "../../../components/base/Button.js";
 
-export function renderItemForm(
-  container,
-  mode,
-  itemData,
-  type,
-  onDone
-) {
-
+export function renderItemForm(container, mode, itemData, type, onDone) {
   container.replaceChildren();
 
-  const form = createElement("form", {
-    class: "create-section"
-  });
+  const form = createElement("form", { class: "create-section" });
 
   // ---------------------------------
   // CATEGORY OPTIONS
   // ---------------------------------
 
   const getCategoryOptions = (type) => {
-
     if (type === "product") {
-
       return [
         { value: "", label: "Select category" },
         { value: "Spices", label: "Spices" },
@@ -41,7 +28,6 @@ export function renderItemForm(
     }
 
     if (type === "tool") {
-
       return [
         { value: "", label: "Select category" },
         { value: "Cutting", label: "Cutting" },
@@ -70,36 +56,26 @@ export function renderItemForm(
   });
 
   const categoryGroup = createFormGroup({
-    type: getCategoryOptions(type).length
-      ? "select"
-      : "text",
-
-    id: "category",
-
-    label: "Category",
-
-    value: itemData?.category || "",
-
-    placeholder: getCategoryOptions(type).length
-      ? ""
-      : "e.g., Fruit, Tool",
-
-    required: true,
-
-    options: getCategoryOptions(type)
+    type: getCategoryOptions(type).length ? "select" : "text",
+                                        id: "category",
+                                        label: "Category",
+                                        value: itemData?.category || "",
+                                        placeholder: getCategoryOptions(type).length ? "" : "e.g., Fruit, Tool",
+                                        required: true,
+                                        options: getCategoryOptions(type)
   });
 
   const priceGroup = createFormGroup({
     type: "number",
     id: "price",
     label: "Price (₹)",
-    value: itemData?.price ?? "",
-    placeholder: "e.g., 49.99",
-    required: true,
-    additionalProps: {
-      step: "0.01",
-      min: "0"
-    }
+                                     value: itemData?.price ?? "",
+                                     placeholder: "e.g., 49.99",
+                                     required: true,
+                                     additionalProps: {
+                                       step: "0.01",
+                                       min: "0"
+                                     }
   });
 
   const quantityGroup = createFormGroup({
@@ -120,7 +96,6 @@ export function renderItemForm(
     label: "Unit",
     value: itemData?.unit || "",
     required: true,
-
     options: [
       { value: "", label: "Select unit" },
       { value: "kg", label: "kg" },
@@ -160,51 +135,6 @@ export function renderItemForm(
     required: true
   });
 
-  const imageGroup = createFileInputGroup({
-    label: "Upload Images",
-    inputId: "images",
-    isRequired: mode === "create",
-    multiple: true
-  });
-
-  // ---------------------------------
-  // IMAGE PREVIEW
-  // ---------------------------------
-
-  const previewContainer = createElement("div", {
-    style: `
-      display:flex;
-      gap:10px;
-      margin-top:10px;
-      flex-wrap:wrap;
-    `
-  });
-
-  imageGroup.appendChild(previewContainer);
-
-  imageGroup
-    .querySelector("input")
-    .addEventListener("change", (e) => {
-
-      previewContainer.replaceChildren();
-
-      Array.from(e.target.files).forEach((file) => {
-
-        const img = createElement("img", {
-          src: URL.createObjectURL(file),
-
-          style: `
-            max-width:150px;
-            max-height:150px;
-            object-fit:cover;
-            border-radius:6px;
-          `
-        });
-
-        previewContainer.appendChild(img);
-      });
-    });
-
   const featuredGroup = createFormGroup({
     type: "checkbox",
     id: "featured",
@@ -224,7 +154,6 @@ export function renderItemForm(
     availableFromGroup,
     availableToGroup,
     descriptionGroup,
-    imageGroup,
     featuredGroup
   );
 
@@ -233,14 +162,9 @@ export function renderItemForm(
   // ---------------------------------
 
   const submitBtn = Button(
-    mode === "create"
-      ? `Create ${type}`
-      : `Update ${type}`,
-
+    mode === "create" ? `Create ${type}` : `Update ${type}`,
     `submit-${type}-btn`,
-
     {},
-
     "primary-button"
   );
 
@@ -258,10 +182,7 @@ export function renderItemForm(
     {
       class: "form-actions"
     },
-    [
-      submitBtn,
-      cancelBtn
-    ]
+    [submitBtn, cancelBtn]
   );
 
   form.appendChild(actions);
@@ -271,46 +192,28 @@ export function renderItemForm(
   // ---------------------------------
 
   if (mode === "edit" && itemData?.productid) {
-
     const deleteBtn = Button(
       `Delete ${type}`,
-
       `delete-${type}-btn`,
-
       {
         click: async () => {
-
           if (!confirm(`Delete this ${type}?`)) {
             return;
           }
 
           try {
-
-            await apiFetch(
-              `/farm/${type}/${itemData.productid}`,
-              "DELETE"
-            );
-
+            await apiFetch(`/farm/${type}/${itemData.productid}`, "DELETE");
             onDone();
-
           } catch (err) {
-
             if (err.status === 403) {
-
-              alert(
-                "You can only delete items you created"
-              );
-
+              alert("You can only delete items you created");
             } else {
-
               alert("Delete failed");
             }
-
             console.error(err);
           }
         }
       },
-
       "danger-button"
     );
 
@@ -322,119 +225,45 @@ export function renderItemForm(
   // ---------------------------------
 
   form.onsubmit = async (e) => {
-
     e.preventDefault();
-
     submitBtn.disabled = true;
 
     try {
-
-      const uploadedImages = [];
-
-      const fileInput = form.querySelector("#images");
-
-      const files = Array.from(fileInput.files);
-
-      // ---------------------------------
-      // UPLOAD IMAGES
-      // ---------------------------------
-
-      for (const file of files) {
-
-        const res = await uploadFile({
-
-          id: `image-${Date.now()}-${Math.random()
-            .toString(36)
-            .slice(2)}`,
-
-          entityType: type,
-          entityId: String(itemData?.productid || ""),
-
-          file
-        });
-
-        uploadedImages.push(
-          res.filename || res.key
-        );
-      }
-
-      // ---------------------------------
-      // PAYLOAD
-      // ---------------------------------
-
       const payload = {
-
         name: form.name.value.trim(),
-
         category: form.category.value.trim(),
-
         price: parseFloat(form.price.value),
-
-        quantity: parseInt(
-          form.quantity.value,
-          10
-        ),
-
+        quantity: parseInt(form.quantity.value, 10),
         unit: form.unit.value,
-
         sku: form.sku.value.trim(),
-
         availableFrom: form.availableFrom.value,
-
         availableTo: form.availableTo.value,
-
         description: form.description.value.trim(),
-
-        featured: form.featured.checked,
-
-        images: uploadedImages
+        featured: form.featured.checked
       };
 
-      // ---------------------------------
-      // API
-      // ---------------------------------
+      const url =
+      mode === "create"
+      ? `/farm/${type}`
+      : `/farm/${type}/${itemData.productid}`;
 
-      const url = mode === "create"
-        ? `/farm/${type}`
-        : `/farm/${type}/${itemData.productid}`;
+      const method = mode === "create" ? "POST" : "PUT";
 
-      const method = mode === "create"
-        ? "POST"
-        : "PUT";
-
-      const res = await apiFetch(
-        url,
-        method,
-        payload
-      );
-
-      if (!res || !res.productid) {
+      const res = await apiFetch(url, method, payload);
+      
+      if (!res || !res.productid || !res.status) {
         throw new Error("Request failed");
-      }
-
+      } 
       onDone();
-
     } catch (err) {
-
       if (err.status === 403) {
-
-        alert(
-          "You can only edit items you created"
-        );
-
+        alert("You can only edit items you created");
       } else {
-
-        alert(
-          `${mode === "create"
-            ? "Create"
-            : "Update"} failed`
-        );
+        alert(`${mode === "create" ? "Create" : "Update"} failed`);
       }
 
       console.error(err);
-
     } finally {
-
       submitBtn.disabled = false;
     }
   };
