@@ -41,8 +41,12 @@ type Order struct {
 	Items         map[string][]CartItem `json:"items" bson:"items"` // grouped by category
 	Address       string                `json:"address" bson:"address"`
 	PaymentMethod string                `json:"paymentMethod" bson:"paymentMethod"`
-	Total         int64                 `json:"total" bson:"total"`   // CRITICAL FIX: Changed from float64 to int64 (stored in paise)
 	Status        string                `json:"status" bson:"status"` // e.g. "pending", "completed"
 	ApprovedBy    []string              `json:"approvedBy" bson:"approvedBy"`
 	CreatedAt     time.Time             `json:"createdAt" bson:"createdAt"`
+	Subtotal      int64                 `json:"subtotal" bson:"subtotal"`
+	Discount      int64                 `json:"discount" bson:"discount"`
+	Tax           int64                 `json:"tax" bson:"tax"`
+	Delivery      int64                 `json:"delivery" bson:"delivery"`
+	Total         int64                 `json:"total" bson:"total"`
 }

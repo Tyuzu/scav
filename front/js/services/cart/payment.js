@@ -4,6 +4,7 @@ import { apiFetch } from "../../api/api.js";
 import { showPaymentModal } from "../pay/pay.js";
 import Notify from "../../components/ui/Notify.mjs";
 import Button from "../../components/base/Button.js";
+import { printInvoice } from "./invoice.js";
 
 /* ────────────────────── Helpers ────────────────────── */
 
@@ -43,108 +44,6 @@ function groupByCategory(items = []) {
 
     return acc;
   }, {});
-}
-
-function printInvoice(order, items) {
-  const invoiceWindow = window.open("", "_blank");
-
-  if (!invoiceWindow) {
-    Notify("Unable to open invoice window", {
-      type: "warning",
-      duration: 3000
-    });
-    return;
-  }
-
-  const itemRows = items
-    .map(item => {
-      const price = toRupees(item.price);
-      const total = price * item.quantity;
-
-      return `
-        <tr>
-          <td>${item.itemName || "Item"}</td>
-          <td>${item.quantity}</td>
-          <td>${formatINR(price)}</td>
-          <td>${formatINR(total)}</td>
-        </tr>
-      `;
-    })
-    .join("");
-
-  invoiceWindow.document.write(`
-    <!DOCTYPE html>
-    <html>
-      <head>
-        <title>Invoice - ${order.orderid}</title>
-        <style>
-          body {
-            font-family: Arial, sans-serif;
-            padding: 24px;
-            color: #222;
-          }
-
-          h1,
-          h2 {
-            margin-bottom: 12px;
-          }
-
-          table {
-            width: 100%;
-            border-collapse: collapse;
-            margin-top: 20px;
-          }
-
-          th,
-          td {
-            border: 1px solid #ddd;
-            padding: 8px;
-            text-align: left;
-          }
-
-          .totals {
-            margin-top: 24px;
-          }
-
-          .totals p,
-          .totals h3 {
-            margin: 6px 0;
-          }
-        </style>
-      </head>
-      <body>
-        <h1>Invoice</h1>
-        <h2>Order ID: ${order.orderid}</h2>
-
-        <table>
-          <thead>
-            <tr>
-              <th>Item</th>
-              <th>Quantity</th>
-              <th>Price</th>
-              <th>Total</th>
-            </tr>
-          </thead>
-
-          <tbody>
-            ${itemRows}
-          </tbody>
-        </table>
-
-        <div class="totals">
-          <p>Subtotal: ${formatINR(toRupees(order.subtotal || 0))}</p>
-          <p>Discount: ${formatINR(toRupees(order.discount || 0))}</p>
-          <p>Tax: ${formatINR(toRupees(order.tax || 0))}</p>
-          <p>Delivery: ${formatINR(toRupees(order.delivery || 0))}</p>
-          <h3>Total: ${formatINR(toRupees(order.total || 0))}</h3>
-        </div>
-      </body>
-    </html>
-  `);
-
-  invoiceWindow.document.close();
-  invoiceWindow.focus();
-  invoiceWindow.print();
 }
 
 /* ────────────────────── Renderers ────────────────────── */

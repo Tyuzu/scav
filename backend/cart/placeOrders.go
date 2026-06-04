@@ -53,55 +53,66 @@ func PlaceOrder(app *infra.Deps) httprouter.Handle {
 		var allItems []models.CartItem
 		for category, items := range payload.Items {
 			for _, item := range items {
-				item.Category = category // Ensure category is set
+				item.Category = category
 				allItems = append(allItems, item)
 			}
 		}
 
 		// Validate all items before processing order
-		var subtotal int64 = 0
-		// Rebuild items with validated data from database
+		var subtotal int64
+
 		validatedGroupedItems := make(map[string][]models.CartItem)
 
 		for _, item := range allItems {
-			// Lookup current item details to verify price and availability
 			details, err := lookupItemDetails(ctx, item.ItemID, app)
 			if err != nil {
 				http.Error(w, "Item "+item.ItemID+" is no longer available", http.StatusBadRequest)
 				return
 			}
 
-			// 🔒 SECURITY: Get price from database, never trust frontend
+			// Price in paise
 			price := int64(details.Price * 100)
 
-			// Verify quantity is still available
 			if item.Quantity > details.Available {
-				http.Error(w, "Requested quantity of "+details.Name+" exceeds available stock", http.StatusBadRequest)
+				http.Error(
+					w,
+					"Requested quantity of "+details.Name+" exceeds available stock",
+					http.StatusBadRequest,
+				)
 				return
 			}
 
 			subtotal += price * int64(item.Quantity)
 
-			// 🔒 Store validated item with database entity info
 			category := details.Category
-			validatedGroupedItems[category] = append(validatedGroupedItems[category], models.CartItem{
-				ItemID:     item.ItemID,
-				ItemName:   details.Name,
-				Quantity:   item.Quantity,
-				Price:      price,
-				Category:   category,
-				EntityID:   details.EntityID,   // 🔒 From database
-				EntityType: details.EntityType, // 🔒 From database
-			})
+
+			validatedGroupedItems[category] = append(
+				validatedGroupedItems[category],
+				models.CartItem{
+					ItemID:     item.ItemID,
+					ItemName:   details.Name,
+					Quantity:   item.Quantity,
+					Price:      price,
+					Category:   category,
+					EntityID:   details.EntityID,
+					EntityType: details.EntityType,
+				},
+			)
 		}
 
-		// 🔒 Validate coupon (server-side only)
-		discount := int64(0)
+		// Coupon validation
+		var discount int64
+
 		if payload.Coupon != "" {
-			couponRes, err := validateCouponServer(ctx, payload.Coupon, subtotal, app)
+			couponRes, err := validateCouponServer(
+				ctx,
+				payload.Coupon,
+				subtotal,
+				app,
+			)
+
 			if err != nil {
 				log.Println("Coupon validation error:", err)
-				// Don't fail - just skip coupon
 			} else if couponRes != nil {
 				discount = couponRes.DiscountAmount
 			}
@@ -112,17 +123,16 @@ func PlaceOrder(app *infra.Deps) httprouter.Handle {
 			totalAfterDiscount = 0
 		}
 
-		// Calculate charges
+		// Charges (stored in paise)
 		tax := int64(float64(totalAfterDiscount) * 0.05)
 		delivery := int64(2000) // ₹20
 		total := totalAfterDiscount + tax + delivery
 
-		// Create checkout session object with validated items
 		checkout := models.CheckoutSession{
 			UserID:        userID,
 			Address:       payload.Address,
 			PaymentMethod: payload.PaymentMethod,
-			Items:         validatedGroupedItems, // 🔒 Use validated items with entity info
+			Items:         validatedGroupedItems,
 			Subtotal:      subtotal,
 			Discount:      discount,
 			Tax:           tax,
@@ -142,16 +152,19 @@ func PlaceOrder(app *infra.Deps) httprouter.Handle {
 			return
 		}
 
-		if _, err := app.DB.Delete(ctx, cartCollection, bson.M{"userId": userID}); err != nil {
+		if _, err := app.DB.Delete(
+			ctx,
+			cartCollection,
+			bson.M{"userId": userID},
+		); err != nil {
 			log.Println("Cart cleanup error:", err)
 		}
-
-		/* -------- Publish CheckoutStarted Event -------- */
 
 		resp := map[string]any{
 			"success":    true,
 			"farmOrders": farmOrders,
 		}
+
 		if genOrder != nil {
 			resp["order"] = genOrder
 		}
@@ -160,13 +173,19 @@ func PlaceOrder(app *infra.Deps) httprouter.Handle {
 	}
 }
 
-func processFarmOrders(ctx context.Context, checkout models.CheckoutSession, app *infra.Deps) ([]models.FarmOrder, error) {
+func processFarmOrders(
+	ctx context.Context,
+	checkout models.CheckoutSession,
+	app *infra.Deps,
+) ([]models.FarmOrder, error) {
+
 	cropItems, ok := checkout.Items["crops"]
 	if !ok || len(cropItems) == 0 {
 		return nil, nil
 	}
 
 	grouped := make(map[string][]models.CartItem)
+
 	for _, item := range cropItems {
 		if item.EntityType == "farm" {
 			grouped[item.EntityID] = append(grouped[item.EntityID], item)
@@ -176,11 +195,27 @@ func processFarmOrders(ctx context.Context, checkout models.CheckoutSession, app
 	var orders []models.FarmOrder
 
 	for farmID, items := range grouped {
-		// Calculate total price for this farm order
-		var farmOrderPrice int64 = 0
+
+		var farmSubtotal int64
+
 		for _, item := range items {
-			farmOrderPrice += item.Price * int64(item.Quantity)
+			farmSubtotal += item.Price * int64(item.Quantity)
 		}
+
+		// Allocate checkout-level charges proportionally
+		var discount int64
+		var tax int64
+		var delivery int64
+
+		if checkout.Subtotal > 0 {
+			ratio := float64(farmSubtotal) / float64(checkout.Subtotal)
+
+			discount = int64(float64(checkout.Discount) * ratio)
+			tax = int64(float64(checkout.Tax) * ratio)
+			delivery = int64(float64(checkout.Delivery) * ratio)
+		}
+
+		farmTotal := farmSubtotal - discount + tax + delivery
 
 		order := models.FarmOrder{
 			OrderID:         "ORD" + utils.GenerateRandomDigitString(9),
@@ -191,25 +226,42 @@ func processFarmOrders(ctx context.Context, checkout models.CheckoutSession, app
 			Items:           map[string][]models.CartItem{"crops": items},
 			CreatedAt:       time.Now(),
 			Quantity:        len(items),
-			PriceAtPurchase: float64(farmOrderPrice) / 100, // Convert paise to rupees
+			PriceAtPurchase: float64(farmSubtotal) / 100,
+			Address:         checkout.Address,
+
+			// Invoice fields
+			Subtotal: farmSubtotal,
+			Discount: discount,
+			Tax:      tax,
+			Delivery: delivery,
+			Total:    farmTotal,
 		}
 
 		if err := app.DB.Insert(ctx, farmOrdersCollection, order); err != nil {
 			log.Println("FarmOrders insert error:", err)
 			return nil, err
 		}
+
 		orders = append(orders, order)
 	}
+
 	return orders, nil
 }
 
-func processGeneralOrders(ctx context.Context, checkout models.CheckoutSession, app *infra.Deps) (*models.Order, error) {
+func processGeneralOrders(
+	ctx context.Context,
+	checkout models.CheckoutSession,
+	app *infra.Deps,
+) (*models.Order, error) {
+
 	nonCropItems := make(map[string][]models.CartItem)
+
 	for category, items := range checkout.Items {
 		if category != "crops" && len(items) > 0 {
 			nonCropItems[category] = items
 		}
 	}
+
 	if len(nonCropItems) == 0 {
 		return nil, nil
 	}
@@ -220,15 +272,31 @@ func processGeneralOrders(ctx context.Context, checkout models.CheckoutSession, 
 		Items:         nonCropItems,
 		Address:       checkout.Address,
 		PaymentMethod: checkout.PaymentMethod,
-		Total:         checkout.Total,
-		Status:        "pending",
-		ApprovedBy:    []string{},
-		CreatedAt:     time.Now(),
+
+		// Invoice fields
+		Subtotal: checkout.Subtotal,
+		Discount: checkout.Discount,
+		Tax:      checkout.Tax,
+		Delivery: checkout.Delivery,
+		Total:    checkout.Total,
+
+		Status:     "pending",
+		ApprovedBy: []string{},
+		CreatedAt:  time.Now(),
 	}
 
 	if err := app.DB.Insert(ctx, ordersCollection, order); err != nil {
 		log.Println("Order insert error:", err)
 		return nil, err
 	}
+
 	return &order, nil
 }
+
+// var user models.User
+// _ = app.DB.FindOne(ctx, usersCollection,
+//     map[string]any{"userid": checkout.UserID},
+//     &user)
+
+// order.Name = user.Name
+// order.Phone = user.Phone

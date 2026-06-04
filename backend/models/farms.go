@@ -87,6 +87,14 @@ type FarmOrder struct {
 	Status          OrderStatus           `bson:"status"       json:"status"`
 	ApprovedBy      []string              `bson:"approved"       json:"approved"`
 	Items           map[string][]CartItem `json:"items" bson:"items"`
+	Subtotal        int64                 `json:"subtotal" bson:"subtotal"`
+	Discount        int64                 `json:"discount" bson:"discount"`
+	Tax             int64                 `json:"tax" bson:"tax"`
+	Delivery        int64                 `json:"delivery" bson:"delivery"`
+	Total           int64                 `json:"total" bson:"total"`
+	Address         string                `json:"address" bson:"address"`
+	Name            string                `json:"name" bson:"name"`
+	Phone           string                `json:"phone" bson:"phone"`
 }
 
 type OrderStatus string
@@ -131,8 +139,8 @@ type Product struct {
 	Category    string   `bson:"category" json:"category"`
 	Quantity    float64  `bson:"quantity" json:"quantity"`
 	Type        string   `bson:"type" json:"type"`
-	Photo string `bson:"photo,omitempty" json:"photo,omitempty"`
-	Banner string `bson:"banner,omitempty" json:"banner,omitempty"`
+	Photo       string   `bson:"photo,omitempty" json:"photo,omitempty"`
+	Banner      string   `bson:"banner,omitempty" json:"banner,omitempty"`
 
 	// Physical product fields
 	Size        string            `json:"size,omitempty"`
