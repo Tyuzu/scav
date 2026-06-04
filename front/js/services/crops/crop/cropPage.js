@@ -80,16 +80,85 @@ export async function displayCrop(content, cropID, isLoggedIn) {
 
         const detailsSection = createElement("div", { class: "listing-details" }, [
           createElement("h3", { class: "farm-link" }, [
-            createElement("a", { events: { click: () => navigate(`/farm/${listing.farmid}`) } }, [farmName]),
+            createElement(
+              "a",
+              {
+                events: {
+                  click: () => navigate(`/farm/${listing.farmid}`),
+                },
+              },
+              [farmName]
+            ),
           ]),
+
           createElement("p", {}, [`Breed: ${listing.breed || "Not specified"}`]),
           createElement("p", {}, [`Location: ${listing.location || "Unknown"}`]),
-          createElement("p", {}, [`Price per Kg: ₹${listing.pricePerKg ?? "N/A"}`]),
-          createElement("p", {}, [`Available: ${listing.availableQtyKg ?? "N/A"} Kg`]),
+
           createElement("p", {}, [
-            `Harvest Date: ${listing.harvestDate ? new Date(listing.harvestDate).toLocaleDateString() : "N/A"
-            }`,
+            `Price: ₹${Number(listing.pricePerKg || 0).toLocaleString()}/${listing.unit || "kg"}`
           ]),
+
+          createElement("p", {}, [
+            `Available: ${listing.availableQtyKg ?? 0} ${listing.unit || "kg"}`
+          ]),
+
+          createElement("p", {}, [
+            `Inventory Value: ₹${Number(listing.inventoryValue || 0).toLocaleString()}`
+          ]),
+
+          createElement("p", {}, [
+            `Status: ${listing.outOfStock
+              ? "Out of Stock"
+              : getStockStatus(listing.availableQtyKg || 0)
+            }`
+          ]),
+
+          createElement("p", {}, [
+            `Featured: ${listing.featured ? "Yes" : "No"}`
+          ]),
+
+          createElement("p", {}, [
+            `Rating: ${listing.avgRating || 0} (${listing.reviewCount || 0} reviews)`
+          ]),
+
+          createElement("p", {}, [
+            `Favorites: ${listing.favoritesCount || 0}`
+          ]),
+
+          createElement("p", {}, [
+            `Harvest Date: ${listing.harvestDate
+              ? new Date(listing.harvestDate).toLocaleDateString()
+              : "N/A"
+            }`
+          ]),
+
+          createElement("p", {}, [
+            `Planted Date: ${listing.plantedDate
+              ? new Date(listing.plantedDate).toLocaleDateString()
+              : "N/A"
+            }`
+          ]),
+
+          createElement("p", {}, [
+            `Last Sold: ${listing.lastSoldAt
+              ? formatRelativeDate(listing.lastSoldAt)
+              : "Never"
+            }`
+          ]),
+
+          createElement("p", {}, [
+            `Availability: ${listing.availability || "N/A"}`
+          ]),
+
+          createElement("p", {}, [
+            `Phone: ${listing.phone || "N/A"}`
+          ]),
+
+          listing.tags?.length
+            ? createElement("p", {}, [
+              `Tags: ${listing.tags.join(", ")}`
+            ])
+            : null,
         ]);
 
         const cropData = {
@@ -195,4 +264,25 @@ export async function displayCrop(content, cropID, isLoggedIn) {
   } catch (err) {
     Notify(err.message || "Failed to load crop details.", { type: "error", dismissible: true });
   }
+}
+
+function formatRelativeDate(dateString) {
+  if (!dateString) return "N/A";
+
+  const date = new Date(dateString);
+  const diffDays = Math.floor(
+    (Date.now() - date.getTime()) / (1000 * 60 * 60 * 24)
+  );
+
+  if (diffDays <= 0) return "Today";
+  if (diffDays === 1) return "1 day ago";
+
+  return `${diffDays} days ago`;
+}
+
+function getStockStatus(qty) {
+  if (qty <= 0) return "Out of Stock";
+  if (qty <= 5) return "Low Stock";
+  if (qty <= 20) return "Limited Stock";
+  return "In Stock";
 }

@@ -51,7 +51,9 @@ type Crop struct {
 	CatalogueId  string       `json:"catalogueid,omitempty"`
 	Featured     bool         `json:"featured,omitempty"`
 	OutOfStock   bool         `json:"outOfStock,omitempty"`
-	HarvestDate  *time.Time   `json:"harvestDate,omitempty"`
+	HarvestDate  *time.Time   `bson:"harvestDate,omitempty"`
+	PlantedDate  time.Time    `bson:"plantedDate,omitempty"`
+	LastSoldAt   time.Time    `bson:"lastSoldAt,omitempty"`
 	ExpiryDate   *time.Time   `json:"expiryDate,omitempty"`
 	UpdatedAt    time.Time    `json:"updatedAt"`
 	PriceHistory []PricePoint `json:"priceHistory,omitempty"`
@@ -116,16 +118,37 @@ type CropCatalogueItem struct {
 }
 
 type CropListing struct {
-	FarmID         string   `json:"farmid"`
-	CropId         string   `json:"cropid"`
-	FarmName       string   `json:"farmName"`
-	Location       string   `json:"location"`
-	Breed          string   `json:"breed"`
-	PricePerKg     float64  `json:"pricePerKg"`
-	AvailableQtyKg int      `json:"availableQtyKg,omitempty"`
-	HarvestDate    string   `json:"harvestDate,omitempty"` // ISO string
-	Tags           []string `json:"tags,omitempty"`
-	Banner         string   `bson:"banner" json:"banner"`
+	FarmID string `json:"farmid"`
+	CropId string `json:"cropid"`
+
+	FarmName string `json:"farmName"`
+	Location string `json:"location"`
+
+	Breed string `json:"breed"`
+
+	PricePerKg     float64 `json:"pricePerKg"`
+	AvailableQtyKg int     `json:"availableQtyKg"`
+	Unit           string  `json:"unit"`
+
+	HarvestDate string `json:"harvestDate,omitempty"`
+	PlantedDate string `json:"plantedDate,omitempty"`
+	LastSoldAt  string `json:"lastSoldAt,omitempty"`
+
+	Featured   bool `json:"featured"`
+	OutOfStock bool `json:"outOfStock"`
+
+	AvgRating   float64 `json:"avgRating"`
+	ReviewCount int     `json:"reviewCount"`
+
+	FavoritesCount int64 `json:"favoritesCount"`
+
+	Availability string `json:"availability,omitempty"`
+	Phone        string `json:"phone,omitempty"`
+
+	InventoryValue float64 `json:"inventoryValue"`
+
+	Tags   []string `json:"tags,omitempty"`
+	Banner string   `json:"banner"`
 }
 
 type Product struct {

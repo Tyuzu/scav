@@ -6,35 +6,67 @@ import { resolveImagePath, EntityType, PictureType } from "../../utils/imagePath
 import { createIconButton } from "../../utils/svgIconButton.js";
 import { searchSVG } from "../../components/svgs.js";
 
+let currentTab = "all";
+let searchQuery = "";
 
-let currentTab = "all"; // Tracks active tab
-let searchQuery = "";   // Tracks current query
+/* -----------------------------
+   STATE (autocomplete control)
+------------------------------*/
+let autocompleteController = null;
+const autocompleteCache = new Map();
 
+/* -----------------------------
+   UTILITIES
+------------------------------*/
+function debounce(fn, delay = 300) {
+    let t;
+    return (...args) => {
+        clearTimeout(t);
+        t = setTimeout(() => fn(...args), delay);
+    };
+}
+
+function formatDate(dateString) {
+    const d = new Date(dateString);
+    return Number.isNaN(d.getTime()) ? "Unknown" : d.toLocaleDateString();
+}
+
+function renderEmpty(container) {
+    container.appendChild(
+        createElement("p", {}, ["No results found."])
+    );
+}
+
+/* -----------------------------
+   MAIN ENTRY
+------------------------------*/
 export async function displaySearchForm(container) {
     container.textContent = "";
 
     const searchContainer = createElement("div", { class: "search-container" });
 
-    // --- Search Bar
+    /* ---------------- SEARCH BAR ---------------- */
     const searchBar = createElement("div", { class: "d3" });
 
     const searchInput = createElement("input", {
         id: "search-query",
         placeholder: "Search anything...",
-        required: true,
         class: "search-field"
     });
 
     const searchButton = createIconButton({
-        svgMarkup:searchSVG,
-        classSuffix:"search-btn",
+        svgMarkup: searchSVG,
+        classSuffix: "search-btn",
     });
 
-    const autocompleteList = createElement("ul", { id: "autocomplete-list", class: "autocomplete-list" });
+    const autocompleteList = createElement("ul", {
+        id: "autocomplete-list",
+        class: "autocomplete-list"
+    });
 
     searchBar.append(searchInput, searchButton);
 
-    // --- Tabs
+    /* ---------------- TABS ---------------- */
     const tabsData = [
         { id: "all", title: "All" },
         { id: "events", title: "Events" },
@@ -59,233 +91,310 @@ export async function displaySearchForm(container) {
         tabsData.map(tab => ({
             ...tab,
             render: async (tabContainer) => {
-                // Render results only if query exists
-                if (searchQuery) {
-await fetchSearchResults(tab.id, searchQuery, tabContainer);
-}
+                if (!searchQuery) {
+                    return;
+                }
+                await fetchSearchResults(tab.id, searchQuery, tabContainer);
             }
         })),
         "search-tabs",
         "all",
         (tabId) => {
- currentTab = tabId; 
-}
+            currentTab = tabId;
+        }
     );
 
     searchContainer.append(searchBar, autocompleteList, tabsUI);
     container.appendChild(searchContainer);
 
-    // --- Listeners
+    /* ---------------- EVENTS ---------------- */
+
     searchButton.addEventListener("click", () => {
         searchQuery = searchInput.value.trim();
+
         if (!searchQuery) {
-return Notify("Please enter a search query.", { type: "info", duration: 3000 });
-}
+            return Notify("Please enter a search query.", {
+                type: "info",
+                duration: 3000
+            });
+        }
+
         refreshCurrentTab();
     });
 
-    searchInput.addEventListener("input", handleAutocomplete);
+    searchInput.addEventListener(
+        "input",
+        debounce(handleAutocomplete, 250)
+    );
+
     searchInput.addEventListener("keydown", handleKeyboardNavigation);
+
     searchInput.addEventListener("keydown", (e) => {
         if (e.key === "Enter") {
             searchQuery = searchInput.value.trim();
+
             if (searchQuery) {
-refreshCurrentTab();
-}
+                refreshCurrentTab();
+            }
+
             autocompleteList.textContent = "";
         }
     });
 
     document.addEventListener("click", (e) => {
         if (!searchContainer.contains(e.target)) {
-autocompleteList.textContent = "";
+            autocompleteList.textContent = "";
+        }
+    });
+
+    /* ---------------- CORE ---------------- */
+
+    function refreshCurrentTab() {
+        const active = document.querySelector(".tab-content.active");
+
+        if (active) {
+            fetchSearchResults(currentTab, searchQuery, active);
+        }
+    }
 }
+
+/* -----------------------------
+   AUTOCOMPLETE
+------------------------------*/
+async function handleAutocomplete(event) {
+    const query = event.target.value.trim();
+    const list = document.getElementById("autocomplete-list");
+
+    if (!list) return;
+
+    list.textContent = "";
+
+    if (!query) return;
+
+    if (autocompleteCache.has(query)) {
+        renderSuggestions(autocompleteCache.get(query), list, query);
+        return;
+    }
+
+    try {
+        autocompleteController?.abort();
+        autocompleteController = new AbortController();
+
+        const res = await fetch(
+            `${SEARCH_URL}/ac?prefix=${encodeURIComponent(query)}`,
+            { signal: autocompleteController.signal }
+        );
+
+        let suggestions = await res.json();
+
+        if (!Array.isArray(suggestions)) {
+            suggestions = [];
+        }
+
+        autocompleteCache.set(query, suggestions);
+        renderSuggestions(suggestions, list, query);
+
+    } catch (err) {
+        if (err.name !== "AbortError") {
+            console.error("Autocomplete error:", err);
+        }
+    }
+}
+
+function renderSuggestions(suggestions, list, query) {
+    list.textContent = "";
+
+    if (!suggestions.length) return;
+
+    suggestions.forEach(s => {
+        const li = createElement("li", {
+            class: "autocomplete-item"
+        }, [s]);
+
+        li.addEventListener("click", () => {
+            document.getElementById("search-query").value = s;
+            list.textContent = "";
+            searchQuery = s;
+            refreshCurrentTab();
+        });
+
+        list.appendChild(li);
     });
 }
 
-// --- Refresh results in the currently active tab
-function refreshCurrentTab() {
-    const activeTabContainer = document.querySelector(".tab-content.active");
-    if (activeTabContainer) {
-fetchSearchResults(currentTab, searchQuery, activeTabContainer);
-}
-}
-
-// --- Autocomplete logic
-async function handleAutocomplete(event) {
-    const query = event.target.value.trim();
-    const autocompleteList = document.getElementById("autocomplete-list");
-    if (!autocompleteList) {
-        console.warn("Autocomplete list element not found");
-        return;
-    }
-    autocompleteList.textContent = "";
-    if (!query) {
-        return;
-    }
-
-    try {
-        const response = await fetch(`${SEARCH_URL}/ac?prefix=${encodeURIComponent(query)}`);
-        let suggestions = await response.json();
-        
-        // Handle null response by converting to empty array
-        if (suggestions === null || !Array.isArray(suggestions)) {
-            suggestions = [];
-        }
-        
-        suggestions.forEach(suggestion => {
-            const li = createElement("li", { class: "autocomplete-item" }, [suggestion]);
-            li.addEventListener("click", () => {
-                document.getElementById("search-query").value = suggestion;
-                autocompleteList.textContent = "";
-                searchQuery = suggestion;
-                refreshCurrentTab();
-            });
-            autocompleteList.appendChild(li);
-        });
-    } catch (err) {
-        console.error("Autocomplete error:", err);
-    }
-}
-
-// --- Keyboard nav for autocomplete
+/* -----------------------------
+   KEYBOARD NAV
+------------------------------*/
 function handleKeyboardNavigation(event) {
-    const autocompleteList = document.getElementById("autocomplete-list");
-    const items = autocompleteList.querySelectorAll(".autocomplete-item");
-    if (!items.length) {
-return;
-}
+    const list = document.getElementById("autocomplete-list");
+    if (!list) return;
 
-    let index = Array.from(items).findIndex(item => item.classList.contains("selected"));
+    const items = list.querySelectorAll(".autocomplete-item");
+    if (!items.length) return;
+
+    let index = Array.from(items)
+        .findIndex(i => i.classList.contains("selected"));
 
     if (event.key === "ArrowDown") {
-index = (index + 1) % items.length;
-} else if (event.key === "ArrowUp") {
-index = (index - 1 + items.length) % items.length;
-} else if (event.key === "Enter") {
-        if (index >= 0) {
-items[index].click();
-}
+        index = (index + 1) % items.length;
+    } else if (event.key === "ArrowUp") {
+        index = (index - 1 + items.length) % items.length;
+    } else if (event.key === "Enter") {
+        if (index >= 0) items[index].click();
         event.preventDefault();
         return;
     } else {
-return;
+        return;
+    }
+
+    items.forEach(i => i.classList.remove("selected"));
+    if (index >= 0) items[index].classList.add("selected");
 }
 
-    items.forEach(item => item.classList.remove("selected"));
-    if (index >= 0) {
-items[index].classList.add("selected");
-}
-}
-
-// --- Fetch wrapper
+/* -----------------------------
+   API
+------------------------------*/
 async function apiFetch(endpoint) {
     try {
-        const response = await fetch(endpoint);
-        if (!response.ok) {
-throw new Error("Failed to fetch");
-}
-        const text = await response.text();
+        const res = await fetch(endpoint);
+
+        if (!res.ok) {
+            throw new Error("Request failed");
+        }
+
+        const text = await res.text();
         return text ? JSON.parse(text) : [];
     } catch (err) {
-        Notify(`API Fetch Error: ${err}`, { type: "error", duration: 3000 });
+        Notify(`API error: ${err.message}`, {
+            type: "error",
+            duration: 3000
+        });
         return [];
     }
 }
 
-// --- Search request per tab
 async function fetchSearchResults(tabId, query, container) {
-    container.textContent = "";
+    container.textContent = "Loading...";
+
     try {
         const url = `${SEARCH_URL}/search/${tabId}?query=${encodeURIComponent(query)}`;
         const results = await apiFetch(url);
+
         displaySearchResults(tabId, results, container);
-    } catch (err) {
-        Notify("Error fetching search results.", { type: "error", duration: 3000 });
+
+    } catch {
+        Notify("Error fetching search results.", {
+            type: "error",
+            duration: 3000
+        });
     }
 }
 
-// --- Render results inside container
+/* -----------------------------
+   RENDER RESULTS
+------------------------------*/
 function displaySearchResults(entityType, data, container) {
     container.textContent = "";
 
-    if (entityType === "all" && typeof data === "object" && !Array.isArray(data)) {
-        const keys = Object.keys(data);
-        let hasResults = false;
+    if (entityType === "all" && data && typeof data === "object" && !Array.isArray(data)) {
+        let has = false;
 
-        keys.forEach(key => {
-            if (Array.isArray(data[key]) && data[key].length) {
-                hasResults = true;
-                container.appendChild(createElement("h2", {}, [capitalizeFirstLetter(key)]));
-                data[key].forEach(item => container.appendChild(createCard(key, item)));
+        for (const key in data) {
+            const arr = data[key];
+
+            if (Array.isArray(arr) && arr.length) {
+                has = true;
+
+                container.appendChild(
+                    createElement("h2", {}, [capitalize(key)])
+                );
+
+                arr.forEach(item =>
+                    container.appendChild(createCard(key, item))
+                );
             }
-        });
+        }
 
-        if (!hasResults) {
-container.appendChild(createElement("p", {}, ["No results found."]));
-}
-    } else if (Array.isArray(data)) {
-        if (!data.length) {
-container.appendChild(createElement("p", {}, ["No results found."]));
-} else {
-data.forEach(item => container.appendChild(createCard(entityType, item)));
-}
-    } else {
-container.appendChild(createElement("p", {}, ["No results found."]));
-}
+        if (!has) renderEmpty(container);
+        return;
+    }
+
+    if (Array.isArray(data)) {
+        if (!data.length) return renderEmpty(container);
+
+        data.forEach(item =>
+            container.appendChild(createCard(entityType, item))
+        );
+        return;
+    }
+
+    renderEmpty(container);
 }
 
 function createCard(entityType, item) {
-    const card = createElement("div", { class: `result-card ${entityType}` });
+    const card = createElement("div", {
+        class: `result-card ${entityType}`
+    });
 
-    // --- Header ---
     const header = createElement("div", { class: "result-header" });
+
     if (item.image) {
-        header.appendChild(Imagex({
-            src: resolveImagePath(
-                EntityType[entityType.toUpperCase()] || EntityType.POST,
-                PictureType.THUMB,
-                `${item.image}` // keep .png extension from your data
-                // `${item.image}.png` // keep .png extension from your data
-            ),
-            alt: item.title || entityType,
-            loading: "lazy",
-            classes: "result-image"
-        }));
+        header.appendChild(
+            Imagex({
+                src: resolveImagePath(
+                    EntityType[entityType.toUpperCase()] || EntityType.POST,
+                    PictureType.THUMB,
+                    item.image
+                ),
+                alt: item.title || entityType,
+                loading: "lazy",
+                classes: "result-image"
+            })
+        );
     }
 
-    const info = createElement("div", { class: "result-info" }, [
-        createElement("h3", {}, [item.title || "No Title"])
-    ]);
-    header.appendChild(info);
-    card.appendChild(header);
+    header.appendChild(
+        createElement("div", { class: "result-info" }, [
+            createElement("h3", {}, [item.title || "No Title"])
+        ])
+    );
 
-    // --- Details ---
     const details = createElement("div", { class: "result-details" }, [
-        createElement("em", {}, [item.description || "No description available."]),
-        createElement("small", {}, [`Created: ${new Date(item.createdAt).toLocaleDateString()}`])
+        createElement("em", {}, [
+            item.description || "No description available."
+        ]),
+        createElement("small", {}, [
+            `Created: ${formatDate(item.createdAt)}`
+        ])
     ]);
-    card.appendChild(details);
 
-    // --- Footer ---
     const footer = createElement("div", { class: "result-footer" });
-    const entityId = item.id || item.entityid; // support both
-    if (entityId) {
-        footer.appendChild(createElement("a", {
-            href: `/${entityType}/${entityId}`,
-            class: "btn",
-            target: "_blank"
-        }, ["View Details"]));
+
+    const id = item.id || item.entityid;
+
+    if (id) {
+        footer.appendChild(
+            createElement("a", {
+                href: `/${entityType}/${id}`,
+                class: "btn",
+                target: "_blank"
+            }, ["View Details"])
+        );
     }
+
+    card.append(header, details);
+
     if (footer.children.length) {
-card.appendChild(footer);
-}
+        card.appendChild(footer);
+    }
 
     return card;
 }
 
-
-function capitalizeFirstLetter(str) {
+/* -----------------------------
+   HELPERS
+------------------------------*/
+function capitalize(str) {
     return str.charAt(0).toUpperCase() + str.slice(1);
 }
 

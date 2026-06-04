@@ -718,20 +718,26 @@ func AddSettingsRoutes(
 ) {
 	authmidware := middleware.Authenticate(app)
 
-	router.GET(
-		"/api/v1/settings/init/:userid",
-		rateLimiter.Limit(authmidware(settings.InitUserSettings(app))),
-	)
+	router.GET("/api/v1/settings", rateLimiter.Limit(authmidware(settings.GetSettings(app))))
+	router.GET("/api/v1/settings/schema", rateLimiter.Limit(authmidware(settings.GetSettingsSchema(app))))
+	router.PATCH("/api/v1/settings", rateLimiter.Limit(authmidware(settings.UpdateSettings(app))))
+	router.POST("/api/v1/settings/reset", rateLimiter.Limit(authmidware(settings.ResetSettings(app))))
+	router.POST("/api/v1/settings/init", rateLimiter.Limit(authmidware(settings.InitUserSettings(app))))
 
-	router.GET(
-		"/api/v1/settings/all",
-		rateLimiter.Limit(authmidware(settings.GetUserSettings(app))),
-	)
+	// router.GET(
+	// 	"/api/v1/settings/init/:userid",
+	// 	rateLimiter.Limit(authmidware(settings.InitUserSettings(app))),
+	// )
 
-	router.PUT(
-		"/api/v1/settings/setting/:type",
-		rateLimiter.Limit(authmidware(settings.UpdateUserSetting(app))),
-	)
+	// router.GET(
+	// 	"/api/v1/settings/all",
+	// 	rateLimiter.Limit(authmidware(settings.GetUserSettings(app))),
+	// )
+
+	// router.PUT(
+	// 	"/api/v1/settings/setting/:type",
+	// 	rateLimiter.Limit(authmidware(settings.UpdateUserSetting(app))),
+	// )
 }
 
 func AddAdsRoutes(router *httprouter.Router, app *infra.Deps, rateLimiter *middleware.RateLimiter) {

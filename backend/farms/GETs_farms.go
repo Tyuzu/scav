@@ -162,16 +162,48 @@ func GetCropTypeFarms(app *infra.Deps) httprouter.Handle {
 				}
 
 				listings = append(listings, models.CropListing{
-					FarmID:         crop.FarmID,
-					CropId:         crop.CropId,
-					FarmName:       farm.Name,
-					Location:       farm.Location,
-					Breed:          crop.Notes,
+					FarmID: crop.FarmID,
+					CropId: crop.CropId,
+
+					FarmName: farm.Name,
+					Location: farm.Location,
+
+					Breed: crop.Notes,
+
 					PricePerKg:     crop.Price,
 					AvailableQtyKg: crop.Quantity,
-					HarvestDate:    harvestDate,
-					Tags:           farm.Tags,
-					Banner:         crop.Banner,
+					Unit:           crop.Unit,
+
+					HarvestDate: harvestDate,
+					PlantedDate: func() string {
+						if crop.PlantedDate.IsZero() {
+							return ""
+						}
+						return crop.PlantedDate.Format(time.RFC3339)
+					}(),
+
+					LastSoldAt: func() string {
+						if crop.LastSoldAt.IsZero() {
+							return ""
+						}
+						return crop.LastSoldAt.Format(time.RFC3339)
+					}(),
+
+					Featured:   crop.Featured,
+					OutOfStock: crop.OutOfStock,
+
+					AvgRating:   farm.AvgRating,
+					ReviewCount: farm.ReviewCount,
+
+					FavoritesCount: farm.FavoritesCount,
+
+					Availability: farm.AvailabilityTiming,
+					Phone:        farm.ContactInfo.Phone,
+
+					InventoryValue: crop.Price * float64(crop.Quantity),
+
+					Tags:   farm.Tags,
+					Banner: crop.Banner,
 				})
 			}
 		}

@@ -52,11 +52,11 @@ type BulkOrdersResponse struct {
 
 func orderStatusTransitions() map[string][]string {
 	return map[string][]string{
-		"pending":   []string{"accepted", "rejected"},
-		"accepted":  []string{"paid", "rejected"},
-		"paid":      []string{"delivered"},
-		"rejected":  []string{},
-		"delivered": []string{},
+		"pending":   {"accepted", "rejected"},
+		"accepted":  {"paid", "rejected"},
+		"paid":      {"delivered"},
+		"rejected":  {},
+		"delivered": {},
 	}
 }
 

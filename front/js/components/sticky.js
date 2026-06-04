@@ -29,7 +29,7 @@ function updateNav(container) {
   const buttons = [
     makeButton("pause", menuSVG, toggleSidebar),
 
-    makeButton("dld", searchSVG, () => navigate("/search")),
+    // makeButton("dld", searchSVG, () => navigate("/search")),
 
     ...(isLoggedIn
       ? [
