@@ -178,18 +178,6 @@ func (p *PaymentService) getOrCreateAccount(ctx context.Context, userID string) 
 	return newAcc.ID, nil
 }
 
-// ===== Redis Lock =====
-
-const walletLockTTL = 5 * time.Second
-
-func (p *PaymentService) lock(ctx context.Context, key string) (bool, error) {
-	return p.app.Cache.SetNX(ctx, "wallet_lock:"+key, []byte("1"), walletLockTTL)
-}
-
-func (p *PaymentService) unlock(ctx context.Context, key string) {
-	_ = p.app.Cache.Del(ctx, "wallet_lock:"+key)
-}
-
 // HELPERS
 
 func (p *PaymentService) failTxn(ctx context.Context, txnID string) {

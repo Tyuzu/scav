@@ -2,11 +2,12 @@ package pay
 
 import (
 	"encoding/json"
+	"net/http"
+	"time"
+
 	"naevis/auditlog"
 	"naevis/models"
 	"naevis/utils"
-	"net/http"
-	"time"
 
 	"github.com/julienschmidt/httprouter"
 )
@@ -17,7 +18,6 @@ func (p *PaymentService) Pay(w http.ResponseWriter, r *http.Request, _ httproute
 
 	var req models.PayRequest
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
-		// Log the error for debugging
 		auditlog.LogAction(
 			ctx, p.app, r, userID,
 			models.AuditActionPayment,
@@ -112,11 +112,6 @@ func (p *PaymentService) Pay(w http.ResponseWriter, r *http.Request, _ httproute
 			return
 		}
 
-		if req.Amount < 0 {
-			utils.RespondWithError(w, http.StatusBadRequest, "amount must be positive")
-			return
-		}
-
 		price = req.Amount
 	}
 
@@ -125,17 +120,34 @@ func (p *PaymentService) Pay(w http.ResponseWriter, r *http.Request, _ httproute
 		return
 	}
 
-	// ────────── ACCOUNT RESOLUTION ──────────
-	ok, _ = p.lock(ctx, userID)
-	if !ok {
+	// ────────── REDIS LOCK ──────────
+	lockKey := "payment_lock:" + userID
+	lockToken := utils.GetUUID()
+
+	locked, err := p.app.Cache.SetNX(ctx, lockKey, []byte(lockToken), 30*time.Second)
+	if err != nil {
+		utils.RespondWithError(w, http.StatusInternalServerError, "lock error")
+		return
+	}
+	if !locked {
 		utils.RespondWithError(w, http.StatusTooManyRequests, "retry")
 		return
 	}
-	defer p.unlock(ctx, userID)
 
+	defer func() {
+		_ = p.app.Cache.Del(ctx, lockKey)
+	}()
+
+	// ────────── ACCOUNT RESOLUTION ──────────
 	userAcc, err := p.getOrCreateAccount(ctx, userID)
 	if err != nil {
 		utils.RespondWithError(w, http.StatusInternalServerError, "account error")
+		return
+	}
+
+	// ────────── PREVENT SELF-FUNDING ──────────
+	if req.PaymentType == "funding" && userID == req.EntityID {
+		utils.RespondWithError(w, http.StatusForbidden, "self funding not allowed")
 		return
 	}
 
@@ -147,12 +159,6 @@ func (p *PaymentService) Pay(w http.ResponseWriter, r *http.Request, _ httproute
 	}
 	if err != nil {
 		utils.RespondWithError(w, http.StatusInternalServerError, "destination account error")
-		return
-	}
-
-	// ────────── PREVENT SELF-FUNDING ──────────
-	if req.PaymentType == "funding" && userID == req.EntityID {
-		utils.RespondWithError(w, http.StatusForbidden, "self funding not allowed")
 		return
 	}
 

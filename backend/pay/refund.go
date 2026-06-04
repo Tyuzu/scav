@@ -2,10 +2,11 @@ package pay
 
 import (
 	"encoding/json"
-	"naevis/models"
-	"naevis/utils"
 	"net/http"
 	"time"
+
+	"naevis/models"
+	"naevis/utils"
 
 	"github.com/julienschmidt/httprouter"
 )
@@ -17,18 +18,24 @@ func (p *PaymentService) Refund(w http.ResponseWriter, r *http.Request, _ httpro
 	var req struct {
 		TransactionID string `json:"transaction_id"`
 	}
+
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil || req.TransactionID == "" {
 		utils.RespondWithError(w, http.StatusBadRequest, "invalid request")
 		return
 	}
 
 	var orig models.Transaction
-	if err := p.app.DB.FindOne(ctx, transactionsCollection, map[string]any{"_id": req.TransactionID}, &orig); err != nil {
+	if err := p.app.DB.FindOne(
+		ctx,
+		transactionsCollection,
+		map[string]any{"_id": req.TransactionID},
+		&orig,
+	); err != nil {
 		utils.RespondWithError(w, http.StatusNotFound, "not found")
 		return
 	}
 
-	// Verify user owns the transaction (they are the original payer)
+	// Verify user owns the transaction
 	if orig.UserID != "" && orig.UserID != userID {
 		utils.RespondWithError(w, http.StatusForbidden, "unauthorized")
 		return
@@ -42,24 +49,63 @@ func (p *PaymentService) Refund(w http.ResponseWriter, r *http.Request, _ httpro
 	fromAcc := orig.ToAccount
 	toAcc := orig.FromAccount
 
-	lockA, lockB := fromAcc, toAcc
+	// Consistent lock ordering prevents deadlocks
+	lockA := fromAcc
+	lockB := toAcc
+
 	if lockB < lockA {
 		lockA, lockB = lockB, lockA
 	}
 
-	ok, _ := p.lock(ctx, lockA)
-	if !ok {
-		utils.RespondWithError(w, http.StatusTooManyRequests, "retry")
-		return
-	}
-	defer p.unlock(ctx, lockA)
+	// ────────── REDIS LOCKS ──────────
 
-	ok, _ = p.lock(ctx, lockB)
-	if !ok {
+	lockKeyA := "refund_lock:" + lockA
+	lockTokenA := utils.GetUUID()
+
+	locked, err := p.app.Cache.SetNX(
+		ctx,
+		lockKeyA,
+		[]byte(lockTokenA),
+		30*time.Second,
+	)
+	if err != nil {
+		utils.RespondWithError(w, http.StatusInternalServerError, "lock error")
+		return
+	}
+
+	if !locked {
 		utils.RespondWithError(w, http.StatusTooManyRequests, "retry")
 		return
 	}
-	defer p.unlock(ctx, lockB)
+
+	defer func() {
+		_ = p.app.Cache.Del(ctx, lockKeyA)
+	}()
+
+	lockKeyB := "refund_lock:" + lockB
+	lockTokenB := utils.GetUUID()
+
+	locked, err = p.app.Cache.SetNX(
+		ctx,
+		lockKeyB,
+		[]byte(lockTokenB),
+		30*time.Second,
+	)
+	if err != nil {
+		utils.RespondWithError(w, http.StatusInternalServerError, "lock error")
+		return
+	}
+
+	if !locked {
+		utils.RespondWithError(w, http.StatusTooManyRequests, "retry")
+		return
+	}
+
+	defer func() {
+		_ = p.app.Cache.Del(ctx, lockKeyB)
+	}()
+
+	// ────────── REFUND TRANSACTION ──────────
 
 	txnID := utils.GetUUID()
 	now := time.Now()
@@ -100,13 +146,25 @@ func (p *PaymentService) Refund(w http.ResponseWriter, r *http.Request, _ httpro
 		return
 	}
 
-	if err := p.app.DB.Inc(ctx, accountsCollection, map[string]any{"_id": fromAcc}, "cached_balance", -refund.Amount); err != nil {
+	if err := p.app.DB.Inc(
+		ctx,
+		accountsCollection,
+		map[string]any{"_id": fromAcc},
+		"cached_balance",
+		-refund.Amount,
+	); err != nil {
 		p.failTxn(ctx, txnID)
 		utils.RespondWithError(w, http.StatusInternalServerError, "failed")
 		return
 	}
 
-	if err := p.app.DB.Inc(ctx, accountsCollection, map[string]any{"_id": toAcc}, "cached_balance", refund.Amount); err != nil {
+	if err := p.app.DB.Inc(
+		ctx,
+		accountsCollection,
+		map[string]any{"_id": toAcc},
+		"cached_balance",
+		refund.Amount,
+	); err != nil {
 		p.failTxn(ctx, txnID)
 		utils.RespondWithError(w, http.StatusInternalServerError, "failed")
 		return
@@ -115,9 +173,16 @@ func (p *PaymentService) Refund(w http.ResponseWriter, r *http.Request, _ httpro
 	p.successTxn(ctx, txnID)
 
 	// mark original reversed (best-effort)
-	_ = p.app.DB.UpdateOne(ctx, transactionsCollection,
+	_ = p.app.DB.UpdateOne(
+		ctx,
+		transactionsCollection,
 		map[string]any{"_id": orig.ID},
-		map[string]any{"$set": map[string]any{"status": "reversed", "updated_at": now}},
+		map[string]any{
+			"$set": map[string]any{
+				"status":     "reversed",
+				"updated_at": now,
+			},
+		},
 	)
 
 	utils.RespondWithJSON(w, http.StatusOK, map[string]interface{}{
