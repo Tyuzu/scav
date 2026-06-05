@@ -1,81 +1,83 @@
 import { createElement } from "./createElement.js";
-// eslint-disable-next-line no-unused-vars
-import {
-  notifSVG,
-  cartSVG,
-  chatSVG,
-  menuSVG,
-  searchSVG,
-} from "./svgs.js";
-
+import { notifSVG, cartSVG, chatSVG, menuSVG, searchSVG } from "./svgs.js";
 import { navigate } from "../routes/index.js";
 import { getState, subscribeDeep } from "../state/state.js";
 import { openNotificationsModal } from "../services/notifications/notifModal.js";
 import { toggleSidebar } from "./sidebar.js";
 import { createIconButton } from "../utils/svgIconButton.js";
+// import { tmessaging } from "./tumblrSvgs.js";
+// import { openCartModal } from "../services/cart/cartModal.js";
 
-// Helper to reduce repetition
-const makeButton = (classSuffix, svgMarkup, onClick) =>
-  createIconButton({
-    classSuffix,
-    svgMarkup,
-    onClick,
-    label: "",
-  });
+// --- Update container children based on login state
+function updateNav(container, _divs) {
+  const isLoggedIn = !!getState("token"); // use token for reactive auth
 
-function updateNav(container) {
-  const isLoggedIn = !!getState("token");
+  container.innerHTML = "";
 
-  const buttons = [
-    makeButton("pause", menuSVG, toggleSidebar),
+  container.appendChild(createIconButton({
+    classSuffix: "pause",
+    svgMarkup: menuSVG,
+    onClick: toggleSidebar,
+    label: "" // âœ… no text
+  }));
 
-    // makeButton("dld", searchSVG, () => navigate("/search")),
+  container.appendChild(createIconButton({
+    classSuffix: "dld",
+    svgMarkup: searchSVG,
+    onClick: () => navigate("/search"),
+    label: "" // âœ… no text
+  }));
 
-    ...(isLoggedIn
-      ? [
-          makeButton("play", chatSVG, () => navigate("/newchats")),
+  if (isLoggedIn) {
 
-          makeButton("stop", notifSVG, openNotificationsModal),
+    container.appendChild(createIconButton({
+      classSuffix: "play",
+      svgMarkup: chatSVG,
+      onClick: () => navigate("/newchats"),
+      label: ""
+    }));
+    
+    container.appendChild(createIconButton({
+      classSuffix: "edit",
+      svgMarkup: cartSVG,
+      onClick: () => navigate("/cart"),
+      label: ""
+    }));
+ 
+    container.appendChild(createIconButton({
+      classSuffix: "stop",
+      svgMarkup: notifSVG,
+      onClick: openNotificationsModal,
+      label: ""
+    }));   
 
-          makeButton("edit", cartSVG, () => navigate("/cart")),
-        ]
-      : []),
-  ];
 
-  container.replaceChildren(...buttons);
+    // container.appendChild(createIconButton({
+    //   classSuffix: "edit",
+    //   svgMarkup: "",
+    //   onClick: () => navigate("/profile"),
+    //   label: divs.imglink
+    // }));
+  }
 }
 
-export function Sticky() {
-  const container = createElement("div", {
-    class: "plypzstp",
-  });
+// --- Sticky container (reactive)
+export function Sticky(divs) {
+  const container = createElement("div", { class: "plypzstp" });
 
-  updateNav(container);
+  updateNav(container, divs);
 
-  let previousLoggedIn = !!getState("token");
+  // Subscribe to token changes instead of user directly
+  const unsub = subscribeDeep("token", () => updateNav(container, divs));
 
-  const unsub = subscribeDeep("token", () => {
-    const currentLoggedIn = !!getState("token");
-
-    // Only rebuild when auth state actually changes
-    if (currentLoggedIn !== previousLoggedIn) {
-      previousLoggedIn = currentLoggedIn;
-      updateNav(container);
-    }
-  });
-
-  // Cleanup when removed from DOM
+  // Optional: cleanup if container is removed
   const observer = new MutationObserver(() => {
-    if (!container.isConnected) {
+    if (!document.body.contains(container)) {
       unsub?.();
       observer.disconnect();
     }
   });
-
-  observer.observe(document.body, {
-    childList: true,
-    subtree: true,
-  });
+  observer.observe(document.body, { childList: true, subtree: true });
 
   return container;
 }

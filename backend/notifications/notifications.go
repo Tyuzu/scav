@@ -4,7 +4,6 @@ import (
 	"context"
 	"encoding/json"
 	"net/http"
-	"strconv"
 	"strings"
 	"time"
 
@@ -15,54 +14,16 @@ import (
 	"github.com/julienschmidt/httprouter"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
-	"go.mongodb.org/mongo-driver/mongo/options"
 )
 
-//
-// DTO
-//
-
-type NotificationDTO struct {
-	ID          string    `json:"id"`
-	UserID      string    `json:"userId"`
-	Type        string    `json:"type"`
-	Title       string    `json:"title"`
-	Message     string    `json:"message"`
-	EntityType  string    `json:"entityType"`
-	EntityID    string    `json:"entityId"`
-	RelatedUser string    `json:"relatedUser"`
-	IsRead      bool      `json:"isRead"`
-	CreatedAt   time.Time `json:"createdAt"`
-	UpdatedAt   time.Time `json:"updatedAt"`
-}
-
-func toDTO(n models.Notification) NotificationDTO {
-	return NotificationDTO{
-		ID:          n.ID,
-		UserID:      n.UserID,
-		Type:        n.Type,
-		Title:       n.Title,
-		Message:     n.Message,
-		EntityType:  n.EntityType,
-		EntityID:    n.EntityID,
-		RelatedUser: n.RelatedUser,
-		IsRead:      n.IsRead,
-		CreatedAt:   n.CreatedAt,
-		UpdatedAt:   n.UpdatedAt,
-	}
-}
-
-//
-// CREATE
-//
-
+// CreateNotification creates a new notification for a user
 func CreateNotification(app *infra.Deps) httprouter.Handle {
 	return func(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 		ctx, cancel := context.WithTimeout(r.Context(), 5*time.Second)
 		defer cancel()
 
 		var body struct {
-			UserID      string `json:"userId"`
+			UserID      string `json:"userid"`
 			Type        string `json:"type"`
 			Title       string `json:"title"`
 			Message     string `json:"message"`
@@ -76,12 +37,13 @@ func CreateNotification(app *infra.Deps) httprouter.Handle {
 			return
 		}
 
+		// Validate required fields
 		body.UserID = strings.TrimSpace(body.UserID)
 		body.Type = strings.TrimSpace(body.Type)
 		body.Message = strings.TrimSpace(body.Message)
 
 		if body.UserID == "" || body.Type == "" || body.Message == "" {
-			utils.RespondWithError(w, http.StatusBadRequest, "Missing required fields")
+			utils.RespondWithError(w, http.StatusBadRequest, "Missing required fields: userId, type, message")
 			return
 		}
 
@@ -104,14 +66,11 @@ func CreateNotification(app *infra.Deps) httprouter.Handle {
 			return
 		}
 
-		utils.RespondWithJSON(w, http.StatusCreated, toDTO(notification))
+		utils.RespondWithJSON(w, http.StatusCreated, notification)
 	}
 }
 
-//
-// BULK CREATE
-//
-
+// BulkCreateNotifications creates multiple notifications at once
 func BulkCreateNotifications(app *infra.Deps) httprouter.Handle {
 	return func(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 		ctx, cancel := context.WithTimeout(r.Context(), 10*time.Second)
@@ -119,7 +78,7 @@ func BulkCreateNotifications(app *infra.Deps) httprouter.Handle {
 
 		var body struct {
 			Notifications []struct {
-				UserID      string `json:"userId"`
+				UserID      string `json:"userid"`
 				Type        string `json:"type"`
 				Title       string `json:"title"`
 				Message     string `json:"message"`
@@ -139,24 +98,14 @@ func BulkCreateNotifications(app *infra.Deps) httprouter.Handle {
 			return
 		}
 
-		var docs []interface{}
-		var created []NotificationDTO
-
-		for _, n := range body.Notifications {
-			n.UserID = strings.TrimSpace(n.UserID)
-			n.Type = strings.TrimSpace(n.Type)
-			n.Message = strings.TrimSpace(n.Message)
-
-			if n.UserID == "" || n.Type == "" || n.Message == "" {
-				continue
-			}
-
-			notification := models.Notification{
+		notifications := make([]interface{}, len(body.Notifications))
+		for i, n := range body.Notifications {
+			notifications[i] = models.Notification{
 				ID:          primitive.NewObjectID().Hex(),
-				UserID:      n.UserID,
-				Type:        n.Type,
+				UserID:      strings.TrimSpace(n.UserID),
+				Type:        strings.TrimSpace(n.Type),
 				Title:       strings.TrimSpace(n.Title),
-				Message:     n.Message,
+				Message:     strings.TrimSpace(n.Message),
 				EntityType:  strings.TrimSpace(n.EntityType),
 				EntityID:    strings.TrimSpace(n.EntityID),
 				RelatedUser: strings.TrimSpace(n.RelatedUser),
@@ -164,126 +113,69 @@ func BulkCreateNotifications(app *infra.Deps) httprouter.Handle {
 				CreatedAt:   time.Now(),
 				UpdatedAt:   time.Now(),
 			}
-
-			docs = append(docs, notification)
-			created = append(created, toDTO(notification))
 		}
 
-		if len(docs) == 0 {
-			utils.RespondWithError(w, http.StatusBadRequest, "No valid notifications")
-			return
-		}
-
-		if err := app.DB.InsertMany(ctx, notificationsCollection, docs); err != nil {
+		if err := app.DB.InsertMany(ctx, notificationsCollection, notifications); err != nil {
 			utils.RespondWithError(w, http.StatusInternalServerError, "Failed to create notifications")
 			return
 		}
 
 		utils.RespondWithJSON(w, http.StatusCreated, map[string]interface{}{
-			"inserted": len(docs),
-			"items":    created,
+			"inserted": len(notifications),
 		})
 	}
 }
 
-// GET USER NOTIFICATIONS (PAGINATED)
+// GetUserNotifications retrieves all notifications for a user
 func GetUserNotifications(app *infra.Deps) httprouter.Handle {
 	return func(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 		ctx, cancel := context.WithTimeout(r.Context(), 5*time.Second)
 		defer cancel()
 
-		userID := strings.TrimSpace(ps.ByName("userid"))
+		userID := ps.ByName("userid")
+		userID = strings.TrimSpace(userID)
 		if userID == "" {
 			utils.RespondWithError(w, http.StatusBadRequest, "Invalid user ID")
 			return
 		}
 
-		// -----------------------
-		// Pagination defaults
-		// -----------------------
-		limit := 20
-		page := 1
+		// Get unread only query param
+		unreadOnly := r.URL.Query().Get("unread") == "true"
 
-		q := r.URL.Query()
-
-		if v := q.Get("limit"); v != "" {
-			if parsed, err := strconv.Atoi(v); err == nil && parsed > 0 {
-				limit = parsed
-			}
+		filter := bson.M{"userid": userID}
+		if unreadOnly {
+			filter["isRead"] = false
 		}
 
-		if v := q.Get("page"); v != "" {
-			if parsed, err := strconv.Atoi(v); err == nil && parsed > 0 {
-				page = parsed
-			}
-		}
-
-		if limit > 100 {
-			limit = 100
-		}
-
-		skip := (page - 1) * limit
-
-		// -----------------------
-		// Mongo filter
-		// -----------------------
-		filter := bson.M{
-			"userId": userID,
-		}
-
-		// -----------------------
-		// Mongo options
-		// -----------------------
-		opts := options.Find().
-			SetLimit(int64(limit)).
-			SetSkip(int64(skip)).
-			SetSort(bson.M{
-				"createdAt": -1,
-			})
-
-		// -----------------------
-		// Query
-		// -----------------------
 		var notifications []models.Notification
-
-		if err := app.DB.FindMany(ctx, notificationsCollection, filter, &notifications, opts); err != nil {
+		if err := app.DB.FindMany(ctx, notificationsCollection, filter, &notifications); err != nil {
 			utils.RespondWithError(w, http.StatusInternalServerError, "Failed to fetch notifications")
 			return
 		}
 
-		// -----------------------
-		// DTO mapping
-		// -----------------------
-		out := make([]NotificationDTO, len(notifications))
-		for i, n := range notifications {
-			out[i] = toDTO(n)
+		// If notifications is nil, return empty array instead of null
+		if notifications == nil {
+			notifications = []models.Notification{}
 		}
 
-		utils.RespondWithJSON(w, http.StatusOK, map[string]any{
-			"items": out,
-			"page":  page,
-			"limit": limit,
-		})
+		utils.RespondWithJSON(w, http.StatusOK, notifications)
 	}
 }
 
-//
-// UNREAD COUNT
-//
-
+// GetUnreadCount gets count of unread notifications
 func GetUnreadCount(app *infra.Deps) httprouter.Handle {
 	return func(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 		ctx, cancel := context.WithTimeout(r.Context(), 5*time.Second)
 		defer cancel()
 
-		userID := strings.TrimSpace(ps.ByName("userid"))
+		userID := ps.ByName("userid")
+		userID = strings.TrimSpace(userID)
 		if userID == "" {
 			utils.RespondWithError(w, http.StatusBadRequest, "Invalid user ID")
 			return
 		}
 
-		filter := bson.M{"userId": userID, "isRead": false}
-
+		filter := bson.M{"userid": userID, "isRead": false}
 		count, err := app.DB.CountDocuments(ctx, notificationsCollection, filter)
 		if err != nil {
 			utils.RespondWithError(w, http.StatusInternalServerError, "Failed to count notifications")
@@ -296,28 +188,19 @@ func GetUnreadCount(app *infra.Deps) httprouter.Handle {
 	}
 }
 
-//
-// MARK SINGLE READ (SECURE)
-//
-
+// MarkAsRead marks a notification as read
 func MarkAsRead(app *infra.Deps) httprouter.Handle {
 	return func(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 		ctx, cancel := context.WithTimeout(r.Context(), 5*time.Second)
 		defer cancel()
 
 		notificationID := strings.TrimSpace(ps.ByName("notificationid"))
-		userID := r.Header.Get("X-User-ID") // replace with real auth middleware
-
-		if notificationID == "" || userID == "" {
-			utils.RespondWithError(w, http.StatusBadRequest, "Invalid request")
+		if notificationID == "" {
+			utils.RespondWithError(w, http.StatusBadRequest, "Invalid notification ID")
 			return
 		}
 
-		filter := bson.M{
-			"_id":    notificationID,
-			"userId": userID,
-		}
-
+		filter := bson.M{"_id": notificationID}
 		update := bson.M{
 			"$set": bson.M{
 				"isRead":    true,
@@ -330,27 +213,26 @@ func MarkAsRead(app *infra.Deps) httprouter.Handle {
 			return
 		}
 
-		utils.RespondWithJSON(w, http.StatusOK, map[string]bool{"updated": true})
+		utils.RespondWithJSON(w, http.StatusOK, map[string]interface{}{
+			"updated": true,
+		})
 	}
 }
 
-//
-// MARK ALL READ
-//
-
+// MarkAllAsRead marks all notifications as read for a user
 func MarkAllAsRead(app *infra.Deps) httprouter.Handle {
 	return func(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 		ctx, cancel := context.WithTimeout(r.Context(), 5*time.Second)
 		defer cancel()
 
-		userID := strings.TrimSpace(ps.ByName("userid"))
+		userID := ps.ByName("userid")
+		userID = strings.TrimSpace(userID)
 		if userID == "" {
 			utils.RespondWithError(w, http.StatusBadRequest, "Invalid user ID")
 			return
 		}
 
-		filter := bson.M{"userId": userID, "isRead": false}
-
+		filter := bson.M{"userid": userID, "isRead": false}
 		update := bson.M{
 			"$set": bson.M{
 				"isRead":    true,
@@ -363,63 +245,57 @@ func MarkAllAsRead(app *infra.Deps) httprouter.Handle {
 			return
 		}
 
-		utils.RespondWithJSON(w, http.StatusOK, map[string]bool{"updated": true})
+		utils.RespondWithJSON(w, http.StatusOK, map[string]interface{}{
+			"updated": true,
+		})
 	}
 }
 
-//
-// DELETE SINGLE (SECURE)
-//
-
+// DeleteNotification deletes a notification
 func DeleteNotification(app *infra.Deps) httprouter.Handle {
 	return func(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 		ctx, cancel := context.WithTimeout(r.Context(), 5*time.Second)
 		defer cancel()
 
 		notificationID := strings.TrimSpace(ps.ByName("notificationid"))
-		userID := r.Header.Get("X-User-ID")
-
-		if notificationID == "" || userID == "" {
-			utils.RespondWithError(w, http.StatusBadRequest, "Invalid request")
+		if notificationID == "" {
+			utils.RespondWithError(w, http.StatusBadRequest, "Invalid notification ID")
 			return
 		}
 
-		filter := bson.M{
-			"_id":    notificationID,
-			"userId": userID,
-		}
-
+		filter := bson.M{"_id": notificationID}
 		if _, err := app.DB.DeleteOne(ctx, notificationsCollection, filter); err != nil {
 			utils.RespondWithError(w, http.StatusInternalServerError, "Failed to delete notification")
 			return
 		}
 
-		utils.RespondWithJSON(w, http.StatusOK, map[string]bool{"deleted": true})
+		utils.RespondWithJSON(w, http.StatusOK, map[string]interface{}{
+			"deleted": true,
+		})
 	}
 }
 
-//
-// CLEAR ALL
-//
-
+// ClearAllNotifications deletes all notifications for a user
 func ClearAllNotifications(app *infra.Deps) httprouter.Handle {
 	return func(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 		ctx, cancel := context.WithTimeout(r.Context(), 5*time.Second)
 		defer cancel()
 
-		userID := strings.TrimSpace(ps.ByName("userid"))
+		userID := ps.ByName("userid")
+		userID = strings.TrimSpace(userID)
 		if userID == "" {
 			utils.RespondWithError(w, http.StatusBadRequest, "Invalid user ID")
 			return
 		}
 
-		filter := bson.M{"userId": userID}
-
+		filter := bson.M{"userid": userID}
 		if err := app.DB.DeleteMany(ctx, notificationsCollection, filter); err != nil {
 			utils.RespondWithError(w, http.StatusInternalServerError, "Failed to delete notifications")
 			return
 		}
 
-		utils.RespondWithJSON(w, http.StatusOK, map[string]bool{"deleted": true})
+		utils.RespondWithJSON(w, http.StatusOK, map[string]interface{}{
+			"deleted": true,
+		})
 	}
 }
